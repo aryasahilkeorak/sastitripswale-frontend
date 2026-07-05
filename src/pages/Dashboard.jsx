@@ -1,0 +1,372 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { api, apiError } from '../lib/api.js';
+import { useAuth } from '../store/auth.js';
+import { imageUrl, paiseToRupee, timeAgo, dateRange, formatDate, PREF_LABEL, AVATAR_FALLBACK } from '../lib/helpers.js';
+import { toast } from '../lib/toast.js';
+import TripCard from '../components/TripCard.jsx';
+
+const TABS = [
+  { key: 'overview', label: 'Overview', icon: 'ri-dashboard-line' },
+  { key: 'trips', label: 'My Trips', icon: 'ri-map-2-line' },
+  { key: 'notifications', label: 'Notifications', icon: 'ri-notification-3-line' },
+  { key: 'payments', label: 'Payments', icon: 'ri-bank-card-line' },
+  { key: 'settings', label: 'Settings', icon: 'ri-settings-3-line' },
+];
+
+const NOTIF_ICON = {
+  welcome: 'ri-hand-heart-line',
+  trip_interest: 'ri-fire-line',
+  payment: 'ri-bank-card-line',
+  connection: 'ri-user-add-line',
+  verification: 'ri-verified-badge-line',
+  system: 'ri-information-line',
+};
+
+export default function Dashboard() {
+  const user = useAuth((s) => s.user);
+  const setUser = useAuth((s) => s.setUser);
+  const [tab, setTab] = useState('overview');
+
+  const [trips, setTrips] = useState([]);
+  const [notifs, setNotifs] = useState([]);
+  const [connections, setConnections] = useState([]);
+  const [payments, setPayments] = useState([]);
+
+  useEffect(() => {
+    api.get('/trips/my').then((r) => setTrips(r.data.trips)).catch(() => {});
+    api.get('/members/notifications').then((r) => setNotifs(r.data.notifications)).catch(() => {});
+    api.get('/members/connections').then((r) => setConnections(r.data.connections)).catch(() => {});
+    api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
+  }, []);
+
+  const unread = notifs.filter((n) => !n.isRead).length;
+  const pendingReceived = connections.filter((c) => c.status === 'pending' && String(c.receiver?._id) === String(user?.id));
+  const acceptedCount = connections.filter((c) => c.status === 'accepted').length;
+
+  const markRead = async () => {
+    await api.patch('/members/notifications/read').catch(() => {});
+    setNotifs((ns) => ns.map((n) => ({ ...n, isRead: true })));
+  };
+
+  const respond = async (id, action) => {
+    try {
+      await api.patch(`/members/connect/${id}`, { action });
+      setConnections((cs) => cs.map((c) => (c._id === id ? { ...c, status: action === 'accept' ? 'accepted' : 'rejected' } : c)));
+      toast(action === 'accept' ? '🤝' : '👋', action === 'accept' ? 'Connection accepted!' : 'Request declined');
+    } catch (err) {
+      toast('❌', apiError(err));
+    }
+  };
+
+  const removeTrip = async (id) => {
+    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
+    try {
+      await api.delete(`/trips/${id}`);
+      setTrips((ts) => ts.filter((t) => t._id !== id));
+      toast('🗑️', 'Trip deleted');
+    } catch (err) {
+      toast('❌', apiError(err));
+    }
+  };
+
+  return (
+    <section style={{ paddingTop: 100 }}>
+      <div className="container">
+        {/* Header */}
+        <div className="dash-header">
+          <img className="profile-avatar" src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800 }}>{user?.fullName}</h1>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+              {user?.city || 'India'}{user?.vehicleType ? ` · ${user.vehicleType}` : ''} · {user?.email}
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+              <span className={`badge ${user?.membershipActive ? 'badge-green' : 'badge-red'}`}>
+                {user?.membershipActive ? '● Active member' : '○ Membership inactive'}
+              </span>
+              {user?.membershipActive && user?.membershipExpiresAt && (
+                <span className="badge badge-gold">Valid till {formatDate(user.membershipExpiresAt)}</span>
+              )}
+              {user?.isVerified && <span className="badge badge-cyan"><i className="ri-verified-badge-fill" /> Verified</span>}
+              {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {!user?.membershipPaid && <Link to="/join" className="btn btn-primary btn-sm"><i className="ri-vip-crown-line" /> Activate</Link>}
+            <Link to="/plan-trip" className="btn btn-outline btn-sm"><i className="ri-map-2-line" /> Plan Trip</Link>
+          </div>
+        </div>
+
+        {/* Complete-profile gate banner */}
+        {!user?.profileComplete && (
+          <div className="card mb-4" style={{ padding: 20, borderColor: 'rgba(224,64,251,0.4)' }}>
+            <div className="row-between">
+              <div>
+                <strong>Complete your profile to unlock trips 📝</strong>
+                <p className="text-muted" style={{ fontSize: '0.85rem' }}>Add your name, city, interests, vehicle &amp; ID. You can't plan or join trips until it's done.</p>
+              </div>
+              <Link to="/complete-profile" className="btn btn-primary btn-sm"><i className="ri-user-settings-line" /> Complete now</Link>
+            </div>
+          </div>
+        )}
+
+        {/* Quick stats */}
+        <div className="grid-4 mb-4">
+          <div className="mini-stat"><div className="num">{trips.length}</div><div className="lbl">Trips Organized</div></div>
+          <div className="mini-stat"><div className="num">{acceptedCount}</div><div className="lbl">Connections</div></div>
+          <div className="mini-stat"><div className="num">{unread}</div><div className="lbl">Unread Alerts</div></div>
+          <div className="mini-stat"><div className="num">{payments.length}</div><div className="lbl">Payments</div></div>
+        </div>
+
+        {/* Tabs */}
+        <div className="dash-tabs">
+          {TABS.map((t) => (
+            <button key={t.key} className={`dash-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
+              <i className={t.icon} /> {t.label}
+              {t.key === 'notifications' && unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 6 }}>{unread}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* OVERVIEW */}
+        {tab === 'overview' && (
+          <div className="grid-2">
+            <div className="card" style={{ padding: 24 }}>
+              <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Profile</h3>
+              <Detail label="Profession" value={user?.profession} />
+              <Detail label="City / State" value={[user?.city, user?.state].filter(Boolean).join(', ')} />
+              <Detail label="Age" value={user?.age} />
+              <Detail label="Vehicle" value={[user?.vehicleType, user?.vehicleModel].filter(Boolean).join(' · ')} />
+              <Detail label="Mobile" value={user?.mobile} />
+              <Detail label="Travels with" value={PREF_LABEL[user?.coTravelerPreference]} />
+              <Detail
+                label="Membership"
+                value={user?.membershipActive ? `${user?.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(user?.membershipExpiresAt)}` : 'Inactive'}
+              />
+              <div className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--glass-bdr)' }}>
+                <span className="text-muted" style={{ fontSize: '0.8rem' }}>Your User ID</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="id-chip">{user?.id}</span>
+                  <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => { navigator.clipboard?.writeText(user?.id || ''); toast('📋', 'User ID copied — share it to be added to groups'); }}
+                  >
+                    <i className="ri-file-copy-line" />
+                  </button>
+                </span>
+              </div>
+              {user?.travelInterests?.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div className="text-muted" style={{ fontSize: '0.75rem', marginBottom: 6 }}>Travel interests</div>
+                  <div className="member-tags" style={{ justifyContent: 'flex-start' }}>
+                    {user.travelInterests.map((t) => <span key={t} className="badge badge-cyan">{t}</span>)}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              {!user?.membershipActive && (
+                <div className="card mb-3" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
+                  <h4 style={{ fontFamily: 'var(--font-display)' }}>Activate your membership</h4>
+                  <p className="text-muted mt-2">Unlock trip creation, joining and connections.</p>
+                  <Link to="/join" className="btn btn-primary mt-3"><i className="ri-vip-crown-line" /> View Plans</Link>
+                </div>
+              )}
+              <div className="card" style={{ padding: 24 }}>
+                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick actions</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Link to="/trips" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-compass-line" /> Browse Trips</Link>
+                  <Link to="/plan-trip" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-map-2-line" /> Plan a Trip</Link>
+                  <Link to="/chat" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-chat-3-line" /> Messages</Link>
+                  <Link to="/members" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-group-line" /> Find Members</Link>
+                  <Link to="/gallery" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-image-line" /> Gallery</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MY TRIPS */}
+        {tab === 'trips' && (
+          <>
+            <div className="row-between mb-3">
+              <h4 style={{ fontFamily: 'var(--font-display)' }}>Trips you host</h4>
+              <Link to="/plan-trip" className="btn btn-sm btn-primary"><i className="ri-add-line" /> Host a Trip</Link>
+            </div>
+            {trips.length === 0 ? (
+              <div className="empty-state"><i className="ri-map-2-line" /><p>You haven't hosted any trips yet.</p><Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link></div>
+            ) : (
+              <div className="trips-grid">
+                {trips.map((t) => (
+                  <div key={t._id}>
+                    <TripCard trip={t} />
+                    <button
+                      className="btn btn-sm"
+                      style={{ width: '100%', justifyContent: 'center', marginTop: 8, background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
+                      onClick={() => removeTrip(t._id)}
+                    >
+                      <i className="ri-delete-bin-line" /> Delete trip
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* NOTIFICATIONS */}
+        {tab === 'notifications' && (
+          <div style={{ maxWidth: 680 }}>
+            {pendingReceived.length > 0 && (
+              <div className="card mb-4" style={{ padding: 20 }}>
+                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Connection requests</h4>
+                {pendingReceived.map((c) => (
+                  <div key={c._id} className="row-between" style={{ marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={imageUrl(c.sender?.avatarUrl, AVATAR_FALLBACK)} alt="" style={{ width: 36, height: 36, borderRadius: '50%' }} />
+                      <span style={{ fontSize: '0.88rem' }}>{c.sender?.fullName}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-sm btn-primary" onClick={() => respond(c._id, 'accept')}>Accept</button>
+                      <button className="btn btn-sm btn-outline" onClick={() => respond(c._id, 'reject')}>Decline</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="row-between mb-3">
+              <h4 style={{ fontFamily: 'var(--font-display)' }}>Notifications</h4>
+              {unread > 0 && <button className="btn btn-sm btn-outline" onClick={markRead}>Mark all read</button>}
+            </div>
+            {notifs.length === 0 ? (
+              <div className="empty-state"><i className="ri-notification-off-line" /><p>No notifications yet.</p></div>
+            ) : (
+              notifs.map((n) => (
+                <div key={n._id} className={`notif-item${n.isRead ? '' : ' unread'}`}>
+                  <div className="notif-icon"><i className={NOTIF_ICON[n.type] || 'ri-information-line'} /></div>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ fontSize: '0.88rem' }}>{n.title}</strong>
+                    <p className="text-muted" style={{ fontSize: '0.82rem' }}>{n.message}</p>
+                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>{timeAgo(n.createdAt)}</span>
+                  </div>
+                  {!n.isRead && <span className="notif-dot" />}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* PAYMENTS */}
+        {tab === 'payments' && (
+          <div style={{ maxWidth: 680 }}>
+            {payments.length === 0 ? (
+              <div className="empty-state"><i className="ri-bank-card-line" /><p>No payments yet.</p>{!user?.membershipActive && <Link to="/join" className="btn btn-primary mt-3">View plans</Link>}</div>
+            ) : (
+              payments.map((p) => (
+                <div key={p._id} className="notif-item">
+                  <div className="notif-icon"><i className="ri-bank-card-line" /></div>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ fontSize: '0.88rem', textTransform: 'capitalize' }}>{p.purpose}</strong>
+                    <p className="text-muted" style={{ fontSize: '0.78rem' }}>
+                      {p.razorpayPaymentId || p._id}{p.couponUsed ? ` · ${p.couponUsed}` : ''} · {timeAgo(p.createdAt)}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700 }}>{paiseToRupee(p.amount)}</div>
+                    <span className={`badge ${p.status === 'success' ? 'badge-green' : p.status === 'failed' ? 'badge-red' : 'badge-gold'}`}>{p.status}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* SETTINGS */}
+        {tab === 'settings' && <SettingsForm user={user} setUser={setUser} />}
+      </div>
+    </section>
+  );
+}
+
+function Detail({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--glass-bdr)' }}>
+      <span className="text-muted" style={{ fontSize: '0.8rem' }}>{label}</span>
+      <span style={{ fontSize: '0.85rem' }}>{value}</span>
+    </div>
+  );
+}
+
+function SettingsForm({ user, setUser }) {
+  const fileRef = useRef(null);
+  const [form, setForm] = useState({
+    fullName: user?.fullName || '', profession: user?.profession || '', city: user?.city || '',
+    state: user?.state || '', whatsapp: user?.whatsapp || '', instagram: user?.instagram || '',
+    vehicleModel: user?.vehicleModel || '', bio: user?.bio || '',
+  });
+  const [avatar, setAvatar] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const clear = useAuth((s) => s.clear);
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const save = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      if (avatar) fd.append('avatar', avatar);
+      const { data } = await api.put('/members/profile', fd);
+      setUser(data.user);
+      toast('✅', 'Profile updated!');
+    } catch (err) {
+      toast('❌', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const logout = async () => {
+    await api.post('/auth/logout').catch(() => {});
+    clear();
+    toast('👋', 'Logged out');
+  };
+
+  return (
+    <div className="grid-2">
+      <form className="card" style={{ padding: 24 }} onSubmit={save}>
+        <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Edit profile</h3>
+        <div className="upload-box mb-3" onClick={() => fileRef.current?.click()}>
+          <img className="avatar-preview" src={avatar ? URL.createObjectURL(avatar) : imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt="" />
+          <div className="upload-label">{avatar ? avatar.name : 'Change photo'}</div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={(e) => setAvatar(e.target.files?.[0] || null)} />
+        </div>
+        <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
+        <div className="form-row">
+          <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
+          <div className="form-group"><label>Vehicle model</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} /></div>
+        </div>
+        <div className="form-row">
+          <div className="form-group"><label>City</label><input className="form-input" value={form.city} onChange={set('city')} /></div>
+          <div className="form-group"><label>State</label><input className="form-input" value={form.state} onChange={set('state')} /></div>
+        </div>
+        <div className="form-row">
+          <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
+          <div className="form-group"><label>Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} /></div>
+        </div>
+        <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} /></div>
+        <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="ri-save-line" />} Save Changes</button>
+      </form>
+
+      <div className="card" style={{ padding: 24, alignSelf: 'flex-start', borderColor: 'rgba(239,68,68,0.25)' }}>
+        <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
+        <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
+        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="ri-logout-box-line" /> Logout</button>
+      </div>
+    </div>
+  );
+}
