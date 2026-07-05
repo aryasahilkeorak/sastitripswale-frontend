@@ -15,15 +15,15 @@ const LINKS = [
 ];
 
 const MOBILE_LINKS = [
-  { to: '/', label: 'Home', icon: 'ri-home-5-line' },
-  { to: '/trips', label: 'Trips', icon: 'ri-compass-line' },
-  { to: '/members', label: 'Members', icon: 'ri-group-line' },
-  { to: '/gallery', label: 'Gallery', icon: 'ri-image-line' },
-  { to: '/completed-trips', label: 'Completed', icon: 'ri-trophy-line' },
-  { to: '/plan-trip', label: 'Plan Trip', icon: 'ri-map-2-line' },
-  { to: '/testimonials', label: 'Reviews', icon: 'ri-star-line' },
-  { to: '/about', label: 'About', icon: 'ri-information-line' },
-  { to: '/contact', label: 'Contact', icon: 'ri-phone-line' },
+  { to: '/', label: 'Home', icon: 'fa-home' },
+  { to: '/trips', label: 'Trips', icon: 'fa-compass' },
+  { to: '/members', label: 'Members', icon: 'fa-people-group' },
+  { to: '/gallery', label: 'Gallery', icon: 'fa-images' },
+  { to: '/completed-trips', label: 'Completed', icon: 'fa-trophy' },
+  { to: '/plan-trip', label: 'Plan Trip', icon: 'fa-map' },
+  { to: '/testimonials', label: 'Reviews', icon: 'fa-star' },
+  { to: '/about', label: 'About', icon: 'fa-circle-info' },
+  { to: '/contact', label: 'Contact', icon: 'fa-phone' },
 ];
 
 export default function Navbar() {
@@ -101,7 +101,7 @@ export default function Navbar() {
 
           {!accessToken ? (
             <NavLink to="/join" className="nav-cta">
-              Join Free 🚀
+              Join Free <i className="fas fa-rocket" style={{ marginLeft: '6px' }} />
             </NavLink>
           ) : (
             <div className="nav-user" ref={menuRef}>
@@ -125,21 +125,21 @@ export default function Navbar() {
                     <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>{user?.email}</div>
                   </div>
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                    <i className="ri-dashboard-line" /> Dashboard
+                    <i className="fas fa-gauge" /> Dashboard
                   </Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)}>
-                    <i className="ri-chat-3-line" /> Messages
+                    <i className="fas fa-comments" /> Messages
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
-                    <i className="ri-map-2-line" /> Plan a Trip
+                    <i className="fas fa-map" /> Plan a Trip
                   </Link>
                   {user?.role === 'admin' && (
                     <Link to="/admin" onClick={() => setMenuOpen(false)}>
-                      <i className="ri-shield-star-line" /> Admin Panel
+                      <i className="fas fa-shield" /> Admin Panel
                     </Link>
                   )}
                   <button onClick={logout}>
-                    <i className="ri-logout-box-line" /> Logout
+                    <i className="fas fa-sign-out-alt" /> Logout
                   </button>
                 </div>
               )}
@@ -161,21 +161,21 @@ export default function Navbar() {
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
         {MOBILE_LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)}>
-            <i className={l.icon} /> {l.label}
+            <i className={`fas ${l.icon}`} /> {l.label}
           </NavLink>
         ))}
         {accessToken ? (
           <>
             <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <i className="ri-dashboard-line" /> Dashboard
+              <i className="fas fa-gauge" /> Dashboard
             </NavLink>
             <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
-              <i className="ri-chat-3-line" /> Messages
+              <i className="fas fa-comments" /> Messages
               {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
             </NavLink>
             {user?.role === 'admin' && (
               <NavLink to="/admin" onClick={() => setMobileOpen(false)}>
-                <i className="ri-shield-star-line" /> Admin Panel
+                <i className="fas fa-shield" /> Admin Panel
               </NavLink>
             )}
             <button
@@ -194,7 +194,7 @@ export default function Navbar() {
                 padding: '13px 16px',
               }}
             >
-              <i className="ri-logout-box-line" /> Logout
+              <i className="fas fa-sign-out-alt" /> Logout
             </button>
           </>
         ) : (
@@ -213,7 +213,7 @@ export default function Navbar() {
               marginTop: 6,
             }}
           >
-            <i className="ri-rocket-line" /> Join Community
+            <i className="fas fa-rocket" /> Join Community
           </NavLink>
         )}
       </div>
