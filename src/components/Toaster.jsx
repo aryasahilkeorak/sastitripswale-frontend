@@ -6,7 +6,9 @@ export default function Toaster() {
     <div className="toast-stack">
       {toasts.map((t) => (
         <div key={t.id} className="toast show">
-          <span className="toast-icon">{t.icon}</span>
+          <span className="toast-icon">
+            {typeof t.icon === 'string' && t.icon.startsWith('fa') ? <i className={t.icon} /> : t.icon}
+          </span>
           <span className="toast-text">{t.message}</span>
         </div>
       ))}

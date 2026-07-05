@@ -1,4 +1,4 @@
-export default function PageHero({ tag, tagIcon = 'ri-sparkling-fill', title, highlight, sub }) {
+export default function PageHero({ tag, tagIcon = 'fa-solid fa-wand-magic-sparkles', title, highlight, sub }) {
   return (
     <section className="page-hero">
       <div className="page-hero-bg" />

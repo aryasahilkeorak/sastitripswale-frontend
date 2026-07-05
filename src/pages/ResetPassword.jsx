@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -22,7 +23,7 @@ export default function ResetPassword() {
     setErr('');
     try {
       await api.post('/auth/reset-password', { token, password });
-      toast('✅', 'Password updated! Please log in.');
+      toast('fa-solid fa-circle-check', 'Password updated! Please log in.');
       navigate('/login', { replace: true });
     } catch (e2) {
       setErr(apiError(e2));
@@ -50,14 +51,14 @@ export default function ResetPassword() {
             <form onSubmit={submit}>
               <div className="form-group">
                 <label>New password</label>
-                <input className="form-input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
               <div className="form-group">
                 <label>Confirm password</label>
-                <input className="form-input" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+                <PasswordInput required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
               </div>
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
-                {busy ? <span className="spinner" /> : <i className="ri-lock-line" />} Update password
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-lock" />} Update password
               </button>
             </form>
           </>

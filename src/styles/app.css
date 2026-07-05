@@ -5,6 +5,17 @@
    from style.css.
    ============================================================ */
 
+/* ── Custom scrollbars (whole app) ── */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,107,0,0.55) rgba(255,255,255,0.04); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--fire), var(--magenta)); border-radius: 99px; border: 2px solid var(--bg); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--fire-2), var(--magenta)); border: 2px solid var(--bg); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+/* Thin variant for inner scroll areas (chat, tables, modals) */
+.chat-thread::-webkit-scrollbar, .table-wrap::-webkit-scrollbar, .chat-groups::-webkit-scrollbar,
+.modal::-webkit-scrollbar, .admin-sidebar::-webkit-scrollbar { width: 7px; height: 7px; }
+
 /* ── Toast stack ── */
 .toast-stack { position: fixed; top: 80px; right: 20px; z-index: 9100; display: flex; flex-direction: column; gap: 10px; }
 .toast-stack .toast { position: relative; top: auto; right: auto; }
@@ -328,6 +339,55 @@ table.data-table { width: 100%; border-collapse: collapse; min-width: 640px; }
   .chat-wrap.has-active .chat-panel { display: flex; }
   .chat-back { display: inline-flex; }
 }
+
+/* ============================================================
+   ADMIN DASHBOARD — distinct sidebar layout (separate from the
+   public cyberpunk site chrome).
+   ============================================================ */
+.admin-shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; background: var(--bg); }
+.admin-sidebar { background: linear-gradient(180deg, var(--bg-2), var(--bg)); border-right: 1px solid var(--glass-bdr); padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.admin-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+.badge-shield { width: 38px; height: 38px; border-radius: 11px; background: var(--grad-fire); display: flex; align-items: center; justify-content: center; color: var(--text-inv); box-shadow: 0 0 18px var(--fire-glow); flex-shrink: 0; }
+.admin-nav-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-3); padding: 14px 10px 5px; font-weight: 700; }
+.admin-link { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: var(--r); color: var(--text-2); font-size: 0.88rem; font-weight: 500; transition: all var(--t); background: none; border: 1px solid transparent; cursor: pointer; width: 100%; text-align: left; }
+.admin-link i { width: 18px; text-align: center; }
+.admin-link:hover { background: var(--glass-2); color: var(--text); }
+.admin-link.active { background: rgba(255,107,0,0.12); color: var(--fire-2); border-color: rgba(255,107,0,0.25); }
+.admin-sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--glass-bdr); display: flex; flex-direction: column; gap: 4px; }
+.admin-main { min-width: 0; }
+.admin-topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 28px; border-bottom: 1px solid var(--glass-bdr); background: rgba(11,13,23,0.7); backdrop-filter: blur(14px); position: sticky; top: 0; z-index: 10; }
+.admin-topbar h1 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+.admin-topbar .sub { color: var(--text-3); font-size: 0.76rem; }
+.admin-content { padding: 26px 28px 60px; }
+.admin-user-chip { display: flex; align-items: center; gap: 10px; }
+.admin-user-chip img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid transparent; background: linear-gradient(var(--surface),var(--surface)) padding-box, var(--grad-fire) border-box; }
+.admin-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.admin-stat { padding: 20px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--glass-bdr); transition: all var(--t); }
+.admin-stat:hover { border-color: rgba(255,107,0,0.25); transform: translateY(-2px); }
+.admin-stat .ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; margin-bottom: 12px; background: rgba(255,107,0,0.12); color: var(--fire); }
+.admin-stat .val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; line-height: 1; }
+.admin-stat .lbl { color: var(--text-3); font-size: 0.76rem; margin-top: 4px; }
+.role-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill); font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.role-badge.super { background: var(--grad-fire); color: var(--text-inv); }
+.role-badge.admin { background: rgba(0,212,255,0.15); color: var(--cyan); border: 1px solid rgba(0,212,255,0.3); }
+.admin-clickable { color: var(--fire-2); cursor: pointer; font-weight: 600; }
+.admin-clickable:hover { text-decoration: underline; }
+.doc-thumb { width: 100%; height: 120px; object-fit: cover; border-radius: var(--r); border: 1px solid var(--glass-bdr); }
+.admin-profile-hero { padding: 32px; border-radius: var(--r-xl); background: var(--grad-surface), var(--surface); border: 1px solid rgba(255,107,0,0.25); display: flex; align-items: center; gap: 22px; flex-wrap: wrap; box-shadow: var(--shadow-fire); }
+.admin-profile-hero .profile-avatar { width: 96px; height: 96px; }
+
+@media (max-width: 860px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-sidebar { position: sticky; top: 0; height: auto; flex-direction: row; overflow-x: auto; gap: 4px; padding: 10px; align-items: center; z-index: 20; }
+  .admin-brand, .admin-nav-label { display: none; }
+  .admin-sidebar-footer { flex-direction: row; margin: 0; padding: 0; border: none; }
+  .admin-link { white-space: nowrap; flex: 0 0 auto; padding: 9px 12px; }
+  .admin-topbar { padding: 12px 16px; }
+  .admin-topbar h1 { font-size: 1.05rem; }
+  .admin-content { padding: 16px; }
+  .admin-stats-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) { .admin-stats-grid { grid-template-columns: 1fr; } }
 
 /* ── Utility ── */
 .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 16px; } .mt-4 { margin-top: 24px; }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, paiseToRupee, timeAgo, dateRange, formatDate, PREF_LABEL, AVATAR_FALLBACK } from '../lib/helpers.js';
@@ -7,20 +7,20 @@ import { toast } from '../lib/toast.js';
 import TripCard from '../components/TripCard.jsx';
 
 const TABS = [
-  { key: 'overview', label: 'Overview', icon: 'ri-dashboard-line' },
-  { key: 'trips', label: 'My Trips', icon: 'ri-map-2-line' },
-  { key: 'notifications', label: 'Notifications', icon: 'ri-notification-3-line' },
-  { key: 'payments', label: 'Payments', icon: 'ri-bank-card-line' },
-  { key: 'settings', label: 'Settings', icon: 'ri-settings-3-line' },
+  { key: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
+  { key: 'trips', label: 'My Trips', icon: 'fa-solid fa-map-location-dot' },
+  { key: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
+  { key: 'payments', label: 'Payments', icon: 'fa-solid fa-credit-card' },
+  { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear' },
 ];
 
 const NOTIF_ICON = {
-  welcome: 'ri-hand-heart-line',
-  trip_interest: 'ri-fire-line',
-  payment: 'ri-bank-card-line',
-  connection: 'ri-user-add-line',
-  verification: 'ri-verified-badge-line',
-  system: 'ri-information-line',
+  welcome: 'fa-solid fa-hand-holding-heart',
+  trip_interest: 'fa-solid fa-fire',
+  payment: 'fa-solid fa-credit-card',
+  connection: 'fa-solid fa-user-plus',
+  verification: 'fa-solid fa-circle-check',
+  system: 'fa-solid fa-circle-info',
 };
 
 export default function Dashboard() {
@@ -40,6 +40,11 @@ export default function Dashboard() {
     api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
   }, []);
 
+  // Admins get the dedicated admin dashboard, not the member one.
+  if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+    return <Navigate to="/admin" replace />;
+  }
+
   const unread = notifs.filter((n) => !n.isRead).length;
   const pendingReceived = connections.filter((c) => c.status === 'pending' && String(c.receiver?._id) === String(user?.id));
   const acceptedCount = connections.filter((c) => c.status === 'accepted').length;
@@ -53,9 +58,9 @@ export default function Dashboard() {
     try {
       await api.patch(`/members/connect/${id}`, { action });
       setConnections((cs) => cs.map((c) => (c._id === id ? { ...c, status: action === 'accept' ? 'accepted' : 'rejected' } : c)));
-      toast(action === 'accept' ? '🤝' : '👋', action === 'accept' ? 'Connection accepted!' : 'Request declined');
+      toast(action === 'accept' ? 'fa-solid fa-handshake' : 'fa-solid fa-hand', action === 'accept' ? 'Connection accepted!' : 'Request declined');
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
@@ -64,9 +69,9 @@ export default function Dashboard() {
     try {
       await api.delete(`/trips/${id}`);
       setTrips((ts) => ts.filter((t) => t._id !== id));
-      toast('🗑️', 'Trip deleted');
+      toast('fa-solid fa-trash', 'Trip deleted');
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
@@ -88,13 +93,13 @@ export default function Dashboard() {
               {user?.membershipActive && user?.membershipExpiresAt && (
                 <span className="badge badge-gold">Valid till {formatDate(user.membershipExpiresAt)}</span>
               )}
-              {user?.isVerified && <span className="badge badge-cyan"><i className="ri-verified-badge-fill" /> Verified</span>}
+              {user?.isVerified && <span className="badge badge-cyan"><i className="fa-solid fa-circle-check" /> Verified</span>}
               {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {!user?.membershipPaid && <Link to="/join" className="btn btn-primary btn-sm"><i className="ri-vip-crown-line" /> Activate</Link>}
-            <Link to="/plan-trip" className="btn btn-outline btn-sm"><i className="ri-map-2-line" /> Plan Trip</Link>
+            {!user?.membershipPaid && <Link to="/join" className="btn btn-primary btn-sm"><i className="fa-solid fa-crown" /> Activate</Link>}
+            <Link to="/plan-trip" className="btn btn-outline btn-sm"><i className="fa-solid fa-map-location-dot" /> Plan Trip</Link>
           </div>
         </div>
 
@@ -103,10 +108,10 @@ export default function Dashboard() {
           <div className="card mb-4" style={{ padding: 20, borderColor: 'rgba(224,64,251,0.4)' }}>
             <div className="row-between">
               <div>
-                <strong>Complete your profile to unlock trips 📝</strong>
+                <strong>Complete your profile to unlock trips</strong>
                 <p className="text-muted" style={{ fontSize: '0.85rem' }}>Add your name, city, interests, vehicle &amp; ID. You can't plan or join trips until it's done.</p>
               </div>
-              <Link to="/complete-profile" className="btn btn-primary btn-sm"><i className="ri-user-settings-line" /> Complete now</Link>
+              <Link to="/complete-profile" className="btn btn-primary btn-sm"><i className="fa-solid fa-user-gear" /> Complete now</Link>
             </div>
           </div>
         )}
@@ -150,9 +155,9 @@ export default function Dashboard() {
                   <span className="id-chip">{user?.id}</span>
                   <button
                     className="btn btn-sm btn-outline"
-                    onClick={() => { navigator.clipboard?.writeText(user?.id || ''); toast('📋', 'User ID copied — share it to be added to groups'); }}
+                    onClick={() => { navigator.clipboard?.writeText(user?.id || ''); toast('fa-solid fa-clipboard', 'User ID copied — share it to be added to groups'); }}
                   >
-                    <i className="ri-file-copy-line" />
+                    <i className="fa-solid fa-copy" />
                   </button>
                 </span>
               </div>
@@ -170,17 +175,17 @@ export default function Dashboard() {
                 <div className="card mb-3" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
                   <h4 style={{ fontFamily: 'var(--font-display)' }}>Activate your membership</h4>
                   <p className="text-muted mt-2">Unlock trip creation, joining and connections.</p>
-                  <Link to="/join" className="btn btn-primary mt-3"><i className="ri-vip-crown-line" /> View Plans</Link>
+                  <Link to="/join" className="btn btn-primary mt-3"><i className="fa-solid fa-crown" /> View Plans</Link>
                 </div>
               )}
               <div className="card" style={{ padding: 24 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick actions</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Link to="/trips" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-compass-line" /> Browse Trips</Link>
-                  <Link to="/plan-trip" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-map-2-line" /> Plan a Trip</Link>
-                  <Link to="/chat" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-chat-3-line" /> Messages</Link>
-                  <Link to="/members" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-group-line" /> Find Members</Link>
-                  <Link to="/gallery" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="ri-image-line" /> Gallery</Link>
+                  <Link to="/trips" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-compass" /> Browse Trips</Link>
+                  <Link to="/plan-trip" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-map-location-dot" /> Plan a Trip</Link>
+                  <Link to="/chat" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-comment-dots" /> Messages</Link>
+                  <Link to="/members" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-users" /> Find Members</Link>
+                  <Link to="/gallery" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-regular fa-image" /> Gallery</Link>
                 </div>
               </div>
             </div>
@@ -192,10 +197,10 @@ export default function Dashboard() {
           <>
             <div className="row-between mb-3">
               <h4 style={{ fontFamily: 'var(--font-display)' }}>Trips you host</h4>
-              <Link to="/plan-trip" className="btn btn-sm btn-primary"><i className="ri-add-line" /> Host a Trip</Link>
+              <Link to="/plan-trip" className="btn btn-sm btn-primary"><i className="fa-solid fa-plus" /> Host a Trip</Link>
             </div>
             {trips.length === 0 ? (
-              <div className="empty-state"><i className="ri-map-2-line" /><p>You haven't hosted any trips yet.</p><Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link></div>
+              <div className="empty-state"><i className="fa-solid fa-map-location-dot" /><p>You haven't hosted any trips yet.</p><Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link></div>
             ) : (
               <div className="trips-grid">
                 {trips.map((t) => (
@@ -206,7 +211,7 @@ export default function Dashboard() {
                       style={{ width: '100%', justifyContent: 'center', marginTop: 8, background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
                       onClick={() => removeTrip(t._id)}
                     >
-                      <i className="ri-delete-bin-line" /> Delete trip
+                      <i className="fa-solid fa-trash" /> Delete trip
                     </button>
                   </div>
                 ))}
@@ -241,11 +246,11 @@ export default function Dashboard() {
               {unread > 0 && <button className="btn btn-sm btn-outline" onClick={markRead}>Mark all read</button>}
             </div>
             {notifs.length === 0 ? (
-              <div className="empty-state"><i className="ri-notification-off-line" /><p>No notifications yet.</p></div>
+              <div className="empty-state"><i className="fa-solid fa-bell-slash" /><p>No notifications yet.</p></div>
             ) : (
               notifs.map((n) => (
                 <div key={n._id} className={`notif-item${n.isRead ? '' : ' unread'}`}>
-                  <div className="notif-icon"><i className={NOTIF_ICON[n.type] || 'ri-information-line'} /></div>
+                  <div className="notif-icon"><i className={NOTIF_ICON[n.type] || 'fa-solid fa-circle-info'} /></div>
                   <div style={{ flex: 1 }}>
                     <strong style={{ fontSize: '0.88rem' }}>{n.title}</strong>
                     <p className="text-muted" style={{ fontSize: '0.82rem' }}>{n.message}</p>
@@ -262,11 +267,11 @@ export default function Dashboard() {
         {tab === 'payments' && (
           <div style={{ maxWidth: 680 }}>
             {payments.length === 0 ? (
-              <div className="empty-state"><i className="ri-bank-card-line" /><p>No payments yet.</p>{!user?.membershipActive && <Link to="/join" className="btn btn-primary mt-3">View plans</Link>}</div>
+              <div className="empty-state"><i className="fa-solid fa-credit-card" /><p>No payments yet.</p>{!user?.membershipActive && <Link to="/join" className="btn btn-primary mt-3">View plans</Link>}</div>
             ) : (
               payments.map((p) => (
                 <div key={p._id} className="notif-item">
-                  <div className="notif-icon"><i className="ri-bank-card-line" /></div>
+                  <div className="notif-icon"><i className="fa-solid fa-credit-card" /></div>
                   <div style={{ flex: 1 }}>
                     <strong style={{ fontSize: '0.88rem', textTransform: 'capitalize' }}>{p.purpose}</strong>
                     <p className="text-muted" style={{ fontSize: '0.78rem' }}>
@@ -322,9 +327,9 @@ function SettingsForm({ user, setUser }) {
       if (avatar) fd.append('avatar', avatar);
       const { data } = await api.put('/members/profile', fd);
       setUser(data.user);
-      toast('✅', 'Profile updated!');
+      toast('fa-solid fa-circle-check', 'Profile updated!');
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -333,7 +338,7 @@ function SettingsForm({ user, setUser }) {
   const logout = async () => {
     await api.post('/auth/logout').catch(() => {});
     clear();
-    toast('👋', 'Logged out');
+    toast('fa-solid fa-hand', 'Logged out');
   };
 
   return (
@@ -359,13 +364,13 @@ function SettingsForm({ user, setUser }) {
           <div className="form-group"><label>Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} /></div>
         </div>
         <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} /></div>
-        <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="ri-save-line" />} Save Changes</button>
+        <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes</button>
       </form>
 
       <div className="card" style={{ padding: 24, alignSelf: 'flex-start', borderColor: 'rgba(239,68,68,0.25)' }}>
         <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
         <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
-        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="ri-logout-box-line" /> Logout</button>
+        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ export default function Trips() {
     <>
       <PageHero
         tag="Upcoming Adventures"
-        tagIcon="ri-compass-3-fill"
+        tagIcon="fa-solid fa-compass"
         title="Explore"
         highlight="Trips"
         sub="Find your next adventure. Filter by vehicle, budget or destination and join a verified group."
@@ -64,7 +64,7 @@ export default function Trips() {
               setQuery(search.trim());
             }}
           >
-            <i className="ri-search-line" style={{ color: 'var(--text-3)' }} />
+            <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-3)' }} />
             <input
               placeholder="Search destination or trip name…"
               value={search}
@@ -100,10 +100,10 @@ export default function Trips() {
             <Loader label="Loading trips…" />
           ) : trips.length === 0 ? (
             <div className="empty-state">
-              <i className="ri-compass-3-line" />
+              <i className="fa-solid fa-compass" />
               <p>No trips match your filters.</p>
               <Link to="/plan-trip" className="btn btn-primary mt-3">
-                <i className="ri-add-line" /> Plan a Trip
+                <i className="fa-solid fa-plus" /> Plan a Trip
               </Link>
             </div>
           ) : (

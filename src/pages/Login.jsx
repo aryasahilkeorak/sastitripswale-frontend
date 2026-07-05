@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
-      toast('👋', `Welcome back, ${data.user.fullName.split(' ')[0]}!`);
+      toast('fa-solid fa-hand', `Welcome back, ${data.user.fullName.split(' ')[0]}!`);
       const dest = location.state?.from || (data.user.role === 'admin' ? '/admin' : '/dashboard');
       navigate(dest, { replace: true });
     } catch (e2) {
@@ -34,7 +35,7 @@ export default function Login() {
     <div className="auth-wrap">
       <div className="page-hero-bg" />
       <div className="auth-card">
-        <h1>Welcome back 👋</h1>
+        <h1>Welcome back <i className="fa-solid fa-hand" /></h1>
         <p className="muted">Log in to plan trips, join groups and connect.</p>
 
         {err && (
@@ -50,7 +51,7 @@ export default function Login() {
           </div>
           <div className="form-group">
             <label>Password</label>
-            <input className="form-input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div style={{ textAlign: 'right', marginBottom: 16 }}>
             <Link to="/forgot-password" style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>
@@ -58,7 +59,7 @@ export default function Login() {
             </Link>
           </div>
           <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
-            {busy ? <span className="spinner" /> : <i className="ri-login-box-line" />} Log In
+            {busy ? <span className="spinner" /> : <i className="fa-solid fa-right-to-bracket" />} Log In
           </button>
         </form>
 

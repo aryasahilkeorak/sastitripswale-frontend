@@ -56,13 +56,13 @@ export default function Lightbox({ images, index, onClose, onIndex }) {
         }}
       />
       <button className="lb-btn" style={lbBtn('top')} onClick={onClose} aria-label="Close">
-        ✕
+        <i className="fa-solid fa-xmark" />
       </button>
       <button className="lb-btn" style={lbBtn('left')} onClick={() => go(-1)} aria-label="Previous">
-        ‹
+        <i className="fa-solid fa-angle-left" />
       </button>
       <button className="lb-btn" style={lbBtn('right')} onClick={() => go(1)} aria-label="Next">
-        ›
+        <i className="fa-solid fa-angle-right" />
       </button>
     </div>
   );

@@ -66,6 +66,16 @@ const DEFAULT_AVATAR_SVG =
   "<path d='M20 90c0-17 13-28 30-28s30 11 30 28z' fill='#5a6380'/></svg>";
 export const AVATAR_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
 
+// Fallback icon for non-image documents (e.g. PDFs) shown as thumbnails.
+const DOC_ICON_SVG =
+  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>" +
+  "<rect width='100' height='100' fill='#1a1f35'/>" +
+  "<rect x='30' y='22' width='40' height='56' rx='4' fill='#5a6380'/>" +
+  "<rect x='37' y='34' width='26' height='4' rx='2' fill='#0f1220'/>" +
+  "<rect x='37' y='44' width='26' height='4' rx='2' fill='#0f1220'/>" +
+  "<rect x='37' y='54' width='18' height='4' rx='2' fill='#0f1220'/></svg>";
+export const DOC_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DOC_ICON_SVG)}`;
+
 // Plan pricing (kept in sync with backend utils/plans.js) for display.
 export const PLAN_PRICES = {
   single: { '6m': 199, '1y': 299 },

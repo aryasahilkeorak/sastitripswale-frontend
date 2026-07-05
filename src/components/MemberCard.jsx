@@ -14,7 +14,7 @@ export default function MemberCard({ member }) {
   const connect = async (e) => {
     e.preventDefault();
     if (!accessToken) {
-      toast('🔒', 'Log in to connect with members');
+      toast('fa-solid fa-lock', 'Log in to connect with members');
       navigate('/login');
       return;
     }
@@ -22,9 +22,9 @@ export default function MemberCard({ member }) {
     try {
       const { data } = await api.post('/members/connect', { receiverId: member.id });
       setConn({ status: data.status, direction: 'sent' });
-      toast('🤝', `Connection request sent to ${member.fullName}!`);
+      toast('fa-solid fa-handshake', `Connection request sent to ${member.fullName}!`);
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -40,19 +40,19 @@ export default function MemberCard({ member }) {
   } else if (conn?.status === 'accepted') {
     btn = (
       <span className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(16,185,129,0.15)', color: '#6ee7b7' }}>
-        <i className="ri-check-double-line" /> Connected
+        <i className="fa-solid fa-check-double" /> Connected
       </span>
     );
   } else if (conn?.status === 'pending') {
     btn = (
       <span className="btn btn-sm btn-outline" style={{ width: '100%', justifyContent: 'center', opacity: 0.7 }}>
-        <i className="ri-time-line" /> {conn.direction === 'received' ? 'Respond in dashboard' : 'Requested'}
+        <i className="fa-regular fa-clock" /> {conn.direction === 'received' ? 'Respond in dashboard' : 'Requested'}
       </span>
     );
   } else {
     btn = (
       <button className="btn btn-sm btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={connect} disabled={busy}>
-        <i className="ri-user-add-line" /> Connect
+        <i className="fa-solid fa-user-plus" /> Connect
       </button>
     );
   }
@@ -68,7 +68,7 @@ export default function MemberCard({ member }) {
       <h3>{member.fullName}</h3>
       {member.isVerified && (
         <div className="verified-badge" style={{ justifyContent: 'center' }}>
-          <i className="ri-verified-badge-fill" /> Verified
+          <i className="fa-solid fa-circle-check" /> Verified
         </div>
       )}
       <p className="member-meta">

@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <Link to="/" className="nav-brand" style={{ fontSize: '1.4rem' }}>
-              <div className="nav-brand-icon">🏍️</div>
+              <div className="nav-brand-icon"><i className="fa-solid fa-motorcycle" /></div>
               <span className="nav-brand-text">SastiTripWale</span>
             </Link>
             <p>
@@ -18,10 +18,10 @@ export default function Footer() {
               By <strong style={{ color: 'var(--fire-2)' }}>Arya Sahil Keorak</strong>
             </p>
             <div className="social-links" style={{ marginTop: 16 }}>
-              <a href="#" aria-label="Instagram"><i className="fab fa-instagram" /></a>
-              <a href="#" aria-label="Facebook"><i className="fab fa-facebook" /></a>
-              <a href="#" aria-label="YouTube"><i className="fab fa-youtube" /></a>
-              <a href="https://wa.me/919876543210" aria-label="WhatsApp"><i className="fab fa-whatsapp" /></a>
+              <a href="#" aria-label="Instagram"><i className="fa-brands fa-instagram" /></a>
+              <a href="#" aria-label="Facebook"><i className="fa-brands fa-facebook-f" /></a>
+              <a href="#" aria-label="YouTube"><i className="fa-brands fa-youtube" /></a>
+              <a href="https://wa.me/919876543210" aria-label="WhatsApp"><i className="fa-brands fa-whatsapp" /></a>
             </div>
           </div>
           <div className="footer-col">
@@ -46,14 +46,14 @@ export default function Footer() {
           <div className="footer-col">
             <h4>Contact</h4>
             <ul>
-              <li><a href="mailto:hello@sastitripwale.com"><i className="fas fa-envelope" /> hello@sastitripwale.com</a></li>
-              <li><a href="tel:+919876543210"><i className="fas fa-phone" /> +91 98765 43210</a></li>
-              <li><a href="#"><i className="fas fa-location-dot" /> Delhi, India</a></li>
+              <li><a href="mailto:hello@sastitripwale.com"><i className="fa-solid fa-envelope" /> hello@sastitripwale.com</a></li>
+              <li><a href="tel:+919876543210"><i className="fa-solid fa-phone" /> +91 98765 43210</a></li>
+              <li><a href="#"><i className="fa-solid fa-location-dot" /> Delhi, India</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2025 SastiTripWale.com · Made with ❤️ by Arya Sahil Keorak</p>
+          <p>© 2025 SastiTripWale.com · Made with <i className="fa-solid fa-heart" style={{ color: '#ff5a7a' }} /> by Arya Sahil Keorak</p>
           <p>Travel Together · Split Expenses · Make New Travel Friends</p>
         </div>
       </div>

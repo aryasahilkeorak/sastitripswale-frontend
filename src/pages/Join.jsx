@@ -5,11 +5,12 @@ import { useAuth } from '../store/auth.js';
 import { rupee, planPrice, PREF_LABEL } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Modal from '../components/Modal.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
 
 const PREFS = [
-  { key: 'male', label: 'Only Male', icon: 'ri-men-line', note: 'Travel with male co-travelers' },
-  { key: 'female', label: 'Only Female', icon: 'ri-women-line', note: 'Women-only verified groups' },
-  { key: 'both', label: 'Male + Female', icon: 'ri-group-line', note: 'Mixed verified groups' },
+  { key: 'male', label: 'Only Male', icon: 'fa-solid fa-mars', note: 'Travel with male co-travelers' },
+  { key: 'female', label: 'Only Female', icon: 'fa-solid fa-venus', note: 'Women-only verified groups' },
+  { key: 'both', label: 'Male + Female', icon: 'fa-solid fa-users', note: 'Mixed verified groups' },
 ];
 
 const DURATIONS = [
@@ -96,7 +97,7 @@ export default function Join() {
 
   const register = async () => {
     const err = validateStep1();
-    if (err) return toast('⚠️', err);
+    if (err) return toast('fa-solid fa-triangle-exclamation', err);
     setBusy(true);
     try {
       const { data } = await api.post('/auth/register', {
@@ -107,11 +108,11 @@ export default function Join() {
         coTravelerPreference: form.coTravelerPreference,
       });
       setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
-      toast('🎉', 'Account created! Choose your plan.');
+      toast('fa-solid fa-champagne-glasses', 'Account created! Choose your plan.');
       setStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
-      toast('❌', apiError(e, 'Registration failed'));
+      toast('fa-solid fa-circle-xmark', apiError(e, 'Registration failed'));
     } finally {
       setBusy(false);
     }
@@ -123,9 +124,9 @@ export default function Join() {
     try {
       const { data } = await api.post('/payments/validate-coupon', { code, duration });
       setApplied({ code: data.coupon, finalRupees: data.finalAmountRupees, isFree: data.isFree });
-      toast('🎟️', data.isFree ? 'Coupon applied — FREE! 🎊' : `Coupon applied — pay ${rupee(data.finalAmountRupees)}`);
+      toast('fa-solid fa-ticket', data.isFree ? 'Coupon applied — FREE!' : `Coupon applied — pay ${rupee(data.finalAmountRupees)}`);
     } catch (e) {
-      toast('❌', apiError(e, 'Invalid coupon'));
+      toast('fa-solid fa-circle-xmark', apiError(e, 'Invalid coupon'));
     }
   };
 
@@ -140,16 +141,16 @@ export default function Join() {
     try {
       const { data } = await api.post('/payments/create-order', { duration, coupon: applied?.code || undefined });
       if (data.isFree) {
-        toast('✅', 'Membership activated!');
+        toast('fa-solid fa-circle-check', 'Membership activated!');
         return finish();
       }
       if (data.testMode) {
         await api.post('/payments/confirm-test');
-        toast('✅', 'Payment successful (test mode)!');
+        toast('fa-solid fa-circle-check', 'Payment successful (test mode)!');
         return finish();
       }
       const ok = await loadRazorpay();
-      if (!ok) return toast('❌', 'Could not load payment gateway.');
+      if (!ok) return toast('fa-solid fa-circle-xmark', 'Could not load payment gateway.');
       const rzp = new window.Razorpay({
         key: data.keyId,
         amount: data.amount,
@@ -166,17 +167,17 @@ export default function Join() {
               razorpay_payment_id: resp.razorpay_payment_id,
               razorpay_signature: resp.razorpay_signature,
             });
-            toast('✅', 'Payment successful!');
+            toast('fa-solid fa-circle-check', 'Payment successful!');
             finish();
           } catch (e) {
-            toast('❌', apiError(e, 'Verification failed'));
+            toast('fa-solid fa-circle-xmark', apiError(e, 'Verification failed'));
           }
         },
-        modal: { ondismiss: () => toast('ℹ️', 'Payment cancelled') },
+        modal: { ondismiss: () => toast('fa-solid fa-circle-info', 'Payment cancelled') },
       });
       rzp.open();
     } catch (e) {
-      toast('❌', apiError(e, 'Could not start payment'));
+      toast('fa-solid fa-circle-xmark', apiError(e, 'Could not start payment'));
     } finally {
       setBusy(false);
     }
@@ -186,7 +187,7 @@ export default function Join() {
     <section style={{ paddingTop: 110 }}>
       <div className="container" style={{ maxWidth: 560 }}>
         <div className="text-center mb-4">
-          <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="ri-rocket-fill" /> Join the Tribe</div>
+          <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-rocket" /> Join the Tribe</div>
           <h1 className="section-title" style={{ fontSize: '2rem' }}>Become a <span className="highlight">Member</span></h1>
         </div>
 
@@ -195,7 +196,7 @@ export default function Join() {
           {[1, 2].map((n, i) => (
             <Fragment key={n}>
               <div className={`step-dot${step === n ? ' active' : step > n ? ' done' : ''}`}>
-                {step > n ? <i className="ri-check-line" /> : n}
+                {step > n ? <i className="fa-solid fa-check" /> : n}
               </div>
               {i < 1 && <div className={`step-line${step > n ? ' done' : ''}`} />}
             </Fragment>
@@ -209,7 +210,7 @@ export default function Join() {
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Create your account</h3>
               <div className="form-group"><label>Email *</label><input className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" /></div>
               <div className="form-group"><label>Mobile number *</label><input className="form-input" value={form.mobile} onChange={set('mobile')} placeholder="10-digit mobile" /></div>
-              <div className="form-group"><label>Password *</label><input className="form-input" type="password" value={form.password} onChange={set('password')} placeholder="min 6 characters" /></div>
+              <div className="form-group"><label>Password *</label><PasswordInput value={form.password} onChange={set('password')} placeholder="min 6 characters" /></div>
               <div className="form-group">
                 <label>Your gender *</label>
                 <select className="form-input" value={form.gender} onChange={set('gender')}>
@@ -238,14 +239,14 @@ export default function Join() {
                         <strong style={{ fontSize: '0.92rem' }}>{p.label}</strong>
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>{p.note}</div>
                       </div>
-                      <i className={form.coTravelerPreference === p.key ? 'ri-radio-button-line' : 'ri-checkbox-blank-circle-line'} style={{ color: form.coTravelerPreference === p.key ? 'var(--fire)' : 'var(--text-3)' }} />
+                      <i className={form.coTravelerPreference === p.key ? 'fa-solid fa-circle-dot' : 'fa-regular fa-circle'} style={{ color: form.coTravelerPreference === p.key ? 'var(--fire)' : 'var(--text-3)' }} />
                     </button>
                   ))}
                 </div>
               </div>
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={register} disabled={busy}>
-                {busy ? <span className="spinner" /> : <i className="ri-arrow-right-line" />} Continue to Plan
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-arrow-right" />} Continue to Plan
               </button>
               <p className="auth-switch">Already a member? <Link to="/login">Log in</Link></p>
             </div>
@@ -289,34 +290,34 @@ export default function Join() {
                   {rupee(payable)}
                   {applied && payable !== listPrice && <span className="price-strike">{rupee(listPrice)}</span>}
                 </div>
-                {applied?.isFree && <div style={{ color: '#6ee7b7', fontSize: '0.85rem', fontWeight: 700 }}>FREE with {applied.code} 🎉</div>}
+                {applied?.isFree && <div style={{ color: '#6ee7b7', fontSize: '0.85rem', fontWeight: 700 }}>FREE with {applied.code}</div>}
               </div>
 
               <div className="search-bar mb-3">
-                <i className="ri-coupon-3-line" style={{ color: 'var(--text-3)' }} />
+                <i className="fa-solid fa-ticket" style={{ color: 'var(--text-3)' }} />
                 <input placeholder="Coupon code (try FREEJOIN)" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
                 <button className="btn btn-sm btn-outline" type="button" onClick={applyCoupon}>Apply</button>
               </div>
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={pay} disabled={busy}>
-                {busy ? <span className="spinner" /> : <i className="ri-secure-payment-line" />}
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-shield-halved" />}
                 {applied?.isFree ? ' Activate Free Membership' : ` Pay ${rupee(payable)}`}
               </button>
               <p className="text-muted" style={{ fontSize: '0.72rem', textAlign: 'center', marginTop: 12 }}>
-                🔒 Secure payment. Next: complete your profile to start planning &amp; joining trips.
+                <i className="fa-solid fa-lock" /> Secure payment. Next: complete your profile to start planning &amp; joining trips.
               </p>
             </div>
           )}
         </div>
       </div>
 
-      <Modal open={success} onClose={() => navigate('/complete-profile')} title="🎉 Membership active!">
+      <Modal open={success} onClose={() => navigate('/complete-profile')} title="Membership active!">
         <p style={{ color: 'var(--text-2)', lineHeight: 1.8 }}>
           One last step — complete your profile (name, city, interests, vehicle &amp; ID). You need a
           complete profile to plan or join trips.
         </p>
         <button className="btn btn-primary btn-lg mt-3" style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate('/complete-profile')}>
-          <i className="ri-user-settings-line" /> Complete My Profile
+          <i className="fa-solid fa-user-gear" /> Complete My Profile
         </button>
       </Modal>
     </section>

@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom';
 import PageHero from '../components/PageHero.jsx';
 
 const VALUES = [
-  { icon: '🛡️', h: 'Safety First', p: 'Every member is ID-verified before joining any group.' },
-  { icon: '💰', h: 'Budget Travel', p: 'Split costs fairly so anyone can afford to explore India.' },
-  { icon: '🤝', h: 'Real Connections', p: 'Turn co-travelers into lifelong friends.' },
-  { icon: '🗺️', h: 'Explore India', p: 'From the Himalayas to the beaches of the south.' },
-  { icon: '⚡', h: 'Easy Planning', p: 'Post a trip in minutes and let members join.' },
-  { icon: '👩', h: 'Women Safety', p: 'Dedicated women-safe verified groups.' },
+  { icon: 'fa-solid fa-shield-halved', h: 'Safety First', p: 'Every member is ID-verified before joining any group.' },
+  { icon: 'fa-solid fa-wallet', h: 'Budget Travel', p: 'Split costs fairly so anyone can afford to explore India.' },
+  { icon: 'fa-solid fa-handshake', h: 'Real Connections', p: 'Turn co-travelers into lifelong friends.' },
+  { icon: 'fa-solid fa-map-location-dot', h: 'Explore India', p: 'From the Himalayas to the beaches of the south.' },
+  { icon: 'fa-solid fa-bolt', h: 'Easy Planning', p: 'Post a trip in minutes and let members join.' },
+  { icon: 'fa-solid fa-venus', h: 'Women Safety', p: 'Dedicated women-safe verified groups.' },
 ];
 
 // Edit these names, photos and social links to your real team details.
@@ -18,10 +18,10 @@ const TEAM = [
     photo: 'https://i.pravatar.cc/400?img=12',
     quote: 'I built SastiTripWale after too many solo trips got cancelled. Travel should never wait — here, you always find your tribe.',
     socials: [
-      { icon: 'ri-instagram-line', url: 'https://instagram.com/' },
-      { icon: 'ri-linkedin-box-line', url: 'https://linkedin.com/' },
-      { icon: 'ri-twitter-x-line', url: 'https://x.com/' },
-      { icon: 'ri-whatsapp-line', url: 'https://wa.me/919876543210' },
+      { icon: 'fa-brands fa-instagram', url: 'https://instagram.com/' },
+      { icon: 'fa-brands fa-linkedin', url: 'https://linkedin.com/' },
+      { icon: 'fa-brands fa-x-twitter', url: 'https://x.com/' },
+      { icon: 'fa-brands fa-whatsapp', url: 'https://wa.me/919876543210' },
     ],
   },
   {
@@ -30,10 +30,10 @@ const TEAM = [
     photo: 'https://i.pravatar.cc/400?img=33',
     quote: 'Every road in India has a story. We help you find the right people to share it with — safely and affordably.',
     socials: [
-      { icon: 'ri-instagram-line', url: 'https://instagram.com/' },
-      { icon: 'ri-linkedin-box-line', url: 'https://linkedin.com/' },
-      { icon: 'ri-twitter-x-line', url: 'https://x.com/' },
-      { icon: 'ri-facebook-line', url: 'https://facebook.com/' },
+      { icon: 'fa-brands fa-instagram', url: 'https://instagram.com/' },
+      { icon: 'fa-brands fa-linkedin', url: 'https://linkedin.com/' },
+      { icon: 'fa-brands fa-x-twitter', url: 'https://x.com/' },
+      { icon: 'fa-brands fa-facebook-f', url: 'https://facebook.com/' },
     ],
   },
 ];
@@ -41,13 +41,13 @@ const TEAM = [
 export default function About() {
   return (
     <>
-      <PageHero tag="Our Story" tagIcon="ri-information-fill" title="About" highlight="SastiTripWale" sub="India's #1 verified travel community — travel together, split expenses, make friends." />
+      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripWale" sub="India's #1 verified travel community — travel together, split expenses, make friends." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
           <div className="grid-2 mb-4">
             <div className="card" style={{ padding: 32 }}>
-              <div className="why-icon" style={{ background: 'rgba(255,107,0,0.12)' }}>🎯</div>
+              <div className="why-icon" style={{ background: 'rgba(255,107,0,0.12)' }}><i className="fa-solid fa-bullseye" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Mission</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
                 To make travel affordable, safe and social for every young Indian — by connecting solo
@@ -55,7 +55,7 @@ export default function About() {
               </p>
             </div>
             <div className="card" style={{ padding: 32 }}>
-              <div className="why-icon" style={{ background: 'rgba(224,64,251,0.12)' }}>🔭</div>
+              <div className="why-icon" style={{ background: 'rgba(224,64,251,0.12)' }}><i className="fa-solid fa-binoculars" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Vision</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
                 A India where no one skips a trip for lack of company or budget — where every road,
@@ -66,7 +66,7 @@ export default function About() {
 
           {/* Team — Founder + Co-Founder */}
           <div className="text-center fade-up mb-4">
-            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="ri-team-fill" /> Our Team</div>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-people-group" /> Our Team</div>
             <h2 className="section-title" style={{ fontSize: '2rem' }}>Meet the <span className="highlight">Founders</span></h2>
           </div>
           <div className="grid-2 mb-4">
@@ -88,7 +88,7 @@ export default function About() {
           </div>
 
           <div className="text-center mb-4">
-            <Link to="/join" className="btn btn-primary"><i className="ri-rocket-line" /> Join the community</Link>
+            <Link to="/join" className="btn btn-primary"><i className="fa-solid fa-rocket" /> Join the community</Link>
           </div>
 
           {/* Values */}
@@ -98,7 +98,7 @@ export default function About() {
           <div className="grid-3">
             {VALUES.map((v) => (
               <div className="why-card fade-up" key={v.h}>
-                <div className="why-icon" style={{ background: 'rgba(255,107,0,0.1)' }}>{v.icon}</div>
+                <div className="why-icon" style={{ background: 'rgba(255,107,0,0.1)' }}><i className={v.icon} /></div>
                 <h3>{v.h}</h3>
                 <p>{v.p}</p>
               </div>

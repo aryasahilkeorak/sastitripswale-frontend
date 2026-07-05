@@ -55,7 +55,7 @@ export default function PlanTrip() {
     e.preventDefault();
     if (!canTrip()) return;
     if (new Date(form.endDate) < new Date(form.startDate)) {
-      toast('⚠️', 'End date must be after start date');
+      toast('fa-solid fa-triangle-exclamation', 'End date must be after start date');
       return;
     }
     setBusy(true);
@@ -64,13 +64,13 @@ export default function PlanTrip() {
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       if (cover) fd.append('cover', cover);
       await api.post('/trips', fd);
-      toast('🗺️', 'Trip posted! Members will start joining soon.');
+      toast('fa-solid fa-map-location-dot', 'Trip posted! Members will start joining soon.');
       setForm(EMPTY);
       setCover(null);
       setCoverPreview('');
       loadMine();
     } catch (err) {
-      if (!handleGateError(err, navigate)) toast('❌', apiError(err));
+      if (!handleGateError(err, navigate)) toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -80,16 +80,16 @@ export default function PlanTrip() {
     if (!window.confirm('Delete this trip?')) return;
     try {
       await api.delete(`/trips/${id}`);
-      toast('🗑️', 'Trip deleted');
+      toast('fa-solid fa-trash', 'Trip deleted');
       loadMine();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
   return (
     <>
-      <PageHero tag="Organize" tagIcon="ri-map-2-fill" title="Plan a" highlight="Trip" sub="Create a trip, set the budget, and let verified travelers join you." />
+      <PageHero tag="Organize" tagIcon="fa-solid fa-map-location-dot" title="Plan a" highlight="Trip" sub="Create a trip, set the budget, and let verified travelers join you." />
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
@@ -97,13 +97,13 @@ export default function PlanTrip() {
             <div className="card mb-4" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
               <strong>Membership required.</strong>
               <p className="text-muted mt-2">Activate a membership (free with coupon FREEJOIN) to post trips.</p>
-              <Link to="/join" className="btn btn-primary mt-3"><i className="ri-vip-crown-line" /> View Plans</Link>
+              <Link to="/join" className="btn btn-primary mt-3"><i className="fa-solid fa-crown" /> View Plans</Link>
             </div>
           ) : !profileDone ? (
             <div className="card mb-4" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
               <strong>Complete your profile first.</strong>
               <p className="text-muted mt-2">Add your name, city, interests, vehicle and ID to plan trips.</p>
-              <Link to="/complete-profile" className="btn btn-primary mt-3"><i className="ri-user-settings-line" /> Complete Profile</Link>
+              <Link to="/complete-profile" className="btn btn-primary mt-3"><i className="fa-solid fa-user-gear" /> Complete Profile</Link>
             </div>
           ) : null}
 
@@ -116,7 +116,7 @@ export default function PlanTrip() {
                 {coverPreview ? (
                   <img src={coverPreview} alt="cover" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 10, marginBottom: 8 }} />
                 ) : (
-                  <i className="ri-image-add-line" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
+                  <i className="fa-solid fa-image" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
                 )}
                 <div className="upload-label">{cover ? cover.name : 'Upload cover photo'}</div>
                 <input ref={fileRef} type="file" accept="image/*" onChange={onCover} />
@@ -152,7 +152,7 @@ export default function PlanTrip() {
               <div className="form-group"><label>Description</label><textarea className="form-input" value={form.description} onChange={set('description')} placeholder="Route, plan, what to expect…" /></div>
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy || !canPlan}>
-                {busy ? <span className="spinner" /> : <i className="ri-send-plane-line" />} Post Trip
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Post Trip
               </button>
             </form>
 
@@ -161,7 +161,7 @@ export default function PlanTrip() {
               <div className="card" style={{ padding: 24, marginBottom: 20 }}>
                 <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My posted trips</h3>
                 {trips.length === 0 ? (
-                  <div className="empty-state-sm"><i className="ri-map-pin-add-line" /><p>No trips yet. Create your first!</p></div>
+                  <div className="empty-state-sm"><i className="fa-solid fa-map-pin" /><p>No trips yet. Create your first!</p></div>
                 ) : (
                   trips.map((t) => (
                     <div key={t._id} className="notif-item" style={{ alignItems: 'center' }}>
@@ -171,8 +171,8 @@ export default function PlanTrip() {
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>{rupee(t.budgetPerHead)}/head · {t.filledSeats}/{t.totalSeats} joined</div>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <Link to={`/trips/${t._id}`} className="btn btn-sm btn-outline"><i className="ri-eye-line" /></Link>
-                        <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(t._id)}><i className="ri-delete-bin-line" /></button>
+                        <Link to={`/trips/${t._id}`} className="btn btn-sm btn-outline"><i className="fa-solid fa-eye" /></Link>
+                        <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(t._id)}><i className="fa-solid fa-trash" /></button>
                       </div>
                     </div>
                   ))
@@ -180,10 +180,10 @@ export default function PlanTrip() {
               </div>
 
               <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>💡 Tips</h4>
+                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}><i className="fa-solid fa-lightbulb" /> Tips</h4>
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {TIPS.map((t) => (
-                    <li key={t} style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}><i className="ri-checkbox-circle-line" style={{ color: 'var(--fire)' }} /> {t}</li>
+                    <li key={t} style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}><i className="fa-solid fa-circle-check" style={{ color: 'var(--fire)' }} /> {t}</li>
                   ))}
                 </ul>
               </div>

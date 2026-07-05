@@ -15,15 +15,15 @@ const LINKS = [
 ];
 
 const MOBILE_LINKS = [
-  { to: '/', label: 'Home', icon: 'fa-home' },
-  { to: '/trips', label: 'Trips', icon: 'fa-compass' },
-  { to: '/members', label: 'Members', icon: 'fa-people-group' },
-  { to: '/gallery', label: 'Gallery', icon: 'fa-images' },
-  { to: '/completed-trips', label: 'Completed', icon: 'fa-trophy' },
-  { to: '/plan-trip', label: 'Plan Trip', icon: 'fa-map' },
-  { to: '/testimonials', label: 'Reviews', icon: 'fa-star' },
-  { to: '/about', label: 'About', icon: 'fa-circle-info' },
-  { to: '/contact', label: 'Contact', icon: 'fa-phone' },
+  { to: '/', label: 'Home', icon: 'fa-solid fa-house' },
+  { to: '/trips', label: 'Trips', icon: 'fa-solid fa-compass' },
+  { to: '/members', label: 'Members', icon: 'fa-solid fa-users' },
+  { to: '/gallery', label: 'Gallery', icon: 'fa-regular fa-image' },
+  { to: '/completed-trips', label: 'Completed', icon: 'fa-solid fa-trophy' },
+  { to: '/plan-trip', label: 'Plan Trip', icon: 'fa-solid fa-map-location-dot' },
+  { to: '/testimonials', label: 'Reviews', icon: 'fa-regular fa-star' },
+  { to: '/about', label: 'About', icon: 'fa-solid fa-circle-info' },
+  { to: '/contact', label: 'Contact', icon: 'fa-solid fa-phone' },
 ];
 
 export default function Navbar() {
@@ -80,7 +80,7 @@ export default function Navbar() {
     }
     clear();
     setMenuOpen(false);
-    toast('👋', 'Logged out. See you soon!');
+    toast('fa-solid fa-hand', 'Logged out. See you soon!');
     navigate('/');
   };
 
@@ -88,7 +88,7 @@ export default function Navbar() {
     <>
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
         <Link to="/" className="nav-brand">
-          <div className="nav-brand-icon">🏍️</div>
+          <div className="nav-brand-icon"><i className="fa-solid fa-motorcycle" /></div>
           <span className="nav-brand-text">SastiTripWale</span>
         </Link>
 
@@ -101,7 +101,7 @@ export default function Navbar() {
 
           {!accessToken ? (
             <NavLink to="/join" className="nav-cta">
-              Join Free <i className="fas fa-rocket" style={{ marginLeft: '6px' }} />
+              Join Free <i className="fa-solid fa-rocket" />
             </NavLink>
           ) : (
             <div className="nav-user" ref={menuRef}>
@@ -125,21 +125,21 @@ export default function Navbar() {
                     <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>{user?.email}</div>
                   </div>
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                    <i className="fas fa-gauge" /> Dashboard
+                    <i className="fa-solid fa-gauge-high" /> Dashboard
                   </Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)}>
-                    <i className="fas fa-comments" /> Messages
+                    <i className="fa-solid fa-comment-dots" /> Messages
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
-                    <i className="fas fa-map" /> Plan a Trip
+                    <i className="fa-solid fa-map-location-dot" /> Plan a Trip
                   </Link>
                   {user?.role === 'admin' && (
                     <Link to="/admin" onClick={() => setMenuOpen(false)}>
-                      <i className="fas fa-shield" /> Admin Panel
+                      <i className="fa-solid fa-shield-halved" /> Admin Panel
                     </Link>
                   )}
                   <button onClick={logout}>
-                    <i className="fas fa-sign-out-alt" /> Logout
+                    <i className="fa-solid fa-right-from-bracket" /> Logout
                   </button>
                 </div>
               )}
@@ -161,21 +161,21 @@ export default function Navbar() {
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
         {MOBILE_LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)}>
-            <i className={`fas ${l.icon}`} /> {l.label}
+            <i className={l.icon} /> {l.label}
           </NavLink>
         ))}
         {accessToken ? (
           <>
             <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <i className="fas fa-gauge" /> Dashboard
+              <i className="fa-solid fa-gauge-high" /> Dashboard
             </NavLink>
             <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
-              <i className="fas fa-comments" /> Messages
+              <i className="fa-solid fa-comment-dots" /> Messages
               {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
             </NavLink>
             {user?.role === 'admin' && (
               <NavLink to="/admin" onClick={() => setMobileOpen(false)}>
-                <i className="fas fa-shield" /> Admin Panel
+                <i className="fa-solid fa-shield-halved" /> Admin Panel
               </NavLink>
             )}
             <button
@@ -194,7 +194,7 @@ export default function Navbar() {
                 padding: '13px 16px',
               }}
             >
-              <i className="fas fa-sign-out-alt" /> Logout
+              <i className="fa-solid fa-right-from-bracket" /> Logout
             </button>
           </>
         ) : (
@@ -213,7 +213,7 @@ export default function Navbar() {
               marginTop: 6,
             }}
           >
-            <i className="fas fa-rocket" /> Join Community
+            <i className="fa-solid fa-rocket" /> Join Community
           </NavLink>
         )}
       </div>

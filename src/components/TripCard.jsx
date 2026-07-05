@@ -7,11 +7,11 @@ import { toast } from '../lib/toast.js';
 import { useCanTrip, handleGateError } from './useCanTrip.js';
 
 const VEHICLE_BADGE = {
-  Bike: { cls: 'badge-magenta', icon: 'ri-motorcycle-line' },
-  Car: { cls: 'badge-green', icon: 'ri-car-line' },
-  Bus: { cls: 'badge-cyan', icon: 'ri-bus-line' },
-  Train: { cls: 'badge-cyan', icon: 'ri-train-line' },
-  Mixed: { cls: 'badge-gold', icon: 'ri-route-line' },
+  Bike: { cls: 'badge-magenta', icon: 'fa-solid fa-motorcycle' },
+  Car: { cls: 'badge-green', icon: 'fa-solid fa-car' },
+  Bus: { cls: 'badge-cyan', icon: 'fa-solid fa-bus' },
+  Train: { cls: 'badge-cyan', icon: 'fa-solid fa-train' },
+  Mixed: { cls: 'badge-gold', icon: 'fa-solid fa-route' },
 };
 
 export default function TripCard({ trip, onChange }) {
@@ -27,7 +27,7 @@ export default function TripCard({ trip, onChange }) {
   const seatsLeft = Math.max(0, total - filled);
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   const days = tripDays(trip.startDate, trip.endDate);
-  const vb = VEHICLE_BADGE[trip.vehicleType] || { cls: 'badge-fire', icon: 'ri-map-pin-line' };
+  const vb = VEHICLE_BADGE[trip.vehicleType] || { cls: 'badge-fire', icon: 'fa-solid fa-location-dot' };
 
   const toggleInterest = async (e) => {
     e.preventDefault();
@@ -39,10 +39,10 @@ export default function TripCard({ trip, onChange }) {
       setInterested(data.interested);
       setFilled(data.filledSeats);
       setCount((c) => Math.max(0, c + (data.interested ? 1 : -1)));
-      toast(data.interested ? '🔥' : '👋', data.interested ? 'Interest registered! The organizer will reach out.' : 'Interest removed');
+      toast(data.interested ? 'fa-solid fa-fire' : 'fa-solid fa-hand', data.interested ? 'Interest registered! The organizer will reach out.' : 'Interest removed');
       onChange?.();
     } catch (err) {
-      if (!handleGateError(err, navigate)) toast('❌', apiError(err));
+      if (!handleGateError(err, navigate)) toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -90,11 +90,11 @@ export default function TripCard({ trip, onChange }) {
       <div className="trip-card-body">
         <h3 style={{ marginBottom: 6 }}>{trip.title || trip.destination}</h3>
         <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginBottom: 12 }}>
-          <i className="ri-map-pin-line" /> {trip.destination}
+          <i className="fa-solid fa-location-dot" /> {trip.destination}
         </p>
         <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-3)', marginBottom: 14, flexWrap: 'wrap' }}>
           <span>
-            <i className="ri-calendar-line" /> {dateRange(trip.startDate, trip.endDate)}
+            <i className="fa-solid fa-calendar" /> {dateRange(trip.startDate, trip.endDate)}
           </span>
         </div>
         <div
@@ -117,7 +117,7 @@ export default function TripCard({ trip, onChange }) {
               onClick={toggleInterest}
               disabled={busy}
             >
-              <i className={interested ? 'ri-heart-fill' : 'ri-heart-line'} /> {count}
+              <i className={interested ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} /> {count}
             </button>
             <span className="btn btn-sm btn-primary">View</span>
           </div>

@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component {
     return (
       <div className="container" style={{ paddingTop: 130, minHeight: '60vh' }}>
         <div className="card" style={{ padding: 32, maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.6rem' }}>😵</div>
+          <div style={{ fontSize: '2.6rem', color: 'var(--fire)' }}><i className="fa-solid fa-face-dizzy" /></div>
           <h2 className="section-title" style={{ fontSize: '1.6rem' }}>Something went wrong</h2>
           <p className="text-muted">This page hit an unexpected error. You can retry or head home.</p>
           {import.meta.env.DEV && (
@@ -48,10 +48,10 @@ export default class ErrorBoundary extends Component {
           )}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18 }}>
             <button className="btn btn-outline" onClick={() => this.setState({ error: null })}>
-              <i className="ri-refresh-line" /> Try again
+              <i className="fa-solid fa-arrows-rotate" /> Try again
             </button>
             <a className="btn btn-primary" href="/">
-              <i className="ri-home-5-line" /> Go home
+              <i className="fa-solid fa-house" /> Go home
             </a>
           </div>
         </div>

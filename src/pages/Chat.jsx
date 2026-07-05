@@ -56,7 +56,7 @@ export default function Chat() {
         scrollBottom();
       })
       .catch(() => {
-        toast('❌', 'You do not have access to this chat');
+        toast('fa-solid fa-circle-xmark', 'You do not have access to this chat');
         navigate('/chat');
       });
 
@@ -99,7 +99,7 @@ export default function Chat() {
       scrollBottom();
       loadGroups();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
       setText(t);
     } finally {
       setSending(false);
@@ -117,12 +117,12 @@ export default function Chat() {
             <div className="chat-sidebar-head">
               <strong style={{ fontFamily: 'var(--font-display)' }}>Messages</strong>
               <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>
-                <i className="ri-add-line" /> New Group
+                <i className="fa-solid fa-plus" /> New Group
               </button>
             </div>
             <div className="chat-groups">
               {groups.length === 0 ? (
-                <div className="empty-state-sm"><i className="ri-chat-3-line" /><p>No chats yet. Join a trip or create a group.</p></div>
+                <div className="empty-state-sm"><i className="fa-solid fa-comment-dots" /><p>No chats yet. Join a trip or create a group.</p></div>
               ) : (
                 groups.map((g) => (
                   <button
@@ -134,7 +134,7 @@ export default function Chat() {
                       {g.trip?.coverImageUrl ? (
                         <img src={imageUrl(g.trip.coverImageUrl)} alt="" />
                       ) : (
-                        <i className={g.type === 'trip' ? 'ri-route-line' : 'ri-group-line'} />
+                        <i className={g.type === 'trip' ? 'fa-solid fa-route' : 'fa-solid fa-users'} />
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -156,14 +156,14 @@ export default function Chat() {
           <div className="chat-panel">
             {!groupId ? (
               <div className="chat-empty">
-                <i className="ri-chat-smile-2-line" style={{ fontSize: '2.4rem' }} />
+                <i className="fa-solid fa-comments" style={{ fontSize: '2.4rem' }} />
                 <p>Select a conversation to start chatting.</p>
               </div>
             ) : (
               <>
                 <div className="chat-panel-head">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                    <button className="btn btn-sm btn-outline chat-back" onClick={() => navigate('/chat')}><i className="ri-arrow-left-line" /></button>
+                    <button className="btn btn-sm btn-outline chat-back" onClick={() => navigate('/chat')}><i className="fa-solid fa-arrow-left" /></button>
                     <div style={{ minWidth: 0 }}>
                       <strong style={{ fontFamily: 'var(--font-display)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {detail?.name || activeGroup?.name || 'Chat'}
@@ -176,13 +176,13 @@ export default function Chat() {
                     </div>
                   </div>
                   <button className="btn btn-sm btn-outline" onClick={() => setShowManage(true)}>
-                    <i className="ri-team-line" /> Members
+                    <i className="fa-solid fa-people-group" /> Members
                   </button>
                 </div>
 
                 <div className="chat-thread" ref={threadRef}>
                   {messages.length === 0 ? (
-                    <div className="chat-empty"><p>No messages yet. Say hello 👋</p></div>
+                    <div className="chat-empty"><p>No messages yet. Say hello <i className="fa-solid fa-hand" /></p></div>
                   ) : (
                     messages.map((m) => {
                       const mine = String(m.sender?._id || m.sender) === String(user?.id);
@@ -211,7 +211,7 @@ export default function Chat() {
                     maxLength={2000}
                   />
                   <button className="btn btn-primary" disabled={sending || !text.trim()}>
-                    <i className="ri-send-plane-2-line" />
+                    <i className="fa-solid fa-paper-plane" />
                   </button>
                 </form>
               </>
@@ -244,12 +244,12 @@ function CreateGroupModal({ open, onClose, onCreated }) {
     try {
       const memberIds = ids.split(/[\s,]+/).filter(Boolean);
       const { data } = await api.post('/chat/groups', { name, memberIds });
-      toast('💬', 'Group created!');
+      toast('fa-solid fa-comment-dots', 'Group created!');
       setName('');
       setIds('');
       onCreated(data.groupId);
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -270,7 +270,7 @@ function CreateGroupModal({ open, onClose, onCreated }) {
           </p>
         </div>
         <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
-          {busy ? <span className="spinner" /> : <i className="ri-group-line" />} Create Group
+          {busy ? <span className="spinner" /> : <i className="fa-solid fa-users" />} Create Group
         </button>
       </form>
     </Modal>
@@ -292,11 +292,11 @@ function ManageMembersModal({ open, onClose, group, currentUserId, onChanged }) 
     try {
       const payload = v.includes('@') ? { email: v } : { userId: v };
       await api.post(`/chat/groups/${group._id}/members`, payload);
-      toast('✅', 'Member added');
+      toast('fa-solid fa-circle-check', 'Member added');
       setInput('');
       onChanged();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -305,10 +305,10 @@ function ManageMembersModal({ open, onClose, group, currentUserId, onChanged }) 
   const remove = async (uid) => {
     try {
       await api.delete(`/chat/groups/${group._id}/members/${uid}`);
-      toast('👋', 'Member removed');
+      toast('fa-solid fa-hand', 'Member removed');
       onChanged();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
@@ -316,7 +316,7 @@ function ManageMembersModal({ open, onClose, group, currentUserId, onChanged }) 
     <Modal open={open} onClose={onClose} title={`Members · ${group.name}`}>
       {isOwner && (
         <form onSubmit={add} className="search-bar mb-3">
-          <i className="ri-user-add-line" style={{ color: 'var(--text-3)' }} />
+          <i className="fa-solid fa-user-plus" style={{ color: 'var(--text-3)' }} />
           <input placeholder="Add by User ID or email" value={input} onChange={(e) => setInput(e.target.value)} />
           <button className="btn btn-sm btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : 'Add'}</button>
         </form>
@@ -326,11 +326,11 @@ function ManageMembersModal({ open, onClose, group, currentUserId, onChanged }) 
           <div key={m._id} className="notif-item" style={{ alignItems: 'center', marginBottom: 8 }}>
             <img src={imageUrl(m.avatarUrl, AVATAR_FALLBACK)} alt="" style={{ width: 36, height: 36, borderRadius: '50%' }} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <strong style={{ fontSize: '0.85rem' }}>{m.fullName}{String(m._id) === String(group.owner?._id || group.owner) ? ' 👑' : ''}</strong>
+              <strong style={{ fontSize: '0.85rem' }}>{m.fullName}{String(m._id) === String(group.owner?._id || group.owner) ? <i className="fa-solid fa-crown" style={{ color: 'var(--gold)', marginLeft: 4 }} /> : ''}</strong>
               <div className="text-muted" style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)' }}>{m._id}</div>
             </div>
             {isOwner && String(m._id) !== String(group.owner?._id || group.owner) && (
-              <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(m._id)}><i className="ri-close-line" /></button>
+              <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(m._id)}><i className="fa-solid fa-xmark" /></button>
             )}
             {String(m._id) === String(currentUserId) && !isOwner && (
               <button className="btn btn-sm btn-outline" onClick={() => { remove(m._id); onClose(); }}>Leave</button>

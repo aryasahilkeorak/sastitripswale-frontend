@@ -20,7 +20,7 @@ export default function Modal({ open, onClose, title, children, maxWidth }) {
     >
       <div className="modal" style={maxWidth ? { maxWidth } : undefined}>
         <button className="modal-close" onClick={onClose} aria-label="Close">
-          ✕
+          <i className="fa-solid fa-xmark" />
         </button>
         {title && (
           <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8, fontSize: '1.3rem' }}>
