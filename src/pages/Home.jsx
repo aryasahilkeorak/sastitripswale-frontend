@@ -8,36 +8,36 @@ import Stars from '../components/Stars.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 
 const STATS = [
-  { icon: '👥', target: 5240, suffix: '+', label: 'Active Members' },
-  { icon: '✈️', target: 320, suffix: '+', label: 'Trips Completed' },
-  { icon: '📍', target: 48, suffix: '+', label: 'Cities Covered' },
-  { icon: '❤️', target: 12000, suffix: '+', label: 'Connections Made' },
+  { icon: 'fa-users', target: 5240, suffix: '+', label: 'Active Members' },
+  { icon: 'fa-plane', target: 320, suffix: '+', label: 'Trips Completed' },
+  { icon: 'fa-map-pin', target: 48, suffix: '+', label: 'Cities Covered' },
+  { icon: 'fa-heart', target: 12000, suffix: '+', label: 'Connections Made' },
 ];
 
 const WHY = [
-  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: '🔍', h: 'Find Your Travel Tribe', p: 'Connect with verified bikers, car owners & backpackers. Filter by vehicle, interests, age & destination.' },
-  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: '💰', h: 'Split Expenses Smartly', p: 'Budget trips from ₹500/day by dividing fuel, hotel & food. Ladakh for ₹8,500 vs ₹40,000 alone.' },
-  { glow: 'var(--cyan)', bg: 'rgba(0,212,255,0.1)', icon: '🛡️', h: 'Travel Safely Together', p: 'All members are ID-verified. Women-only sections. Emergency contacts shared within the group.' },
-  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: '🏍️', h: 'Bike & Car Trips', p: 'Royal Enfield or Maruti Swift — find co-travelers for epic road trips across every corner of India.' },
-  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: '📸', h: 'Make Lifelong Memories', p: 'Shared trips create bonds that last forever. Our gallery has 2000+ real photos from real trips.' },
-  { glow: '#25D366', bg: 'rgba(37,211,102,0.1)', icon: '💬', h: 'WhatsApp Group Access', p: 'Join dedicated groups for every trip. Co-ordinate, share live locations & stay connected real-time.' },
+  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-search', h: 'Find Your Travel Tribe', p: 'Connect with verified bikers, car owners & backpackers. Filter by vehicle, interests, age & dest[...]' },
+  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-wallet', h: 'Split Expenses Smartly', p: 'Budget trips from ₹500/day by dividing fuel, hotel & food. Ladakh for ₹8,500 vs ₹40,00[...]' },
+  { glow: 'var(--cyan)', bg: 'rgba(0,212,255,0.1)', icon: 'fa-shield', h: 'Travel Safely Together', p: 'All members are ID-verified. Women-only sections. Emergency contacts shared within the group.' },
+  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-motorcycle', h: 'Bike & Car Trips', p: 'Royal Enfield or Maruti Swift — find co-travelers for epic road trips across every corner of Indi[...]' },
+  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-camera', h: 'Make Lifelong Memories', p: 'Shared trips create bonds that last forever. Our gallery has 2000+ real photos from real tri[...]' },
+  { glow: '#25D366', bg: 'rgba(37,211,102,0.1)', icon: 'fa-comments', h: 'WhatsApp Group Access', p: 'Join dedicated groups for every trip. Co-ordinate, share live locations & stay connected real-time.' },
 ];
 
 const CATS = [
-  { img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80', label: 'Bike Trips', sub: '125+ active riders', badge: 'badge-fire', emoji: '🏍️' },
-  { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80', label: 'Road Trips', sub: 'Car & SUV groups', badge: 'badge-cyan', emoji: '🚗' },
-  { img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80', label: 'Mountains', sub: 'Himalayas & Ghats', badge: 'badge-magenta', emoji: '⛰️' },
-  { img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=600&q=80', label: 'Camping', sub: 'Stargazing & bonfire', badge: 'badge-gold', emoji: '⛺' },
-  { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80', label: 'Beach Trips', sub: 'Goa, Gokarna & more', badge: 'badge-cyan', emoji: '🏖️' },
-  { img: 'https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=600&q=80', label: 'Backpacking', sub: 'Budget ₹500/day', badge: 'badge-green', emoji: '🎒' },
+  { img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80', label: 'Bike Trips', sub: '125+ active riders', badge: 'badge-fire', emoji: 'fa-motorcycle' },
+  { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80', label: 'Road Trips', sub: 'Car & SUV groups', badge: 'badge-cyan', emoji: 'fa-car' },
+  { img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80', label: 'Mountains', sub: 'Himalayas & Ghats', badge: 'badge-magenta', emoji: 'fa-mountain' },
+  { img: 'https://images.unsplash.com/photo-1280981908839-0d6f8eb01bb2?w=600&q=80', label: 'Camping', sub: 'Stargazing & bonfire', badge: 'badge-gold', emoji: 'fa-campground' },
+  { img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80', label: 'Beach Trips', sub: 'Goa, Gokarna & more', badge: 'badge-cyan', emoji: 'fa-water' },
+  { img: 'https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=600&q=80', label: 'Backpacking', sub: 'Budget ₹500/day', badge: 'badge-green', emoji: 'fa-backpack' },
 ];
 
 const FAQS = [
-  { q: 'How do I join SastiTripWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOIN to join free!' },
+  { q: 'How do I join SastiTripWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOI[...]' },
   { q: 'Is it safe to travel with strangers?', a: 'Yes! Every member is verified with Aadhaar/PAN before joining. Emergency contacts are collected, and we have dedicated women-safe groups.' },
-  { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members. A ₹25,000 Goa trip with 5 people costs just ₹5,000/person!' },
+  { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members. A ₹25,000 Goa trip with 5 people costs just ₹5,000/per[...]' },
   { q: 'I have a bike but no travel friends. Can I join?', a: "Absolutely! That's exactly why SastiTripWale exists. Find hundreds of fellow bikers and car owners and make travel friends for life." },
-  { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to waive it entirely!' },
+  { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to wai[...]' },
 ];
 
 const FALLBACK_GALLERY = [
@@ -82,7 +82,7 @@ export default function Home() {
         <div className="container">
           <div className="hero-content">
             <div className="hero-eyebrow">
-              <i className="ri-map-pin-2-fill" /> India's #1 Travel Community
+              <i className="fas fa-map-pin" /> India's #1 Travel Community
             </div>
             <h1 className="hero-title">
               Find Your Tribe,
@@ -95,13 +95,13 @@ export default function Home() {
             </p>
             <div className="hero-btns">
               <Link to="/join" className="btn btn-primary btn-lg">
-                <i className="ri-group-line" /> Join Community
+                <i className="fas fa-people-group" /> Join Community
               </Link>
               <Link to="/plan-trip" className="btn btn-lg" style={{ background: 'var(--grad-warm)', color: 'var(--text-inv)', boxShadow: '0 0 24px rgba(255,107,0,0.35)' }}>
-                <i className="ri-map-2-line" /> Plan a Trip
+                <i className="fas fa-map" /> Plan a Trip
               </Link>
               <Link to="/trips" className="btn btn-outline btn-lg">
-                <i className="ri-compass-line" /> Explore Trips
+                <i className="fas fa-compass" /> Explore Trips
               </Link>
             </div>
           </div>
@@ -116,11 +116,11 @@ export default function Home() {
       <div className="trust-bar">
         <div className="container">
           <div className="trust-inner">
-            <div className="trust-item"><i className="ri-shield-check-fill" /> <strong>Verified</strong> Members</div>
-            <div className="trust-item"><i className="ri-motorcycle-fill" /> Bike &amp; Car Trips</div>
-            <div className="trust-item"><i className="ri-wallet-3-fill" /> Split Expenses</div>
-            <div className="trust-item"><i className="ri-women-fill" /> Women-Safe Groups</div>
-            <div className="trust-item"><i className="ri-whatsapp-fill" /> WhatsApp Groups</div>
+            <div className="trust-item"><i className="fas fa-check-circle" /> <strong>Verified</strong> Members</div>
+            <div className="trust-item"><i className="fas fa-motorcycle" /> Bike &amp; Car Trips</div>
+            <div className="trust-item"><i className="fas fa-wallet" /> Split Expenses</div>
+            <div className="trust-item"><i className="fas fa-female" /> Women-Safe Groups</div>
+            <div className="trust-item"><i className="fab fa-whatsapp" /> WhatsApp Groups</div>
           </div>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function Home() {
           <div className="stats-grid">
             {STATS.map((s) => (
               <div className="stat-card fade-up" key={s.label}>
-                <div className="stat-icon">{s.icon}</div>
+                <div className="stat-icon"><i className={`fas ${s.icon}`} /></div>
                 <AnimatedCounter target={s.target} suffix={s.suffix} />
                 <div className="stat-label">{s.label}</div>
               </div>
@@ -144,14 +144,14 @@ export default function Home() {
       <section>
         <div className="container">
           <div className="text-center fade-up">
-            <div className="section-tag"><i className="ri-star-fill" /> Why Choose Us</div>
+            <div className="section-tag"><i className="fas fa-star" /> Why Choose Us</div>
             <h2 className="section-title">Why <span className="highlight">SastiTripWale?</span></h2>
             <p className="section-sub">We solve real problems of solo travelers — finding partners, managing budgets, staying safe on the road.</p>
           </div>
           <div className="why-grid">
             {WHY.map((w) => (
               <div className="why-card fade-up" key={w.h}>
-                <div className="why-icon" style={{ background: w.bg }}>{w.icon}</div>
+                <div className="why-icon" style={{ background: w.bg }}><i className={`fas ${w.icon}`} /></div>
                 <h3>{w.h}</h3>
                 <p>{w.p}</p>
               </div>
@@ -164,7 +164,7 @@ export default function Home() {
       <section style={{ background: 'var(--bg-2)' }}>
         <div className="container">
           <div className="fade-up">
-            <div className="section-tag"><i className="ri-compass-3-fill" /> Explore Categories</div>
+            <div className="section-tag"><i className="fas fa-compass" /> Explore Categories</div>
             <h2 className="section-title">Choose Your <span className="highlight">Adventure</span></h2>
           </div>
           <div className="cat-grid fade-up">
@@ -176,7 +176,7 @@ export default function Home() {
                   {c.label}
                   <span>{c.sub}</span>
                 </div>
-                <div className="cat-badge"><span className={`badge ${c.badge}`}>{c.emoji}</span></div>
+                <div className="cat-badge"><span className={`badge ${c.badge}`}><i className={`fas ${c.emoji}`} /></span></div>
               </Link>
             ))}
           </div>
@@ -188,13 +188,13 @@ export default function Home() {
         <div className="container">
           <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 44 }}>
             <div className="fade-left">
-              <div className="section-tag"><i className="ri-fire-fill" /> Hot Right Now</div>
+              <div className="section-tag"><i className="fas fa-fire" /> Hot Right Now</div>
               <h2 className="section-title" style={{ marginBottom: 0 }}>Upcoming <span className="highlight">Trips</span></h2>
             </div>
-            <Link to="/trips" className="btn btn-outline fade-right">View All <i className="ri-arrow-right-line" /></Link>
+            <Link to="/trips" className="btn btn-outline fade-right">View All <i className="fas fa-arrow-right" /></Link>
           </div>
           {trips.length === 0 ? (
-            <div className="empty-state"><i className="ri-compass-3-line" /><p>No trips yet — be the first to plan one!</p></div>
+            <div className="empty-state"><i className="fas fa-compass" /><p>No trips yet — be the first to plan one!</p></div>
           ) : (
             <div className="trips-grid">
               {trips.map((t) => (
@@ -210,7 +210,7 @@ export default function Home() {
         <section className="testi-section">
           <div className="container">
             <div className="text-center fade-up">
-              <div className="section-tag"><i className="ri-chat-quote-fill" /> Member Stories</div>
+              <div className="section-tag"><i className="fas fa-quote-left" /> Member Stories</div>
               <h2 className="section-title">What <span className="highlight">Travelers Say</span></h2>
             </div>
             <div className="slider-wrap fade-up">
@@ -228,13 +228,13 @@ export default function Home() {
                 ))}
               </div>
               <div className="slider-nav">
-                <button className="prev" onClick={() => setSlide((s) => (s - 1 + reviews.length) % reviews.length)}><i className="ri-arrow-left-s-line" /></button>
+                <button className="prev" onClick={() => setSlide((s) => (s - 1 + reviews.length) % reviews.length)}><i className="fas fa-chevron-left" /></button>
                 <div className="dots">
                   {reviews.map((r, i) => (
                     <div key={r._id} className={`dot${i === slide ? ' active' : ''}`} onClick={() => setSlide(i)} />
                   ))}
                 </div>
-                <button className="next" onClick={() => setSlide((s) => (s + 1) % reviews.length)}><i className="ri-arrow-right-s-line" /></button>
+                <button className="next" onClick={() => setSlide((s) => (s + 1) % reviews.length)}><i className="fas fa-chevron-right" /></button>
               </div>
             </div>
           </div>
@@ -246,16 +246,16 @@ export default function Home() {
         <div className="container">
           <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 40 }}>
             <div className="fade-left">
-              <div className="section-tag"><i className="ri-image-fill" /> Trip Memories</div>
+              <div className="section-tag"><i className="fas fa-image" /> Trip Memories</div>
               <h2 className="section-title" style={{ marginBottom: 0 }}>Our <span className="highlight">Gallery</span></h2>
             </div>
-            <Link to="/gallery" className="btn btn-outline fade-right">All Photos <i className="ri-arrow-right-line" /></Link>
+            <Link to="/gallery" className="btn btn-outline fade-right">All Photos <i className="fas fa-arrow-right" /></Link>
           </div>
           <div className="gallery-preview-grid fade-up">
             {galleryImgs.slice(0, 5).map((src, i) => (
               <div className="gallery-thumb" key={i} onClick={() => setLb(i)}>
                 <img src={src} alt="Trip memory" loading="lazy" />
-                <div className="gallery-overlay"><i className="ri-zoom-in-line" /></div>
+                <div className="gallery-overlay"><i className="fas fa-magnifying-glass-plus" /></div>
               </div>
             ))}
           </div>
@@ -266,7 +266,7 @@ export default function Home() {
       <section style={{ background: 'var(--bg-2)' }}>
         <div className="container">
           <div className="text-center fade-up" style={{ marginBottom: 44 }}>
-            <div className="section-tag"><i className="ri-question-fill" /> FAQ</div>
+            <div className="section-tag"><i className="fas fa-circle-question" /> FAQ</div>
             <h2 className="section-title">Frequently Asked <span className="highlight">Questions</span></h2>
           </div>
           <div style={{ maxWidth: 700, margin: '0 auto' }} className="fade-up">
@@ -274,7 +274,7 @@ export default function Home() {
               <div className={`faq-item${openFaq === i ? ' open' : ''}`} key={f.q}>
                 <div className="faq-q" onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>
                   {f.q}
-                  <span className="faq-icon">+</span>
+                  <span className="faq-icon"><i className="fas fa-plus" /></span>
                 </div>
                 <div className="faq-a" style={{ maxHeight: openFaq === i ? 200 : 0 }}>
                   <div className="faq-a-inner">{f.a}</div>
@@ -292,15 +292,15 @@ export default function Home() {
             <div className="cta-orb-1" />
             <div className="cta-orb-2" />
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div className="section-tag" style={{ margin: '0 auto 16px' }}><i className="ri-rocket-fill" /> Limited Spots</div>
+              <div className="section-tag" style={{ margin: '0 auto 16px' }}><i className="fas fa-rocket" /> Limited Spots</div>
               <h2 className="section-title">Ready for Your Next <span className="highlight">Adventure?</span></h2>
               <p style={{ color: 'var(--text-2)', maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.75 }}>
                 Join 5000+ travelers already exploring India together. Use code{' '}
                 <strong style={{ color: 'var(--fire-2)', fontFamily: 'var(--font-mono)' }}>FREEJOIN</strong> for free membership!
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <Link to="/join" className="btn btn-primary btn-lg"><i className="ri-group-line" /> Join Community</Link>
-                <Link to="/trips" className="btn btn-outline btn-lg"><i className="ri-compass-line" /> Browse Trips</Link>
+                <Link to="/join" className="btn btn-primary btn-lg"><i className="fas fa-people-group" /> Join Community</Link>
+                <Link to="/trips" className="btn btn-outline btn-lg"><i className="fas fa-compass" /> Browse Trips</Link>
               </div>
             </div>
           </div>
