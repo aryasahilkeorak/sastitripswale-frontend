@@ -53,13 +53,13 @@ export default function Layout() {
             rel="noreferrer"
             className="fab fab-wa"
           >
-            <i className="ri-whatsapp-line" />
+            <i className="fa-brands fa-whatsapp" />
             <span className="fab-tooltip">Chat on WhatsApp</span>
           </a>
         </div>
         <div style={{ position: 'relative' }}>
           <Link to="/plan-trip" className="fab fab-trip">
-            <i className="ri-map-2-line" />
+            <i className="fa-solid fa-map-location-dot" />
             <span className="fab-tooltip">Plan a Trip</span>
           </Link>
         </div>
@@ -71,29 +71,29 @@ export default function Layout() {
         title="Back to top"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <i className="ri-arrow-up-line" />
+        <i className="fa-solid fa-arrow-up" />
       </button>
 
       <nav className="bottom-nav">
         <div className="bottom-nav-inner">
           <NavLink to="/" end className="bnav-item">
-            <i className="ri-home-5-fill" />
+            <i className="fa-solid fa-house" />
             <span>Home</span>
           </NavLink>
           <NavLink to="/trips" className="bnav-item">
-            <i className="ri-compass-3-line" />
+            <i className="fa-solid fa-compass" />
             <span>Trips</span>
           </NavLink>
           <NavLink to="/plan-trip" className="bnav-item">
-            <i className="ri-add-circle-line" />
+            <i className="fa-solid fa-circle-plus" />
             <span>Plan</span>
           </NavLink>
           <NavLink to="/members" className="bnav-item">
-            <i className="ri-group-line" />
+            <i className="fa-solid fa-users" />
             <span>Members</span>
           </NavLink>
           <NavLink to={accessToken ? '/dashboard' : '/join'} className="bnav-item">
-            <i className="ri-user-add-line" />
+            <i className="fa-solid fa-user-plus" />
             <span>{accessToken ? 'Me' : 'Join'}</span>
           </NavLink>
         </div>

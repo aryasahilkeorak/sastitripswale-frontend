@@ -26,17 +26,17 @@ export default function MemberDetail() {
 
   const connect = async () => {
     if (!accessToken) {
-      toast('🔒', 'Log in to connect');
+      toast('fa-solid fa-lock', 'Log in to connect');
       navigate('/login');
       return;
     }
     setBusy(true);
     try {
       await api.post('/members/connect', { receiverId: id });
-      toast('🤝', `Connection request sent to ${member.fullName}!`);
+      toast('fa-solid fa-handshake', `Connection request sent to ${member.fullName}!`);
       load();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -46,7 +46,7 @@ export default function MemberDetail() {
   if (!member)
     return (
       <div className="empty-state" style={{ paddingTop: 160 }}>
-        <i className="ri-user-line" /><p>Member not found.</p>
+        <i className="fa-solid fa-user" /><p>Member not found.</p>
         <Link to="/members" className="btn btn-primary mt-3">All members</Link>
       </div>
     );
@@ -55,7 +55,7 @@ export default function MemberDetail() {
     <section style={{ paddingTop: 110 }}>
       <div className="container" style={{ maxWidth: 720 }}>
         <Link to="/members" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
-          <i className="ri-arrow-left-line" /> All members
+          <i className="fa-solid fa-arrow-left" /> All members
         </Link>
 
         <div className="card mt-3" style={{ padding: 32, textAlign: 'center' }}>
@@ -63,7 +63,7 @@ export default function MemberDetail() {
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 800, marginTop: 12 }}>{member.fullName}</h1>
           {member.isVerified && (
             <div className="verified-badge" style={{ justifyContent: 'center' }}>
-              <i className="ri-verified-badge-fill" /> Verified member
+              <i className="fa-solid fa-circle-check" /> Verified member
             </div>
           )}
           <p className="text-muted mt-2">
@@ -83,8 +83,8 @@ export default function MemberDetail() {
 
           <div className="mt-3" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <span className="id-chip">{member.id}</span>
-            <button className="btn btn-sm btn-outline" onClick={() => { navigator.clipboard?.writeText(String(member.id)); toast('📋', 'User ID copied — use it to add them to a group'); }}>
-              <i className="ri-file-copy-line" /> Copy ID
+            <button className="btn btn-sm btn-outline" onClick={() => { navigator.clipboard?.writeText(String(member.id)); toast('fa-solid fa-clipboard', 'User ID copied — use it to add them to a group'); }}>
+              <i className="fa-solid fa-copy" /> Copy ID
             </button>
           </div>
 
@@ -96,12 +96,12 @@ export default function MemberDetail() {
           {!member.isSelf && (
             <div className="mt-4">
               {member.connection?.status === 'accepted' ? (
-                <span className="btn btn-lg" style={{ background: 'rgba(16,185,129,0.15)', color: '#6ee7b7' }}><i className="ri-check-double-line" /> Connected</span>
+                <span className="btn btn-lg" style={{ background: 'rgba(16,185,129,0.15)', color: '#6ee7b7' }}><i className="fa-solid fa-check-double" /> Connected</span>
               ) : member.connection?.status === 'pending' ? (
-                <span className="btn btn-lg btn-outline" style={{ opacity: 0.7 }}><i className="ri-time-line" /> Request pending</span>
+                <span className="btn btn-lg btn-outline" style={{ opacity: 0.7 }}><i className="fa-regular fa-clock" /> Request pending</span>
               ) : (
                 <button className="btn btn-lg btn-primary" onClick={connect} disabled={busy}>
-                  {busy ? <span className="spinner" /> : <i className="ri-user-add-line" />} Connect
+                  {busy ? <span className="spinner" /> : <i className="fa-solid fa-user-plus" />} Connect
                 </button>
               )}
             </div>

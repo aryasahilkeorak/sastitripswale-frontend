@@ -38,13 +38,13 @@ export default function Testimonials() {
     setBusy(true);
     try {
       await api.post('/reviews', { rating, message, tripDestination: destination });
-      toast('⭐', 'Review submitted — thank you for sharing!');
+      toast('fa-solid fa-star', 'Review submitted — thank you for sharing!');
       setMessage('');
       setDestination('');
       setRating(5);
       load();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -54,7 +54,7 @@ export default function Testimonials() {
 
   return (
     <>
-      <PageHero tag="Member Stories" tagIcon="ri-chat-quote-fill" title="What Travelers" highlight="Say" sub="Honest reviews from members who found their tribe." />
+      <PageHero tag="Member Stories" tagIcon="fa-solid fa-quote-left" title="What Travelers" highlight="Say" sub="Honest reviews from members who found their tribe." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
@@ -102,7 +102,7 @@ export default function Testimonials() {
               </div>
               <div className="form-group"><label>Trip / destination (optional)</label><input className="form-input" value={destination} onChange={(e) => setDestination(e.target.value)} /></div>
               <div className="form-group"><label>Your review *</label><textarea className="form-input" required value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Share your experience…" /></div>
-              <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="ri-send-plane-line" />} Submit review</button>
+              <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Submit review</button>
             </form>
           ) : (
             <div className="card mb-4" style={{ padding: 20, textAlign: 'center' }}>
@@ -114,12 +114,12 @@ export default function Testimonials() {
           {loading ? (
             <Loader />
           ) : reviews.length === 0 ? (
-            <div className="empty-state"><i className="ri-chat-3-line" /><p>No reviews yet — be the first!</p></div>
+            <div className="empty-state"><i className="fa-solid fa-comment-dots" /><p>No reviews yet — be the first!</p></div>
           ) : (
             <div className="grid-3">
               {reviews.map((r) => (
                 <div className="card fade-up" style={{ padding: 24 }} key={r._id}>
-                  <i className="ri-double-quotes-l" style={{ color: 'var(--fire)', fontSize: '1.6rem' }} />
+                  <i className="fa-solid fa-quote-left" style={{ color: 'var(--fire)', fontSize: '1.6rem' }} />
                   <p style={{ color: 'var(--text-2)', lineHeight: 1.8, margin: '8px 0 16px', fontSize: '0.9rem' }}>{r.message}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <img src={imageUrl(r.user?.avatarUrl, AVATAR_FALLBACK)} alt="" style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover' }} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />

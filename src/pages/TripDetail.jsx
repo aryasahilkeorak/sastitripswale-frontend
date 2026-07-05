@@ -35,10 +35,10 @@ export default function TripDetail() {
     setBusy(true);
     try {
       const { data } = await api.post(`/trips/${id}/interest`);
-      toast(data.interested ? '🔥' : '👋', data.interested ? 'You joined this trip!' : 'Interest removed');
+      toast(data.interested ? 'fa-solid fa-fire' : 'fa-solid fa-hand', data.interested ? 'You joined this trip!' : 'Interest removed');
       load();
     } catch (err) {
-      if (!handleGateError(err, navigate)) toast('❌', apiError(err));
+      if (!handleGateError(err, navigate)) toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -46,7 +46,7 @@ export default function TripDetail() {
 
   const openChat = async () => {
     if (!accessToken) {
-      toast('🔒', 'Log in to open the trip chat');
+      toast('fa-solid fa-lock', 'Log in to open the trip chat');
       navigate('/login');
       return;
     }
@@ -54,7 +54,7 @@ export default function TripDetail() {
       const { data } = await api.get(`/chat/trip/${id}`);
       navigate(`/chat/${data.groupId}`);
     } catch (err) {
-      toast('💬', apiError(err, 'Only the organizer and joined members can chat'));
+      toast('fa-solid fa-comment-dots', apiError(err, 'Only the organizer and joined members can chat'));
     }
   };
 
@@ -62,20 +62,20 @@ export default function TripDetail() {
     if (!window.confirm('Delete this trip? This cannot be undone.')) return;
     try {
       await api.delete(`/trips/${id}`);
-      toast('🗑️', 'Trip deleted');
+      toast('fa-solid fa-trash', 'Trip deleted');
       navigate('/dashboard');
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
   const changeStatus = async (status) => {
     try {
       await api.put(`/trips/${id}`, { status });
-      toast('✅', 'Trip status updated');
+      toast('fa-solid fa-circle-check', 'Trip status updated');
       load();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
@@ -83,7 +83,7 @@ export default function TripDetail() {
   if (!trip)
     return (
       <div className="empty-state" style={{ paddingTop: 160 }}>
-        <i className="ri-error-warning-line" />
+        <i className="fa-solid fa-triangle-exclamation" />
         <p>Trip not found.</p>
         <Link to="/trips" className="btn btn-primary mt-3">Browse trips</Link>
       </div>
@@ -102,7 +102,7 @@ export default function TripDetail() {
       <section style={{ paddingTop: 110 }}>
         <div className="container">
           <Link to="/trips" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
-            <i className="ri-arrow-left-line" /> All trips
+            <i className="fa-solid fa-arrow-left" /> All trips
           </Link>
 
           <div className="detail-grid mt-3">
@@ -120,7 +120,7 @@ export default function TripDetail() {
                 {trip.title || trip.destination}
               </h1>
               <p className="text-muted mb-3">
-                <i className="ri-map-pin-line" /> {trip.destination}
+                <i className="fa-solid fa-location-dot" /> {trip.destination}
                 {trip.pickupLocation ? ` · Pickup: ${trip.pickupLocation}` : ''}
               </p>
 
@@ -136,7 +136,7 @@ export default function TripDetail() {
                     <Link key={m._id} to={`/members/${m._id}`} className="member-pill">
                       <img src={imageUrl(m.avatarUrl, AVATAR_FALLBACK)} alt={m.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                       {m.fullName}
-                      {m.isVerified && <i className="ri-verified-badge-fill" style={{ color: '#6ee7b7' }} />}
+                      {m.isVerified && <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} />}
                     </Link>
                   ))}
                 </div>
@@ -192,8 +192,8 @@ export default function TripDetail() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem', color: 'var(--text-2)', margin: '18px 0' }}>
-                <div><i className="ri-calendar-line" style={{ color: 'var(--fire)' }} /> {dateRange(trip.startDate, trip.endDate)}</div>
-                <div><i className="ri-team-line" style={{ color: 'var(--fire)' }} /> {trip.interestCount} interested</div>
+                <div><i className="fa-solid fa-calendar" style={{ color: 'var(--fire)' }} /> {dateRange(trip.startDate, trip.endDate)}</div>
+                <div><i className="fa-solid fa-people-group" style={{ color: 'var(--fire)' }} /> {trip.interestCount} interested</div>
               </div>
 
               {/* Organizer */}
@@ -206,27 +206,27 @@ export default function TripDetail() {
 
               {trip.status === 'upcoming' && (
                 <button className={`btn btn-lg ${trip.isInterested ? 'btn-outline' : 'btn-primary'}`} style={{ width: '100%', justifyContent: 'center' }} onClick={toggleInterest} disabled={busy}>
-                  {busy ? <span className="spinner" /> : <i className={trip.isInterested ? 'ri-heart-fill' : 'ri-heart-line'} />}
+                  {busy ? <span className="spinner" /> : <i className={trip.isInterested ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} />}
                   {trip.isInterested ? ' Joined — leave' : ' Show Interest'}
                 </button>
               )}
 
               {(trip.isInterested || isOrganizer || user?.role === 'admin') && (
                 <button className="btn btn-lg btn-neon mt-2" style={{ width: '100%', justifyContent: 'center' }} onClick={openChat}>
-                  <i className="ri-chat-3-line" /> Open Trip Chat
+                  <i className="fa-solid fa-comment-dots" /> Open Trip Chat
                 </button>
               )}
 
               {trip.whatsappGroup && (
                 <a href={trip.whatsappGroup} target="_blank" rel="noreferrer" className="btn btn-lg mt-2" style={{ width: '100%', justifyContent: 'center', background: '#25D366', color: '#06070d' }}>
-                  <i className="ri-whatsapp-line" /> WhatsApp Group
+                  <i className="fa-brands fa-whatsapp" /> WhatsApp Group
                 </a>
               )}
 
               {(isOrganizer || user?.role === 'admin') && (
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--glass-bdr)' }}>
                   <div className="text-muted" style={{ fontSize: '0.72rem', marginBottom: 8 }}>
-                    <i className="ri-settings-3-line" /> Organizer controls
+                    <i className="fa-solid fa-gear" /> Organizer controls
                   </div>
                   <select className="form-input mb-2" value={trip.status} onChange={(e) => changeStatus(e.target.value)}>
                     <option value="upcoming">Upcoming</option>
@@ -235,7 +235,7 @@ export default function TripDetail() {
                     <option value="cancelled">Cancelled</option>
                   </select>
                   <button className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={removeTrip}>
-                    <i className="ri-delete-bin-line" /> Delete Trip
+                    <i className="fa-solid fa-trash" /> Delete Trip
                   </button>
                 </div>
               )}

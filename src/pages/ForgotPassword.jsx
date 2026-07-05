@@ -47,7 +47,7 @@ export default function ForgotPassword() {
                 <input className="form-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
               </div>
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
-                {busy ? <span className="spinner" /> : <i className="ri-mail-send-line" />} Send reset link
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Send reset link
               </button>
             </form>
             <p className="auth-switch">

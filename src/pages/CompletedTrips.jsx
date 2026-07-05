@@ -5,15 +5,15 @@ import { imageUrl, rupee, dateRange, tripDays } from '../lib/helpers.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
 
-const STATS = [
-  { num: '320+', label: 'Trips' },
-  { num: '4,800+', label: 'Travelers' },
-  { num: '48', label: 'States' },
-  { num: '₹72L', label: 'Saved together' },
-];
+function pooledLabel(v) {
+  if (!v) return '₹0';
+  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
+  return `₹${Number(v).toLocaleString('en-IN')}`;
+}
 
 export default function CompletedTrips() {
   const [trips, setTrips] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,11 +22,19 @@ export default function CompletedTrips() {
       .then((r) => setTrips(r.data.trips))
       .catch(() => setTrips([]))
       .finally(() => setLoading(false));
+    api.get('/stats').then((r) => setStats(r.data.stats)).catch(() => {});
   }, []);
+
+  const STATS = [
+    { num: stats?.completedTrips ?? 0, label: 'Trips' },
+    { num: stats?.travelers ?? 0, label: 'Travelers' },
+    { num: stats?.states ?? 0, label: 'States' },
+    { num: pooledLabel(stats?.pooledRupees), label: 'Pooled together' },
+  ];
 
   return (
     <>
-      <PageHero tag="Trip Archive" tagIcon="ri-trophy-fill" title="Completed" highlight="Journeys" sub="Real trips, real expense breakdowns, real memories." />
+      <PageHero tag="Trip Archive" tagIcon="fa-solid fa-trophy" title="Completed" highlight="Journeys" sub="Real trips, real expense breakdowns, real memories." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
@@ -42,7 +50,7 @@ export default function CompletedTrips() {
           {loading ? (
             <Loader label="Loading journeys…" />
           ) : trips.length === 0 ? (
-            <div className="empty-state"><i className="ri-trophy-line" /><p>No completed trips yet.</p></div>
+            <div className="empty-state"><i className="fa-solid fa-trophy" /><p>No completed trips yet.</p></div>
           ) : (
             <div className="timeline">
               {trips.map((t) => {
@@ -55,7 +63,7 @@ export default function CompletedTrips() {
                         <img src={imageUrl(t.coverImageUrl, `https://picsum.photos/seed/${t._id}/500/400`)} alt={t.destination} style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: 180 }} />
                         <div style={{ padding: 22 }}>
                           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>{t.title || t.destination}</h3>
-                          <p className="text-muted mb-2"><i className="ri-map-pin-line" /> {t.destination}</p>
+                          <p className="text-muted mb-2"><i className="fa-solid fa-location-dot" /> {t.destination}</p>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                             {tripDays(t.startDate, t.endDate) && <span className="badge badge-gold">{tripDays(t.startDate, t.endDate)} Days</span>}
                             {t.vehicleType && <span className="badge badge-magenta">{t.vehicleType}</span>}
@@ -71,7 +79,7 @@ export default function CompletedTrips() {
                               </tbody>
                             </table>
                           )}
-                          <Link to={`/trips/${t._id}`} className="btn btn-sm btn-outline mt-3"><i className="ri-arrow-right-line" /> View trip</Link>
+                          <Link to={`/trips/${t._id}`} className="btn btn-sm btn-outline mt-3"><i className="fa-solid fa-arrow-right" /> View trip</Link>
                         </div>
                       </div>
                     </div>

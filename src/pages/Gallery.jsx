@@ -46,10 +46,10 @@ export default function Gallery() {
     setUploading(true);
     try {
       await api.post('/gallery', fd);
-      toast('📸', 'Photo uploaded to the community gallery!');
+      toast('fa-solid fa-camera', 'Photo uploaded to the community gallery!');
       load();
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -60,7 +60,7 @@ export default function Gallery() {
 
   return (
     <>
-      <PageHero tag="Trip Memories" tagIcon="ri-image-fill" title="Community" highlight="Gallery" sub="Real photos from real trips shared by our members." />
+      <PageHero tag="Trip Memories" tagIcon="fa-solid fa-image" title="Community" highlight="Gallery" sub="Real photos from real trips shared by our members." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
@@ -75,7 +75,7 @@ export default function Gallery() {
             {accessToken && (
               <>
                 <button className="btn btn-sm btn-primary" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                  {uploading ? <span className="spinner" /> : <i className="ri-upload-2-line" />} Share Photo
+                  {uploading ? <span className="spinner" /> : <i className="fa-solid fa-upload" />} Share Photo
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={onUpload} />
               </>
@@ -85,7 +85,7 @@ export default function Gallery() {
           {loading ? (
             <Loader label="Loading gallery…" />
           ) : photos.length === 0 ? (
-            <div className="empty-state"><i className="ri-image-line" /><p>No photos yet in this category.</p></div>
+            <div className="empty-state"><i className="fa-regular fa-image" /><p>No photos yet in this category.</p></div>
           ) : (
             <div className="masonry">
               {photos.map((p, i) => (

@@ -9,18 +9,18 @@ export function useCanTrip() {
   return () => {
     const { user, accessToken } = useAuth.getState();
     if (!accessToken) {
-      toast('🔒', 'Please log in first');
+      toast('fa-solid fa-lock', 'Please log in first');
       navigate('/login');
       return false;
     }
     if (user?.role === 'admin') return true;
     if (!user?.membershipActive) {
-      toast('💳', 'Activate a membership to continue');
+      toast('fa-solid fa-credit-card', 'Activate a membership to continue');
       navigate('/join');
       return false;
     }
     if (!user?.profileComplete) {
-      toast('📝', 'Complete your profile to plan or join trips');
+      toast('fa-solid fa-pen-to-square', 'Complete your profile to plan or join trips');
       navigate('/complete-profile');
       return false;
     }
@@ -32,12 +32,12 @@ export function useCanTrip() {
 export function handleGateError(err, navigate) {
   const code = err?.response?.data?.code;
   if (code === 'PROFILE_INCOMPLETE') {
-    toast('📝', 'Complete your profile to continue');
+    toast('fa-solid fa-pen-to-square', 'Complete your profile to continue');
     navigate('/complete-profile');
     return true;
   }
   if (code === 'MEMBERSHIP_REQUIRED') {
-    toast('💳', 'Your membership is inactive');
+    toast('fa-solid fa-credit-card', 'Your membership is inactive');
     navigate('/join');
     return true;
   }

@@ -4,10 +4,10 @@ import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 
 const INFO = [
-  { icon: 'ri-whatsapp-line', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
-  { icon: 'ri-mail-line', label: 'Email', value: 'hello@sastitripwale.com', href: 'mailto:hello@sastitripwale.com' },
-  { icon: 'ri-phone-line', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
-  { icon: 'ri-map-pin-line', label: 'Location', value: 'Delhi, India', href: '#' },
+  { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
+  { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@sastitripwale.com', href: 'mailto:hello@sastitripwale.com' },
+  { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
+  { icon: 'fa-solid fa-location-dot', label: 'Location', value: 'Delhi, India', href: '#' },
 ];
 
 const QA = [
@@ -26,10 +26,10 @@ export default function Contact() {
     setBusy(true);
     try {
       await api.post('/contact', form);
-      toast('📩', "Message sent! We'll reply within 24 hours.");
+      toast('fa-solid fa-envelope', "Message sent! We'll reply within 24 hours.");
       setForm({ name: '', mobile: '', email: '', subject: '', message: '' });
     } catch (err) {
-      toast('❌', apiError(err));
+      toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setBusy(false);
     }
@@ -42,7 +42,7 @@ export default function Contact() {
 
   return (
     <>
-      <PageHero tag="Get in Touch" tagIcon="ri-customer-service-2-fill" title="Contact" highlight="Us" sub="Questions about joining, trips or safety? We're here to help." />
+      <PageHero tag="Get in Touch" tagIcon="fa-solid fa-headset" title="Contact" highlight="Us" sub="Questions about joining, trips or safety? We're here to help." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
@@ -85,10 +85,10 @@ export default function Contact() {
               <div className="form-group"><label>Message *</label><textarea className="form-input" required value={form.message} onChange={set('message')} /></div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={busy}>
-                  {busy ? <span className="spinner" /> : <i className="ri-send-plane-line" />} Send Message
+                  {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Send Message
                 </button>
                 <button type="button" className="btn" style={{ background: '#25D366', color: '#06070d' }} onClick={whatsapp}>
-                  <i className="ri-whatsapp-line" /> WhatsApp
+                  <i className="fa-brands fa-whatsapp" /> WhatsApp
                 </button>
               </div>
             </form>

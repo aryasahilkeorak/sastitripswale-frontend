@@ -36,7 +36,7 @@ export default function Members() {
     <>
       <PageHero
         tag="The Community"
-        tagIcon="ri-group-fill"
+        tagIcon="fa-solid fa-users"
         title="Meet the"
         highlight="Travelers"
         sub="Connect with verified bikers, car travelers and backpackers across India."
@@ -52,7 +52,7 @@ export default function Members() {
               setQuery(search.trim());
             }}
           >
-            <i className="ri-search-line" style={{ color: 'var(--text-3)' }} />
+            <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-3)' }} />
             <input placeholder="Search by name, email, mobile or user ID…" value={search} onChange={(e) => setSearch(e.target.value)} />
             <button type="submit" className="btn btn-sm btn-primary">Search</button>
           </form>
@@ -68,7 +68,7 @@ export default function Members() {
           {loading ? (
             <Loader label="Loading members…" />
           ) : members.length === 0 ? (
-            <div className="empty-state"><i className="ri-user-search-line" /><p>No members found.</p></div>
+            <div className="empty-state"><i className="fa-solid fa-user" /><p>No members found.</p></div>
           ) : (
             <div className="member-grid">
               {members.map((m) => (
