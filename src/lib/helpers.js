@@ -59,11 +59,14 @@ export function timeAgo(d) {
 }
 
 // Neutral default user icon (inline SVG, no network needed).
-const DEFAULT_AVATAR_SVG =
-  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>" +
-  "<rect width='100' height='100' fill='#1a1f35'/>" +
-  "<circle cx='50' cy='40' r='17' fill='#5a6380'/>" +
-  "<path d='M20 90c0-17 13-28 30-28s30 11 30 28z' fill='#5a6380'/></svg>";
+const DEFAULT_AVATAR_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <path d="M100 0H0V100H100V0Z" fill="#1A1F35"/>
+  <path d="M50.477 62.0746C61.2672 62.0746 70.0143 53.3274 70.0143 42.5373C70.0143 31.7471 61.2672 23 50.477 23C39.6868 23 30.9397 31.7471 30.9397 42.5373C30.9397 53.3274 39.6868 62.0746 50.477 62.0746Z" fill="#5A6380"/>
+  <path d="M16 100C16 80.4627 30.9403 67.8209 50.4776 67.8209C70.0149 67.8209 84.9552 80.4627 84.9552 100H16Z" fill="#5A6380"/>
+</svg>
+`;
+
 export const AVATAR_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
 
 // Fallback icon for non-image documents (e.g. PDFs) shown as thumbnails.

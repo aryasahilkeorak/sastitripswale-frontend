@@ -16,7 +16,7 @@ const TEAM = [
     name: 'Arya Sahil Keorak',
     title: 'Founder & CEO',
     photo: 'https://i.pravatar.cc/400?img=12',
-    quote: 'I built SastiTripWale after too many solo trips got cancelled. Travel should never wait — here, you always find your tribe.',
+    quote: 'I built SastiTripsWale after too many solo trips got cancelled. Travel should never wait — here, you always find your tribe.',
     socials: [
       { icon: 'fa-brands fa-instagram', url: 'https://instagram.com/' },
       { icon: 'fa-brands fa-linkedin', url: 'https://linkedin.com/' },
@@ -41,7 +41,7 @@ const TEAM = [
 export default function About() {
   return (
     <>
-      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripWale" sub="India's #1 verified travel community — travel together, split expenses, make friends." />
+      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripsWale" sub="India's #1 verified travel community — travel together, split expenses, make friends." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
@@ -72,7 +72,7 @@ export default function About() {
           <div className="grid-2 mb-4">
             {TEAM.map((m) => (
               <div className="card fade-up" style={{ padding: 30, textAlign: 'center' }} key={m.name}>
-                <img className="member-avatar" style={{ width: 110, height: 110 }} src={m.photo} alt={m.name} />
+                <div className="member-avatar"><img style={{ width: 110, height: 110 }} src={m.photo} alt={m.name} /></div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginTop: 12 }}>{m.name}</h3>
                 <div className="section-tag" style={{ margin: '8px auto' }}>{m.title}</div>
                 <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: '0.9rem' }}>&ldquo;{m.quote}&rdquo;</p>

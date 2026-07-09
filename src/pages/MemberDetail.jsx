@@ -59,7 +59,7 @@ export default function MemberDetail() {
         </Link>
 
         <div className="card mt-3" style={{ padding: 32, textAlign: 'center' }}>
-          <img className="member-avatar" style={{ width: 110, height: 110 }} src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)} alt={member.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+          <div className="member-avatar"><img  style={{ width: 110, height: 110 }} src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)} alt={member.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} /></div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 800, marginTop: 12 }}>{member.fullName}</h1>
           {member.isVerified && (
             <div className="verified-badge" style={{ justifyContent: 'center' }}>

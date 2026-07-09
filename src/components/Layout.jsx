@@ -48,7 +48,7 @@ export default function Layout() {
       <div className="fab-group">
         <div style={{ position: 'relative' }}>
           <a
-            href="https://wa.me/919876543210?text=Hi! I want to know more about SastiTripWale"
+            href="https://wa.me/919876543210?text=Hi! I want to know more about SastiTripsWale"
             target="_blank"
             rel="noreferrer"
             className="fab fab-wa"

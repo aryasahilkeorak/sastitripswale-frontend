@@ -155,7 +155,7 @@ export default function Join() {
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: 'SastiTripWale',
+        name: 'SastiTripsWale',
         description: 'Community Membership',
         order_id: data.orderId,
         prefill: data.prefill,

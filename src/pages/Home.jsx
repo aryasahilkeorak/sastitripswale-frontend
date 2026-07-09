@@ -33,10 +33,10 @@ const CATS = [
 ];
 
 const FAQS = [
-  { q: 'How do I join SastiTripWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOIN to join free!' },
+  { q: 'How do I join SastiTripsWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOIN to join free!' },
   { q: 'Is it safe to travel with strangers?', a: 'Yes! Every member is verified with Aadhaar/PAN before joining. Emergency contacts are collected, and we have dedicated women-safe groups.' },
   { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members. A ₹25,000 Goa trip with 5 people costs just ₹5,000/person!' },
-  { q: 'I have a bike but no travel friends. Can I join?', a: "Absolutely! That's exactly why SastiTripWale exists. Find hundreds of fellow bikers and car owners and make travel friends for life." },
+  { q: 'I have a bike but no travel friends. Can I join?', a: "Absolutely! That's exactly why SastiTripsWale exists. Find hundreds of fellow bikers and car owners and make travel friends for life." },
   { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to waive it entirely!' },
 ];
 
@@ -121,8 +121,7 @@ export default function Home() {
             <div className="trust-item"><i className="fa-solid fa-shield-halved" /> <strong>Verified</strong> Members</div>
             <div className="trust-item"><i className="fa-solid fa-motorcycle" /> Bike &amp; Car Trips</div>
             <div className="trust-item"><i className="fa-solid fa-wallet" /> Split Expenses</div>
-            <div className="trust-item"><i className="fa-solid fa-venus" /> Women-Safe Groups</div>
-            <div className="trust-item"><i className="fa-brands fa-whatsapp" /> WhatsApp Groups</div>
+            <div className="trust-item"><i className="fa-solid fa-venus" /> Safe for Women</div>
           </div>
         </div>
       </div>
@@ -150,7 +149,7 @@ export default function Home() {
         <div className="container">
           <div className="text-center fade-up">
             <div className="section-tag"><i className="fa-solid fa-star" /> Why Choose Us</div>
-            <h2 className="section-title">Why <span className="highlight">SastiTripWale?</span></h2>
+            <h2 className="section-title">Why <span className="highlight">SastiTripsWale?</span></h2>
             <p className="section-sub">We solve real problems of solo travelers — finding partners, managing budgets, staying safe on the road.</p>
           </div>
           <div className="why-grid">
@@ -274,7 +273,7 @@ export default function Home() {
             <div className="section-tag"><i className="fa-solid fa-circle-question" /> FAQ</div>
             <h2 className="section-title">Frequently Asked <span className="highlight">Questions</span></h2>
           </div>
-          <div style={{ maxWidth: 700, margin: '0 auto' }} className="fade-up">
+          <div style={{margin: '0 auto' }} className="fade-up">
             {FAQS.map((f, i) => (
               <div className={`faq-item${openFaq === i ? ' open' : ''}`} key={f.q}>
                 <div className="faq-q" onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>

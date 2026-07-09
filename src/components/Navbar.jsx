@@ -88,8 +88,7 @@ export default function Navbar() {
     <>
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
         <Link to="/" className="nav-brand">
-          <div className="nav-brand-icon"><i className="fa-solid fa-motorcycle" /></div>
-          <span className="nav-brand-text">SastiTripWale</span>
+          <span className="nav-brand-text">SastiTripsWale</span>
         </Link>
 
         <div className="nav-links">
@@ -101,7 +100,7 @@ export default function Navbar() {
 
           {!accessToken ? (
             <NavLink to="/join" className="nav-cta">
-              Join Free <i className="fa-solid fa-rocket" />
+              Join Now <i className="fa-solid fa-rocket" />
             </NavLink>
           ) : (
             <div className="nav-user" ref={menuRef}>

@@ -102,7 +102,7 @@ export default function Trips() {
             <div className="empty-state">
               <i className="fa-solid fa-compass" />
               <p>No trips match your filters.</p>
-              <Link to="/plan-trip" className="btn btn-primary mt-3">
+              <Link to="/plan-trip" className="btn btn-primary mt-3 plan-trip-btn">
                 <i className="fa-solid fa-plus" /> Plan a Trip
               </Link>
             </div>

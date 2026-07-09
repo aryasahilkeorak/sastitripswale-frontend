@@ -59,12 +59,13 @@ export default function MemberCard({ member }) {
 
   return (
     <div className="member-card fade-up">
-      <img
-        className="member-avatar"
-        src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
-        alt={member.fullName}
-        onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-      />
+      <div className="member-avatar">
+        <img
+          src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
+          alt={member.fullName}
+          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+        />
+      </div>
       <h3>{member.fullName}</h3>
       {member.isVerified && (
         <div className="verified-badge" style={{ justifyContent: 'center' }}>

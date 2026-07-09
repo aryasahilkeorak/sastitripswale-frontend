@@ -5,7 +5,7 @@ import PageHero from '../components/PageHero.jsx';
 
 const INFO = [
   { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
-  { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@sastitripwale.com', href: 'mailto:hello@sastitripwale.com' },
+  { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@SastiTripsWale.com', href: 'mailto:hello@SastiTripsWale.com' },
   { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
   { icon: 'fa-solid fa-location-dot', label: 'Location', value: 'Delhi, India', href: '#' },
 ];
@@ -36,7 +36,7 @@ export default function Contact() {
   };
 
   const whatsapp = () => {
-    const text = encodeURIComponent(`Hi SastiTripWale! I'm ${form.name || 'a traveler'}. ${form.message || ''}`);
+    const text = encodeURIComponent(`Hi SastiTripsWale! I'm ${form.name || 'a traveler'}. ${form.message || ''}`);
     window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
   };
 
