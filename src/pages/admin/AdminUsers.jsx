@@ -104,7 +104,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
   const u = d?.user;
 
   return (
-    <Modal open={Boolean(id)} onClose={onClose} title="Member details" maxWidth={640}>
+    <Modal open={Boolean(id)} onClose={onClose} title="Member details" maxWidth={900}>
       {!d ? <Loader /> : (
         <>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
