@@ -18,19 +18,22 @@ export default function Members() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('');
 
+  // Live search — debounced so every keystroke doesn't fire a request.
   useEffect(() => {
     setLoading(true);
-    const f = FILTERS.find((x) => x.key === filter) || FILTERS[0];
-    const params = { limit: 40, ...f.params };
-    if (query) params.search = query;
-    api
-      .get('/members', { params })
-      .then((r) => setMembers(r.data.members))
-      .catch(() => setMembers([]))
-      .finally(() => setLoading(false));
-  }, [filter, query]);
+    const t = setTimeout(() => {
+      const f = FILTERS.find((x) => x.key === filter) || FILTERS[0];
+      const params = { limit: 40, ...f.params };
+      if (search.trim()) params.search = search.trim();
+      api
+        .get('/members', { params })
+        .then((r) => setMembers(r.data.members))
+        .catch(() => setMembers([]))
+        .finally(() => setLoading(false));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [filter, search]);
 
   return (
     <>
@@ -47,14 +50,15 @@ export default function Members() {
           <form
             className="search-bar"
             style={{ maxWidth: 520, marginBottom: 20 }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              setQuery(search.trim());
-            }}
+            onSubmit={(e) => e.preventDefault()}
           >
             <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-3)' }} />
             <input placeholder="Search by name, email, mobile or user ID…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <button type="submit" className="btn btn-sm btn-primary">Search</button>
+            {search && (
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => setSearch('')}>
+                <i className="fa-solid fa-xmark" />
+              </button>
+            )}
           </form>
 
           <div className="filter-chips">

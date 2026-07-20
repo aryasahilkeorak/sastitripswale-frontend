@@ -6,6 +6,7 @@ import { rupee, planPrice, PREF_LABEL } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Modal from '../components/Modal.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
+import CustomSelect from '../components/CustomSelect.jsx';
 
 const PREFS = [
   { key: 'male', label: 'Only Male', icon: 'fa-solid fa-mars', note: 'Travel with male co-travelers' },
@@ -19,7 +20,7 @@ const DURATIONS = [
 ];
 
 function launchConfetti() {
-  const colors = ['#ff6b00', '#e040fb', '#00d4ff', '#ffd60a', '#ff3366'];
+  const colors = ['#ff7a1a', '#ff9b4d', '#3e8ef7', '#7fb2ff', '#ffc94d'];
   for (let i = 0; i < 60; i++) {
     const c = document.createElement('div');
     c.style.cssText = `position:fixed;z-index:9999;width:${4 + Math.random() * 6}px;height:${4 + Math.random() * 6}px;border-radius:2px;background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}vw;top:-10px;pointer-events:none;animation:confettiFall ${1.5 + Math.random() * 2}s ease-in ${Math.random() * 0.8}s forwards;transform:rotate(${Math.random() * 360}deg);`;
@@ -159,7 +160,7 @@ export default function Join() {
         description: 'Community Membership',
         order_id: data.orderId,
         prefill: data.prefill,
-        theme: { color: '#ff6b00' },
+        theme: { color: '#ff7a1a' },
         handler: async (resp) => {
           try {
             await api.post('/payments/verify', {
@@ -213,9 +214,11 @@ export default function Join() {
               <div className="form-group"><label>Password *</label><PasswordInput value={form.password} onChange={set('password')} placeholder="min 6 characters" /></div>
               <div className="form-group">
                 <label>Your gender *</label>
-                <select className="form-input" value={form.gender} onChange={set('gender')}>
-                  <option value="">Select</option><option>Male</option><option>Female</option><option>Prefer not to say</option>
-                </select>
+                <CustomSelect
+                  value={form.gender}
+                  onChange={set('gender')}
+                  options={[{ value: '', label: 'Select' }, 'Male', 'Female', 'Prefer not to say']}
+                />
               </div>
 
               <div className="form-group">

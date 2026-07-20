@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { imageUrl, rupee, dateRange, tripDays } from '../lib/helpers.js';
+import { rupee, dateRange, tripDays, routeLabel } from '../lib/helpers.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
+import DestinationImage from '../components/DestinationImage.jsx';
 
 function pooledLabel(v) {
   if (!v) return '₹0';
@@ -38,7 +39,7 @@ export default function CompletedTrips() {
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
-          <div className="grid-4 mb-4">
+          <div className="grid-4 mini-stat-grid mb-4">
             {STATS.map((s) => (
               <div className="mini-stat" key={s.label}>
                 <div className="num">{s.num}</div>
@@ -60,9 +61,9 @@ export default function CompletedTrips() {
                     <div className="tl-date">{dateRange(t.startDate, t.endDate)}</div>
                     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr' }} className="tl-card">
-                        <img src={imageUrl(t.coverImageUrl, `https://picsum.photos/seed/${t._id}/500/400`)} alt={t.destination} style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: 180 }} />
+                        <DestinationImage trip={t} style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: 180 }} />
                         <div style={{ padding: 22 }}>
-                          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>{t.title || t.destination}</h3>
+                          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>{routeLabel(t)}</h3>
                           <p className="text-muted mb-2"><i className="fa-solid fa-location-dot" /> {t.destination}</p>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                             {tripDays(t.startDate, t.endDate) && <span className="badge badge-gold">{tripDays(t.startDate, t.endDate)} Days</span>}

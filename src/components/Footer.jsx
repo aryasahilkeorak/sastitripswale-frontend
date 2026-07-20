@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BrandLogo from './BrandLogo.jsx';
 
 export default function Footer() {
   return (
@@ -6,8 +7,8 @@ export default function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link to="/" className="nav-brand" style={{ fontSize: '1.4rem' }}>
-              <span className="nav-brand-text">SastiTripsWale</span>
+            <Link to="/" className="nav-brand">
+              <BrandLogo variant="horizontal" />
             </Link>
             <p>
               India's #1 travel community for bikers, car travelers &amp; backpackers. Travel

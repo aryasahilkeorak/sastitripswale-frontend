@@ -92,6 +92,12 @@ export default function Layout() {
             <i className="fa-solid fa-users" />
             <span>Members</span>
           </NavLink>
+          {accessToken && (
+            <NavLink to="/chat" className="bnav-item">
+              <i className="fa-solid fa-comment-dots" />
+              <span>Chat</span>
+            </NavLink>
+          )}
           <NavLink to={accessToken ? '/dashboard' : '/join'} className="bnav-item">
             <i className="fa-solid fa-user-plus" />
             <span>{accessToken ? 'Me' : 'Join'}</span>

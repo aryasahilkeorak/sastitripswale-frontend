@@ -19,8 +19,11 @@ export default function AdminCoupons() {
     catch (err) { toast('fa-solid fa-circle-xmark', apiError(err)); }
   };
   const toggle = async (id) => {
-    try { const { data } = await api.patch(`/admin/coupons/${id}`); setCoupons((cs) => cs.map((c) => (c._id === id ? { ...c, isActive: data.isActive } : c))); }
-    catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
+    try {
+      const { data } = await api.patch(`/admin/coupons/${id}`);
+      setCoupons((cs) => cs.map((c) => (c._id === id ? { ...c, isActive: data.isActive } : c)));
+      toast('fa-solid fa-circle-check', data.isActive ? 'Coupon enabled' : 'Coupon disabled');
+    } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const remove = async (id) => {
     if (!window.confirm('Delete this coupon permanently?')) return;
@@ -60,11 +63,11 @@ export default function AdminCoupons() {
             <tbody>
               {coupons.map((c) => (
                 <tr key={c._id}>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>{c.code}{!c.isActive && <span className="text-muted" style={{ fontSize: '0.68rem' }}> (off)</span>}</td>
-                  <td>{c.discountPct ? `${c.discountPct}%` : `₹${c.discountAmt}`}</td>
-                  <td>{c.usedCount}/{c.maxUses}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                  <td data-label="Code" style={{ fontFamily: 'var(--font-mono)' }}>{c.code}{!c.isActive && <span className="text-muted" style={{ fontSize: '0.68rem' }}> (off)</span>}</td>
+                  <td data-label="Discount">{c.discountPct ? `${c.discountPct}%` : `₹${c.discountAmt}`}</td>
+                  <td data-label="Used">{c.usedCount}/{c.maxUses}</td>
+                  <td data-label="Actions">
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button className="btn btn-sm btn-outline" onClick={() => setEditing({ ...c })}><i className="fa-solid fa-pen-to-square" /></button>
                       <button className={`btn btn-sm ${c.isActive ? 'btn-outline' : 'btn-primary'}`} onClick={() => toggle(c._id)}>{c.isActive ? 'Off' : 'On'}</button>
                       <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(c._id)}><i className="fa-solid fa-trash" /></button>

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import AdminLayout from './components/AdminLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import Preloader from './components/Preloader.jsx';
 import { api } from './lib/api.js';
 import { useAuth } from './store/auth.js';
 
@@ -22,6 +23,7 @@ import Login from './pages/Login.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import PlanTrip from './pages/PlanTrip.jsx';
+import EditTrip from './pages/EditTrip.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Chat from './pages/Chat.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -31,6 +33,7 @@ import AdminUsers from './pages/admin/AdminUsers.jsx';
 import AdminTrips from './pages/admin/AdminTrips.jsx';
 import AdminCoupons from './pages/admin/AdminCoupons.jsx';
 import AdminReviews from './pages/admin/AdminReviews.jsx';
+import AdminGallery from './pages/admin/AdminGallery.jsx';
 import AdminMessages from './pages/admin/AdminMessages.jsx';
 import AdminAdmins from './pages/admin/AdminAdmins.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
@@ -48,42 +51,47 @@ export default function App() {
   }, []);
 
   return (
-    <Routes>
-      {/* Public site (with the normal navbar/footer) */}
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/trips" element={<Trips />} />
-        <Route path="/trips/:id" element={<TripDetail />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/members/:id" element={<MemberDetail />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/completed-trips" element={<CompletedTrips />} />
-        <Route path="/testimonials" element={<Testimonials />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/join" element={<Join />} />
-        <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/plan-trip" element={<ProtectedRoute><PlanTrip /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-        <Route path="/chat/:groupId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
+    <>
+      <Preloader />
+      <Routes>
+        {/* Public site (with the normal navbar/footer) */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/trips" element={<Trips />} />
+          <Route path="/trips/:id" element={<TripDetail />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/members/:id" element={<MemberDetail />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/completed-trips" element={<CompletedTrips />} />
+          <Route path="/testimonials" element={<Testimonials />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/join" element={<Join />} />
+          <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/plan-trip" element={<ProtectedRoute><PlanTrip /></ProtectedRoute>} />
+          <Route path="/trips/:id/edit" element={<ProtectedRoute><EditTrip /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/chat/:groupId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-      {/* Admin dashboard (its own sidebar chrome, no public navbar) */}
-      <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<AdminOverview />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="trips" element={<AdminTrips />} />
-        <Route path="coupons" element={<AdminCoupons />} />
-        <Route path="reviews" element={<AdminReviews />} />
-        <Route path="messages" element={<AdminMessages />} />
-        <Route path="admins" element={<ProtectedRoute superadmin><AdminAdmins /></ProtectedRoute>} />
-        <Route path="profile" element={<AdminProfile />} />
-      </Route>
-    </Routes>
+        {/* Admin dashboard (its own sidebar chrome, no public navbar) */}
+        <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminOverview />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="trips" element={<AdminTrips />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="reviews" element={<AdminReviews />} />
+          <Route path="gallery" element={<AdminGallery />} />
+          <Route path="messages" element={<AdminMessages />} />
+          <Route path="admins" element={<ProtectedRoute superadmin><AdminAdmins /></ProtectedRoute>} />
+          <Route path="profile" element={<AdminProfile />} />
+        </Route>
+      </Routes>
+    </>
   );
 }

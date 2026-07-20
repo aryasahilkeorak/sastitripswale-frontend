@@ -2,13 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, paiseToRupee, timeAgo, dateRange, formatDate, PREF_LABEL, AVATAR_FALLBACK } from '../lib/helpers.js';
+import {
+  imageUrl,
+  rupee,
+  paiseToRupee,
+  timeAgo,
+  formatDate,
+  PREF_LABEL,
+  AVATAR_FALLBACK,
+  SOCIAL_PLATFORMS,
+  socialUrl,
+  TRAVEL_INTEREST_ICONS,
+} from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
-import TripCard from '../components/TripCard.jsx';
+import ProfileEditForm from '../components/ProfileEditForm.jsx';
+import DestinationImage from '../components/DestinationImage.jsx';
 
 const TABS = [
-  { key: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
   { key: 'trips', label: 'My Trips', icon: 'fa-solid fa-map-location-dot' },
+  { key: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
   { key: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
   { key: 'payments', label: 'Payments', icon: 'fa-solid fa-credit-card' },
   { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear' },
@@ -26,7 +38,8 @@ const NOTIF_ICON = {
 export default function Dashboard() {
   const user = useAuth((s) => s.user);
   const setUser = useAuth((s) => s.setUser);
-  const [tab, setTab] = useState('overview');
+  const viewMode = useAuth((s) => s.viewMode);
+  const [tab, setTab] = useState('trips');
 
   const [trips, setTrips] = useState([]);
   const [notifs, setNotifs] = useState([]);
@@ -40,8 +53,9 @@ export default function Dashboard() {
     api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
   }, []);
 
-  // Admins get the dedicated admin dashboard, not the member one.
-  if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+  // Admins get the dedicated admin dashboard, not the member one — unless
+  // they chose "Continue as User" at login.
+  if (viewMode !== 'user' && user && (user.role === 'admin' || user.role === 'superadmin')) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -75,37 +89,104 @@ export default function Dashboard() {
     }
   };
 
+  const copyId = () => {
+    navigator.clipboard?.writeText(String(user?.id || ''));
+    toast('fa-solid fa-clipboard', 'User ID copied — share it to be added to groups');
+  };
+
+  const shareProfile = () => {
+    const url = `${window.location.origin}/members/${user?.id}`;
+    if (navigator.share) {
+      navigator.share({ title: `${user?.fullName} on SastiTripsWale`, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url);
+      toast('fa-solid fa-clipboard', 'Profile link copied!');
+    }
+  };
+
   return (
-    <section style={{ paddingTop: 100 }}>
-      <div className="container">
-        {/* Header */}
-        <div className="dash-header">
-          <img className="profile-avatar" src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800 }}>{user?.fullName}</h1>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>
-              {user?.city || 'India'}{user?.vehicleType ? ` · ${user.vehicleType}` : ''} · {user?.email}
+    <section style={{ paddingTop: 110, paddingBottom: 60 }}>
+      <div className="container" style={{ maxWidth: 900 }}>
+        {/* Profile header — matches the real Instagram profile layout: a
+            top row of avatar + stats, then name/bio/links full-width below. */}
+        <div className="ig-header">
+          <div className="ig-top-row">
+            <img
+              className="ig-avatar"
+              src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)}
+              alt={user?.fullName}
+              onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+            />
+            <div className="ig-stats">
+              <div className="ig-stat"><strong>{trips.length}</strong><span>Trips</span></div>
+              <div className="ig-stat"><strong>{acceptedCount}</strong><span>Connections</span></div>
+              <div className="ig-stat"><strong>{unread}</strong><span>Alerts</span></div>
+              <div className="ig-stat"><strong>{payments.length}</strong><span>Payments</span></div>
+            </div>
+          </div>
+
+          <div className="ig-header-body">
+            <div className="ig-name-row">
+              <h1>{user?.fullName}</h1>
+              {user?.role === 'superadmin' ? (
+                <span className="verified-badge founder-badge"><i className="fa-solid fa-crown" /> Founder</span>
+              ) : user?.isVerified && (
+                <span className="verified-badge"><i className="fa-solid fa-circle-check" /> Verified</span>
+              )}
+              <button className="ig-id-btn" onClick={copyId} title="Copy user ID">
+                <i className="fa-solid fa-copy" />
+              </button>
+              <button className="ig-id-btn" style={{ marginLeft: 'auto' }} onClick={() => setTab('settings')} title="Settings">
+                <i className="fa-solid fa-gear" />
+              </button>
+            </div>
+
+            {user?.username && <p className="ig-username">@{user.username}</p>}
+            <p className="ig-joined">Member since {formatDate(user?.createdAt)}</p>
+
+            <p className="ig-meta">
+              {user?.profession && <span><i className="fa-solid fa-briefcase" /> {user.profession}</span>}
+              <span><i className="fa-solid fa-location-dot" /> {user?.city || 'India'}{user?.vehicleType ? ` · ${user.vehicleType}` : ''}</span>
+              <span><i className="fa-solid fa-envelope" /> {user?.email}</span>
             </p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+
+            {user?.bio && <p className="ig-bio">{user.bio}</p>}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
               <span className={`badge ${user?.membershipActive ? 'badge-green' : 'badge-red'}`}>
                 {user?.membershipActive ? '● Active member' : '○ Membership inactive'}
               </span>
               {user?.membershipActive && user?.membershipExpiresAt && (
                 <span className="badge badge-gold">Valid till {formatDate(user.membershipExpiresAt)}</span>
               )}
-              {user?.isVerified && <span className="badge badge-cyan"><i className="fa-solid fa-circle-check" /> Verified</span>}
               {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {!user?.membershipPaid && <Link to="/join" className="btn btn-primary btn-sm"><i className="fa-solid fa-crown" /> Activate</Link>}
-            <Link to="/plan-trip" className="btn btn-outline btn-sm"><i className="fa-solid fa-map-location-dot" /> Plan Trip</Link>
+
+            {SOCIAL_PLATFORMS.some((p) => user?.[p.key]) && (
+              <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
+                {SOCIAL_PLATFORMS.filter((p) => user?.[p.key]).map((p) => (
+                  <a key={p.key} href={socialUrl(p.key, user[p.key])} target="_blank" rel="noreferrer" title={p.label} style={{ fontSize: '1.2rem', color: 'var(--text-2)' }}>
+                    <i className={p.icon} />
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {user?.travelInterests?.length > 0 && (
+              <div className="interest-pill-row" style={{ marginTop: 12 }}>
+                {user.travelInterests.map((t) => (
+                  <span key={t} className="interest-pill">
+                    <i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /> {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Complete-profile gate banner */}
         {!user?.profileComplete && (
-          <div className="card mb-4" style={{ padding: 20, borderColor: 'rgba(224,64,251,0.4)' }}>
+          <div className="card mt-3" style={{ padding: 20, borderColor: 'rgba(224,64,251,0.4)' }}>
             <div className="row-between">
               <div>
                 <strong>Complete your profile to unlock trips</strong>
@@ -116,20 +197,42 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Quick stats */}
-        <div className="grid-4 mb-4">
-          <div className="mini-stat"><div className="num">{trips.length}</div><div className="lbl">Trips Organized</div></div>
-          <div className="mini-stat"><div className="num">{acceptedCount}</div><div className="lbl">Connections</div></div>
-          <div className="mini-stat"><div className="num">{unread}</div><div className="lbl">Unread Alerts</div></div>
-          <div className="mini-stat"><div className="num">{payments.length}</div><div className="lbl">Payments</div></div>
+        {!user?.membershipPaid && (
+          <div className="card mt-3" style={{ padding: 20, borderColor: 'rgba(255,107,0,0.3)' }}>
+            <div className="row-between">
+              <div>
+                <strong>Activate your membership</strong>
+                <p className="text-muted" style={{ fontSize: '0.85rem' }}>Unlock trip creation, joining and connections.</p>
+              </div>
+              <Link to="/join" className="btn btn-primary btn-sm"><i className="fa-solid fa-crown" /> View Plans</Link>
+            </div>
+          </div>
+        )}
+
+        <div className="ig-action-row mt-3">
+          <button className="ig-flat-btn" onClick={() => setTab('settings')}><i className="fa-solid fa-pen" /> Edit profile</button>
+          <button className="ig-flat-btn" onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
+        </div>
+
+        <div className="ig-highlights mt-3">
+          <Link to="/plan-trip" className="ig-highlight-item">
+            <span className="ig-highlight-avatar ig-highlight-new"><i className="fa-solid fa-plus" /></span>
+            <span className="ig-highlight-label">New</span>
+          </Link>
+          {trips.map((t) => (
+            <Link to={`/trips/${t._id}`} key={t._id} className="ig-highlight-item">
+              <span className="ig-highlight-avatar"><DestinationImage trip={t} loading="lazy" /></span>
+              <span className="ig-highlight-label">{t.destination}</span>
+            </Link>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className="dash-tabs">
+        <div className="ig-tabs mt-4">
           {TABS.map((t) => (
-            <button key={t.key} className={`dash-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
-              <i className={t.icon} /> {t.label}
-              {t.key === 'notifications' && unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 6 }}>{unread}</span>}
+            <button key={t.key} className={`ig-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)} title={t.label}>
+              <i className={t.icon} /> <span>{t.label}</span>
+              {t.key === 'notifications' && unread > 0 && <span className="ig-tab-dot" />}
             </button>
           ))}
         </div>
@@ -149,35 +252,8 @@ export default function Dashboard() {
                 label="Membership"
                 value={user?.membershipActive ? `${user?.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(user?.membershipExpiresAt)}` : 'Inactive'}
               />
-              <div className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--glass-bdr)' }}>
-                <span className="text-muted" style={{ fontSize: '0.8rem' }}>Your User ID</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="id-chip">{user?.id}</span>
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => { navigator.clipboard?.writeText(user?.id || ''); toast('fa-solid fa-clipboard', 'User ID copied — share it to be added to groups'); }}
-                  >
-                    <i className="fa-solid fa-copy" />
-                  </button>
-                </span>
-              </div>
-              {user?.travelInterests?.length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div className="text-muted" style={{ fontSize: '0.75rem', marginBottom: 6 }}>Travel interests</div>
-                  <div className="member-tags" style={{ justifyContent: 'flex-start' }}>
-                    {user.travelInterests.map((t) => <span key={t} className="badge badge-cyan">{t}</span>)}
-                  </div>
-                </div>
-              )}
             </div>
             <div>
-              {!user?.membershipActive && (
-                <div className="card mb-3" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
-                  <h4 style={{ fontFamily: 'var(--font-display)' }}>Activate your membership</h4>
-                  <p className="text-muted mt-2">Unlock trip creation, joining and connections.</p>
-                  <Link to="/join" className="btn btn-primary mt-3"><i className="fa-solid fa-crown" /> View Plans</Link>
-                </div>
-              )}
               <div className="card" style={{ padding: 24 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick actions</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -202,18 +278,22 @@ export default function Dashboard() {
             {trips.length === 0 ? (
               <div className="empty-state"><i className="fa-solid fa-map-location-dot" /><p>You haven't hosted any trips yet.</p><Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link></div>
             ) : (
-              <div className="trips-grid">
+              <div className="ig-grid">
                 {trips.map((t) => (
-                  <div key={t._id}>
-                    <TripCard trip={t} />
+                  <Link to={`/trips/${t._id}`} key={t._id} className="ig-tile">
+                    <DestinationImage trip={t} loading="lazy" />
+                    <div className="ig-tile-overlay">
+                      <div className="ig-tile-dest">{t.destination}</div>
+                      <div className="ig-tile-meta">{rupee(t.budgetPerHead)}</div>
+                    </div>
                     <button
-                      className="btn btn-sm"
-                      style={{ width: '100%', justifyContent: 'center', marginTop: 8, background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
-                      onClick={() => removeTrip(t._id)}
+                      className="ig-tile-delete"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTrip(t._id); }}
+                      title="Delete trip"
                     >
-                      <i className="fa-solid fa-trash" /> Delete trip
+                      <i className="fa-solid fa-trash" />
                     </button>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -306,34 +386,7 @@ function Detail({ label, value }) {
 }
 
 function SettingsForm({ user, setUser }) {
-  const fileRef = useRef(null);
-  const [form, setForm] = useState({
-    fullName: user?.fullName || '', profession: user?.profession || '', city: user?.city || '',
-    state: user?.state || '', whatsapp: user?.whatsapp || '', instagram: user?.instagram || '',
-    vehicleModel: user?.vehicleModel || '', bio: user?.bio || '',
-  });
-  const [avatar, setAvatar] = useState(null);
-  const [busy, setBusy] = useState(false);
   const clear = useAuth((s) => s.clear);
-
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const save = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      if (avatar) fd.append('avatar', avatar);
-      const { data } = await api.put('/members/profile', fd);
-      setUser(data.user);
-      toast('fa-solid fa-circle-check', 'Profile updated!');
-    } catch (err) {
-      toast('fa-solid fa-circle-xmark', apiError(err));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const logout = async () => {
     await api.post('/auth/logout').catch(() => {});
@@ -343,34 +396,84 @@ function SettingsForm({ user, setUser }) {
 
   return (
     <div className="grid-2">
-      <form className="card" style={{ padding: 24 }} onSubmit={save}>
-        <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Edit profile</h3>
-        <div className="upload-box mb-3" onClick={() => fileRef.current?.click()}>
-          <img className="avatar-preview" src={avatar ? URL.createObjectURL(avatar) : imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt="" />
-          <div className="upload-label">{avatar ? avatar.name : 'Change photo'}</div>
-          <input ref={fileRef} type="file" accept="image/*" onChange={(e) => setAvatar(e.target.files?.[0] || null)} />
-        </div>
-        <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
-        <div className="form-row">
-          <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
-          <div className="form-group"><label>Vehicle model</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} /></div>
-        </div>
-        <div className="form-row">
-          <div className="form-group"><label>City</label><input className="form-input" value={form.city} onChange={set('city')} /></div>
-          <div className="form-group"><label>State</label><input className="form-input" value={form.state} onChange={set('state')} /></div>
-        </div>
-        <div className="form-row">
-          <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
-          <div className="form-group"><label>Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} /></div>
-        </div>
-        <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} /></div>
-        <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes</button>
-      </form>
+      <ProfileEditForm user={user} onSaved={setUser} />
 
-      <div className="card" style={{ padding: 24, alignSelf: 'flex-start', borderColor: 'rgba(239,68,68,0.25)' }}>
-        <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
-        <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
-        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <DocumentsCard />
+        <div className="card" style={{ padding: 24, borderColor: 'rgba(239,68,68,0.25)' }}>
+          <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
+          <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
+          <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const DOC_TYPE_LABEL = {
+  aadhaar: 'Aadhaar',
+  pan: 'PAN',
+  voter_id: 'Voter ID',
+  driving_license: 'Driving Licence',
+  rc: 'RC',
+};
+const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
+
+function DocumentsCard() {
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reuploadingId, setReuploadingId] = useState(null);
+  const fileRef = useRef(null);
+
+  const load = () => {
+    setLoading(true);
+    api.get('/members/documents').then((r) => setDocs(r.data.documents)).catch(() => {}).finally(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  const pickReupload = (id) => {
+    setReuploadingId(id);
+    setTimeout(() => fileRef.current?.click(), 0);
+  };
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !reuploadingId) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api.put(`/members/documents/${reuploadingId}`, fd);
+      toast('fa-solid fa-circle-check', 'Document re-uploaded — pending review');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setReuploadingId(null);
+    }
+  };
+
+  if (loading) return null;
+  if (docs.length === 0) return null;
+
+  return (
+    <div className="card" style={{ padding: 24 }}>
+      <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My Documents</h4>
+      <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={onFile} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {docs.map((d) => (
+          <div key={d._id} className="row-between" style={{ alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '0.85rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</div>
+              <span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span>
+            </div>
+            {d.status === 'rejected' && (
+              <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d._id)}>
+                <i className="fa-solid fa-rotate" /> Reupload
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

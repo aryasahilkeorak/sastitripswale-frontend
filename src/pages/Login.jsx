@@ -9,10 +9,12 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const setSession = useAuth((s) => s.setSession);
+  const setViewMode = useAuth((s) => s.setViewMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [roleChoice, setRoleChoice] = useState(null); // logged-in user, awaiting admin/user pick
 
   const submit = async (e) => {
     e.preventDefault();
@@ -22,14 +24,43 @@ export default function Login() {
       const { data } = await api.post('/auth/login', { email, password });
       setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
       toast('fa-solid fa-hand', `Welcome back, ${data.user.fullName.split(' ')[0]}!`);
-      const dest = location.state?.from || (data.user.role === 'admin' ? '/admin' : '/dashboard');
-      navigate(dest, { replace: true });
+      if (data.user.role === 'admin' || data.user.role === 'superadmin') {
+        setRoleChoice(data.user);
+      } else {
+        navigate(location.state?.from || '/dashboard', { replace: true });
+      }
     } catch (e2) {
       setErr(apiError(e2, 'Login failed'));
     } finally {
       setBusy(false);
     }
   };
+
+  const continueAs = (mode) => {
+    setViewMode(mode);
+    navigate(mode === 'admin' ? '/admin' : (location.state?.from || '/dashboard'), { replace: true });
+  };
+
+  if (roleChoice) {
+    return (
+      <div className="auth-wrap">
+        <div className="page-hero-bg" />
+        <div className="auth-card text-center">
+          <h1>Welcome back, {roleChoice.fullName.split(' ')[0]} <i className="fa-solid fa-hand" /></h1>
+          <p className="muted">Your account has admin access. How do you want to continue?</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => continueAs('admin')}>
+              <i className="fa-solid fa-shield-halved" /> Continue as Admin
+            </button>
+            <button className="btn btn-outline btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => continueAs('user')}>
+              <i className="fa-solid fa-user" /> Continue as User
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-wrap">

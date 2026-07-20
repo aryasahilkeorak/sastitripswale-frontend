@@ -1,25 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, rupee, dateRange } from '../lib/helpers.js';
+import { rupee, dateRange, routeLabel } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
+import CustomSelect from '../components/CustomSelect.jsx';
+import CustomDatePicker from '../components/CustomDatePicker.jsx';
+import CustomNumberStepper from '../components/CustomNumberStepper.jsx';
+import ChipListInput from '../components/ChipListInput.jsx';
 
 const TIPS = [
-  'Add a clear destination and realistic dates.',
+  'Add a clear route (start, via stops, destination) and realistic dates.',
   'Keep the per-head budget honest — it builds trust.',
-  'Share a WhatsApp group link so members can coordinate.',
   'Mention pickup location and vehicle type.',
-  'Add a cover photo — trips with photos get 3× interest.',
+  'Review join requests promptly — quick hosts get more interest.',
 ];
 
 const POPULAR = ['Leh-Ladakh', 'Spiti Valley', 'Goa', 'Kedarnath', 'Coorg', 'Jaisalmer', 'Meghalaya', 'Manali'];
 
 const EMPTY = {
-  destination: '', title: '', startDate: '', endDate: '', budgetPerHead: '', totalSeats: 4,
-  vehicleType: '', tripType: 'mixed', pickupLocation: '', whatsappGroup: '', description: '',
+  origin: '', viaStops: [], destination: '', startDate: '', endDate: '', budgetPerHead: '', totalSeats: 4,
+  vehicleType: '', tripType: 'mixed', pickupLocation: '', description: '',
+  isCouplesMode: false,
 };
 
 export default function PlanTrip() {
@@ -31,25 +35,21 @@ export default function PlanTrip() {
   const canPlan = isMember && profileDone;
 
   const [form, setForm] = useState(EMPTY);
-  const [cover, setCover] = useState(null);
-  const [coverPreview, setCoverPreview] = useState('');
   const [trips, setTrips] = useState([]);
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef(null);
+  const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const toggleCouplesMode = (e) => {
+    const on = e.target.checked;
+    setForm((f) => ({ ...f, isCouplesMode: on, vehicleType: on ? 'Car' : f.vehicleType }));
+  };
 
   const loadMine = () => api.get('/trips/my').then((r) => setTrips(r.data.trips)).catch(() => {});
   useEffect(() => {
     loadMine();
   }, []);
-
-  const onCover = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCover(file);
-    setCoverPreview(URL.createObjectURL(file));
-  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -58,16 +58,19 @@ export default function PlanTrip() {
       toast('fa-solid fa-triangle-exclamation', 'End date must be after start date');
       return;
     }
+    if (form.isCouplesMode && (Number(form.totalSeats) < 4 || Number(form.totalSeats) % 2 !== 0)) {
+      toast('fa-solid fa-triangle-exclamation', 'Couples mode needs an even number of seats (4 or more)');
+      return;
+    }
+    if (form.isCouplesMode && !hasPartnerInfo) {
+      toast('fa-solid fa-triangle-exclamation', "Add your partner's mobile number and ID document in your profile first");
+      return;
+    }
     setBusy(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      if (cover) fd.append('cover', cover);
-      await api.post('/trips', fd);
-      toast('fa-solid fa-map-location-dot', 'Trip posted! Members will start joining soon.');
+      await api.post('/trips', form);
+      toast('fa-solid fa-map-location-dot', 'Trip posted! A destination photo will appear shortly.');
       setForm(EMPTY);
-      setCover(null);
-      setCoverPreview('');
       loadMine();
     } catch (err) {
       if (!handleGateError(err, navigate)) toast('fa-solid fa-circle-xmark', apiError(err));
@@ -89,7 +92,7 @@ export default function PlanTrip() {
 
   return (
     <>
-      <PageHero tag="Organize" tagIcon="fa-solid fa-map-location-dot" title="Plan a" highlight="Trip" sub="Create a trip, set the budget, and let verified travelers join you." />
+      <PageHero tag="Organize" tagIcon="fa-solid fa-map-location-dot" title="Plan a" highlight="Trip" sub="Create a trip, set the budget, and let verified travelers request to join." />
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
@@ -111,45 +114,91 @@ export default function PlanTrip() {
             {/* Create form */}
             <form className="card" style={{ padding: 28 }} onSubmit={submit}>
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Trip details</h3>
+              <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}>
+                <i className="fa-solid fa-image" /> A destination photo is added automatically — no upload needed.
+              </p>
 
-              <div className="upload-box mb-3" onClick={() => fileRef.current?.click()}>
-                {coverPreview ? (
-                  <img src={coverPreview} alt="cover" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 10, marginBottom: 8 }} />
-                ) : (
-                  <i className="fa-solid fa-image" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
-                )}
-                <div className="upload-label">{cover ? cover.name : 'Upload cover photo'}</div>
-                <input ref={fileRef} type="file" accept="image/*" onChange={onCover} />
+              <div className="form-group"><label>Starting from *</label><input className="form-input" required value={form.origin} onChange={set('origin')} placeholder="e.g. Chandigarh" /></div>
+
+              <div className="form-group">
+                <label>Via stops (optional)</label>
+                <ChipListInput values={form.viaStops} onChange={(viaStops) => setForm((f) => ({ ...f, viaStops }))} placeholder="e.g. Solan" />
               </div>
 
-              <div className="form-group"><label>Destination *</label><input className="form-input" required value={form.destination} onChange={set('destination')} placeholder="e.g. Spiti Valley, HP" /></div>
-              <div className="form-group"><label>Trip title</label><input className="form-input" value={form.title} onChange={set('title')} placeholder="e.g. Spiti Winter Circuit" /></div>
+              <div className="form-group"><label>Destination *</label><input className="form-input" required value={form.destination} onChange={set('destination')} placeholder="e.g. Shimla" /></div>
 
               <div className="form-row">
-                <div className="form-group"><label>Start date *</label><input className="form-input" type="date" required value={form.startDate} onChange={set('startDate')} /></div>
-                <div className="form-group"><label>End date *</label><input className="form-input" type="date" required value={form.endDate} onChange={set('endDate')} /></div>
+                <div className="form-group"><label>Start date *</label><CustomDatePicker value={form.startDate} onChange={set('startDate')} /></div>
+                <div className="form-group"><label>End date *</label><CustomDatePicker value={form.endDate} onChange={set('endDate')} min={form.startDate} /></div>
               </div>
               <div className="form-row">
-                <div className="form-group"><label>Budget / head (₹) *</label><input className="form-input" type="number" min="0" required value={form.budgetPerHead} onChange={set('budgetPerHead')} /></div>
-                <div className="form-group"><label>Total seats *</label><input className="form-input" type="number" min="1" required value={form.totalSeats} onChange={set('totalSeats')} /></div>
+                <div className="form-group">
+                  <label>Budget / head (₹) *</label>
+                  <CustomNumberStepper value={form.budgetPerHead || 0} onChange={set('budgetPerHead')} min={0} step={100} prefix="₹" />
+                </div>
+                <div className="form-group">
+                  <label>Total seats *</label>
+                  <CustomNumberStepper value={form.totalSeats} onChange={set('totalSeats')} min={1} max={100} step={form.isCouplesMode ? 2 : 1} />
+                </div>
               </div>
               <div className="form-row">
                 <div className="form-group"><label>Vehicle type</label>
-                  <select className="form-input" value={form.vehicleType} onChange={set('vehicleType')}>
-                    <option value="">Select</option><option>Bike</option><option>Car</option><option>Bus</option><option>Train</option><option>Mixed</option>
-                  </select>
+                  <CustomSelect
+                    value={form.vehicleType}
+                    onChange={set('vehicleType')}
+                    disabled={form.isCouplesMode}
+                    options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Train', 'Mixed']}
+                  />
                 </div>
                 <div className="form-group"><label>Trip type</label>
-                  <select className="form-input" value={form.tripType} onChange={set('tripType')}>
-                    <option value="mixed">Mixed</option><option value="bike">Bike</option><option value="car">Car</option><option value="trek">Trek</option><option value="beach">Beach</option><option value="mountain">Mountain</option>
-                  </select>
+                  <CustomSelect
+                    value={form.tripType}
+                    onChange={set('tripType')}
+                    options={[
+                      { value: 'mixed', label: 'Mixed' },
+                      { value: 'bike', label: 'Bike' },
+                      { value: 'car', label: 'Car' },
+                      { value: 'trek', label: 'Trek' },
+                      { value: 'beach', label: 'Beach' },
+                      { value: 'mountain', label: 'Mountain' },
+                    ]}
+                  />
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group"><label>Pickup location</label><input className="form-input" value={form.pickupLocation} onChange={set('pickupLocation')} /></div>
-                <div className="form-group"><label>WhatsApp group link</label><input className="form-input" value={form.whatsappGroup} onChange={set('whatsappGroup')} placeholder="https://chat.whatsapp.com/…" /></div>
+
+              <div className="couples-safety-box">
+                <div className="couples-safety-header">
+                  <span className="couples-safety-icon"><i className="fa-solid fa-heart" /></span>
+                  <div>
+                    <label className={`perm-check${form.isCouplesMode ? ' checked' : ''}`} style={{ background: 'transparent', border: 'none', padding: 0 }}>
+                      <input type="checkbox" className="perm-check-input" checked={form.isCouplesMode} onChange={toggleCouplesMode} />
+                      <strong>Couples Mode</strong>
+                    </label>
+                  </div>
+                </div>
+                <p className="text-muted" style={{ fontSize: '0.8rem', margin: '10px 0 0' }}>
+                  For couples traveling together — needs a car with 4+ seats. Fuel &amp; toll cost splits between the host couple and joining couple(s), cheaper and comfier than public transport.
+                </p>
+                {form.isCouplesMode && (
+                  hasPartnerInfo ? (
+                    <div className="couples-safety-alert success" style={{ marginBottom: 0 }}>
+                      <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} />
+                      <span>Using your saved partner details — update anytime in your profile.</span>
+                    </div>
+                  ) : (
+                    <div className="couples-safety-alert" style={{ marginBottom: 0 }}>
+                      <i className="fa-solid fa-triangle-exclamation" style={{ color: '#fca5a5' }} />
+                      <span>
+                        Add your partner's mobile number and ID document in your{' '}
+                        <Link to="/complete-profile" style={{ color: 'var(--fire-2)', textDecoration: 'underline' }}>profile</Link> to enable Couples Mode.
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
-              <div className="form-group"><label>Description</label><textarea className="form-input" value={form.description} onChange={set('description')} placeholder="Route, plan, what to expect…" /></div>
+
+              <div className="form-group"><label>Pickup location</label><input className="form-input" value={form.pickupLocation} onChange={set('pickupLocation')} placeholder="Exact meeting point" /></div>
+              <div className="form-group"><label>Description</label><textarea className="form-input" value={form.description} onChange={set('description')} placeholder="Plan, what to expect…" /></div>
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy || !canPlan}>
                 {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Post Trip
@@ -166,7 +215,7 @@ export default function PlanTrip() {
                   trips.map((t) => (
                     <div key={t._id} className="notif-item" style={{ alignItems: 'center' }}>
                       <div style={{ flex: 1 }}>
-                        <strong style={{ fontSize: '0.9rem' }}>{t.title || t.destination}</strong>
+                        <strong style={{ fontSize: '0.9rem' }}>{routeLabel(t)}</strong>
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>{dateRange(t.startDate, t.endDate)}</div>
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>{rupee(t.budgetPerHead)}/head · {t.filledSeats}/{t.totalSeats} joined</div>
                       </div>

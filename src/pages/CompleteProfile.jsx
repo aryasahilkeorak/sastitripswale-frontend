@@ -2,10 +2,25 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import CustomSelect from '../components/CustomSelect.jsx';
+import AvatarUploadField from '../components/AvatarUploadField.jsx';
 
 const INTERESTS = ['Mountains', 'Beaches', 'Camping', 'Trekking', 'Road Trips', 'Backpacking', 'Photography', 'Food Travel', 'Night Rides'];
+
+function DocBox({ id, label, file, onChange }) {
+  return (
+    <div className="form-group">
+      <label>{label}</label>
+      <div className="upload-box" onClick={() => document.getElementById(id)?.click()}>
+        <div className="upload-label">
+          {file ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {file.name}</> : 'Upload photo'}
+        </div>
+        <input id={id} type="file" accept="image/*,application/pdf" onChange={(e) => onChange(e.target.files?.[0] || null)} />
+      </div>
+    </div>
+  );
+}
 
 export default function CompleteProfile() {
   const navigate = useNavigate();
@@ -19,12 +34,19 @@ export default function CompleteProfile() {
   const [form, setForm] = useState({
     fullName: '', city: '', state: '', profession: '', bio: '',
     gender: '', emergencyContact: '', hasVehicle: false, vehicleType: '', vehicleModel: '',
+    relationshipStatus: '',
   });
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState('');
-  const [aadhaarFile, setAadhaarFile] = useState(null);
+  const [aadhaarFront, setAadhaarFront] = useState(null);
+  const [aadhaarBack, setAadhaarBack] = useState(null);
   const [panFile, setPanFile] = useState(null);
+  const [dlFront, setDlFront] = useState(null);
+  const [dlBack, setDlBack] = useState(null);
+  const [rcFront, setRcFront] = useState(null);
+  const [rcBack, setRcBack] = useState(null);
+  const [partnerMobile, setPartnerMobile] = useState('');
+  const [partnerDoc, setPartnerDoc] = useState(null);
   const [busy, setBusy] = useState(false);
 
   // Prefill from the account (name may be the email prefix, city/gender if any).
@@ -36,19 +58,14 @@ export default function CompleteProfile() {
       city: user.city || '',
       state: user.state || '',
       gender: user.gender || '',
+      relationshipStatus: user.relationshipStatus || '',
     }));
     setInterests(user.travelInterests || []);
+    setPartnerMobile(user.partnerMobile || '');
   }, [user]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const toggleInterest = (t) => setInterests((arr) => (arr.includes(t) ? arr.filter((x) => x !== t) : [...arr, t]));
-
-  const onAvatar = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -57,16 +74,29 @@ export default function CompleteProfile() {
     if (!form.gender) return toast('fa-solid fa-triangle-exclamation', 'Please select your gender');
     if (interests.length === 0) return toast('fa-solid fa-triangle-exclamation', 'Pick at least one travel interest');
     if (form.hasVehicle && !form.vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select your vehicle type');
-    if (!aadhaarFile) return toast('fa-solid fa-triangle-exclamation', 'Aadhaar document is required for verification');
+    if (!aadhaarFront || !aadhaarBack) return toast('fa-solid fa-triangle-exclamation', 'Aadhaar front and back photos are required for verification');
+    if (form.hasVehicle && (!dlFront || !dlBack || !rcFront || !rcBack)) {
+      return toast('fa-solid fa-triangle-exclamation', 'Driving Licence and RC (front & back) are mandatory for vehicle owners');
+    }
+    if (partnerMobile.trim() && !/^[0-9]{10,15}$/.test(partnerMobile.trim())) {
+      return toast('fa-solid fa-triangle-exclamation', "Enter a valid partner's mobile number, or leave it blank");
+    }
 
     setBusy(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       fd.append('travelInterests', JSON.stringify(interests));
+      fd.append('partnerMobile', partnerMobile.trim());
       if (avatarFile) fd.append('avatar', avatarFile);
-      if (aadhaarFile) fd.append('aadhaar', aadhaarFile);
+      if (aadhaarFront) fd.append('aadhaarFront', aadhaarFront);
+      if (aadhaarBack) fd.append('aadhaarBack', aadhaarBack);
       if (panFile) fd.append('pan', panFile);
+      if (dlFront) fd.append('dlFront', dlFront);
+      if (dlBack) fd.append('dlBack', dlBack);
+      if (rcFront) fd.append('rcFront', rcFront);
+      if (rcBack) fd.append('rcBack', rcBack);
+      if (partnerDoc) fd.append('partnerDoc', partnerDoc);
 
       const { data } = await api.put('/members/complete-profile', fd);
       setUser(data.user);
@@ -91,11 +121,7 @@ export default function CompleteProfile() {
         </div>
 
         <form className="card cp-form" onSubmit={submit}>
-          <div className="upload-box mb-3" onClick={() => document.getElementById('cp-avatar')?.click()}>
-            <img className="avatar-preview" src={avatarPreview || imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt="" />
-            <div className="upload-label">{avatarFile ? avatarFile.name : 'Upload profile photo (optional)'}</div>
-            <input id="cp-avatar" type="file" accept="image/*" onChange={onAvatar} />
-          </div>
+          <AvatarUploadField value={avatarFile} currentUrl={user?.avatarUrl} onChange={setAvatarFile} label="Upload profile photo (optional)" />
 
           <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
           <div className="form-row">
@@ -104,11 +130,27 @@ export default function CompleteProfile() {
           </div>
           <div className="form-row">
             <div className="form-group"><label>Gender *</label>
-              <select className="form-input" value={form.gender} onChange={set('gender')}>
-                <option value="">Select</option><option>Male</option><option>Female</option><option>Prefer not to say</option>
-              </select>
+              <CustomSelect
+                value={form.gender}
+                onChange={set('gender')}
+                options={[{ value: '', label: 'Select' }, 'Male', 'Female', 'Prefer not to say']}
+              />
             </div>
             <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
+          </div>
+          <div className="form-group">
+            <label>Relationship status</label>
+            <CustomSelect
+              value={form.relationshipStatus}
+              onChange={set('relationshipStatus')}
+              options={[
+                { value: '', label: 'Select' },
+                { value: 'single', label: 'Single' },
+                { value: 'in_a_relationship', label: 'In a relationship' },
+                { value: 'married', label: 'Married' },
+                { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+              ]}
+            />
           </div>
           <div className="form-group"><label>Emergency contact</label><input className="form-input" value={form.emergencyContact} onChange={set('emergencyContact')} placeholder="A family member's number" /></div>
           <div className="form-group"><label>Short bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} placeholder="Tell co-travelers about yourself" /></div>
@@ -121,9 +163,11 @@ export default function CompleteProfile() {
           {form.hasVehicle && (
             <div className="form-row">
               <div className="form-group"><label>Vehicle type *</label>
-                <select className="form-input" value={form.vehicleType} onChange={set('vehicleType')}>
-                  <option value="">Select</option><option>Bike</option><option>Car</option><option>Bus</option><option>Other</option>
-                </select>
+                <CustomSelect
+                  value={form.vehicleType}
+                  onChange={set('vehicleType')}
+                  options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Other']}
+                />
               </div>
               <div className="form-group"><label>Vehicle model</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} /></div>
             </div>
@@ -138,22 +182,68 @@ export default function CompleteProfile() {
             </div>
           </div>
 
+          <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 8px' }}>
+            <i className="fa-solid fa-id-card" /> Aadhaar (required) — both sides
+          </p>
           <div className="form-row">
-            <div className="form-group">
-              <label>Aadhaar (required) *</label>
-              <div className="upload-box" onClick={() => document.getElementById('cp-aadhaar')?.click()}>
-                <div className="upload-label">{aadhaarFile ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {aadhaarFile.name}</> : 'Upload Aadhaar'}</div>
-                <input id="cp-aadhaar" type="file" accept="image/*,application/pdf" onChange={(e) => setAadhaarFile(e.target.files?.[0] || null)} />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>PAN (optional)</label>
-              <div className="upload-box" onClick={() => document.getElementById('cp-pan')?.click()}>
-                <div className="upload-label">{panFile ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {panFile.name}</> : 'Upload PAN'}</div>
-                <input id="cp-pan" type="file" accept="image/*,application/pdf" onChange={(e) => setPanFile(e.target.files?.[0] || null)} />
-              </div>
-            </div>
+            <DocBox id="cp-aadhaar-front" label="Aadhaar — front *" file={aadhaarFront} onChange={setAadhaarFront} />
+            <DocBox id="cp-aadhaar-back" label="Aadhaar — back *" file={aadhaarBack} onChange={setAadhaarBack} />
           </div>
+          <div className="form-group">
+            <DocBox id="cp-pan" label="PAN (optional)" file={panFile} onChange={setPanFile} />
+          </div>
+
+          {form.hasVehicle && (
+            <>
+              <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 8px' }}>
+                <i className="fa-solid fa-car" /> Vehicle owners must also upload their Driving Licence and RC (both sides)
+              </p>
+              <div className="form-row">
+                <DocBox id="cp-dl-front" label="Driving Licence — front *" file={dlFront} onChange={setDlFront} />
+                <DocBox id="cp-dl-back" label="Driving Licence — back *" file={dlBack} onChange={setDlBack} />
+              </div>
+              <div className="form-row">
+                <DocBox id="cp-rc-front" label="RC — front *" file={rcFront} onChange={setRcFront} />
+                <DocBox id="cp-rc-back" label="RC — back *" file={rcBack} onChange={setRcBack} />
+              </div>
+            </>
+          )}
+
+          {form.relationshipStatus && form.relationshipStatus !== 'single' && form.relationshipStatus !== 'prefer_not_to_say' ? (
+            <div className="couples-safety-box">
+              <div className="couples-safety-header">
+                <span className="couples-safety-icon"><i className="fa-solid fa-heart" /></span>
+                <div>
+                  <strong>Couples Mode</strong>
+                  <span className="badge badge-magenta" style={{ marginLeft: 8 }}>Optional</span>
+                </div>
+              </div>
+              <p className="text-muted" style={{ fontSize: '0.8rem', margin: '8px 0 16px' }}>
+                <i className="fa-solid fa-shield-halved" /> Only needed if you plan to host or join Couples Mode trips.
+                We ask for your partner's mobile number and a government ID once, purely for safety verification —
+                it's visible to platform admins only and never shown to other travelers.
+              </p>
+              <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" /></div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Partner's government ID</label>
+                <div className="upload-box" onClick={() => document.getElementById('cp-partner-doc')?.click()}>
+                  <div className="upload-label">
+                    {partnerDoc ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {partnerDoc.name}</> : user?.partnerDocUrl ? 'Replace uploaded ID' : 'Upload ID document'}
+                  </div>
+                  <input id="cp-partner-doc" type="file" accept="image/*,application/pdf" onChange={(e) => setPartnerDoc(e.target.files?.[0] || null)} />
+                </div>
+                {user?.partnerDocUrl && !partnerDoc && (
+                  <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+                    <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> ID already on file.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted" style={{ fontSize: '0.78rem', margin: '-4px 0 4px' }}>
+              <i className="fa-solid fa-heart" /> Tell us if you're in a relationship or married to unlock Couples Mode for trips.
+            </p>
+          )}
 
           <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
             {busy ? <span className="spinner" /> : <i className="fa-solid fa-check-double" />} Save &amp; Finish
