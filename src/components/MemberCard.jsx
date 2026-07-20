@@ -59,19 +59,25 @@ export default function MemberCard({ member }) {
 
   return (
     <div className="member-card fade-up">
-      <div className="member-avatar">
-        <img
-          src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
-          alt={member.fullName}
-          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-        />
-      </div>
-      <h3>{member.fullName}</h3>
-      {member.isVerified && (
-        <div className="verified-badge" style={{ justifyContent: 'center' }}>
-          <i className="fa-solid fa-circle-check" /> Verified
+      <Link to={`/members/${member.id}`} style={{ color: 'inherit' }}>
+        <div className="member-avatar">
+          <img
+            src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
+            alt={member.fullName}
+            onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+          />
         </div>
-      )}
+        <h3>{member.fullName}</h3>
+        {member.role === 'superadmin' ? (
+          <div className="verified-badge founder-badge" style={{ justifyContent: 'center' }}>
+            <i className="fa-solid fa-crown" /> Founder
+          </div>
+        ) : member.isVerified && (
+          <div className="verified-badge" style={{ justifyContent: 'center' }}>
+            <i className="fa-solid fa-circle-check" /> Verified
+          </div>
+        )}
+      </Link>
       <p className="member-meta">
         {member.city || 'India'}
         {member.age ? ` • ${member.age}` : ''}

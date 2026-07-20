@@ -9,6 +9,10 @@ export const useAuth = create(
       user: null,
       accessToken: null,
       refreshToken: null,
+      // For admin/superadmin accounts only: which side of the app they chose
+      // to browse after login ('admin' | 'user'). Null means no explicit
+      // choice yet, so the normal role-based redirect to /admin applies.
+      viewMode: null,
 
       setSession: ({ user, accessToken, refreshToken }) =>
         set((s) => ({
@@ -17,7 +21,8 @@ export const useAuth = create(
           refreshToken: refreshToken !== undefined ? refreshToken : s.refreshToken,
         })),
       setUser: (user) => set({ user }),
-      clear: () => set({ user: null, accessToken: null, refreshToken: null }),
+      setViewMode: (viewMode) => set({ viewMode }),
+      clear: () => set({ user: null, accessToken: null, refreshToken: null, viewMode: null }),
 
       isAuthed: () => Boolean(get().accessToken),
       isAdmin: () => get().user?.role === 'admin',

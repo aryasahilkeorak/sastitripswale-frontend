@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, apiError } from '../../lib/api.js';
-import { formatDate } from '../../lib/helpers.js';
+import { formatDate, routeLabel } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import CustomSelect from '../../components/CustomSelect.jsx';
 
 export default function AdminTrips() {
   const [trips, setTrips] = useState([]);
@@ -31,14 +32,18 @@ export default function AdminTrips() {
           <tbody>
             {trips.map((t) => (
               <tr key={t._id}>
-                <td><Link to={`/trips/${t._id}`} className="admin-clickable">{t.title || t.destination}</Link></td>
-                <td>{t.organizer?.fullName || '—'}</td>
-                <td>{formatDate(t.startDate)}</td>
-                <td>{t.filledSeats}/{t.totalSeats}</td>
-                <td>
-                  <select className="form-input" style={{ padding: '6px 10px', width: 'auto' }} value={t.status} onChange={(e) => setTripStatus(t._id, e.target.value)}>
-                    <option value="upcoming">upcoming</option><option value="ongoing">ongoing</option><option value="completed">completed</option><option value="cancelled">cancelled</option>
-                  </select>
+                <td data-label="Trip"><Link to={`/trips/${t._id}`} className="admin-clickable">{routeLabel(t)}</Link></td>
+                <td data-label="Organizer">{t.organizer?.fullName || '—'}</td>
+                <td data-label="Dates">{formatDate(t.startDate)}</td>
+                <td data-label="Seats">{t.filledSeats}/{t.totalSeats}</td>
+                <td data-label="Status">
+                  <CustomSelect
+                    className="sm"
+                    style={{ width: 140 }}
+                    value={t.status}
+                    onChange={(e) => setTripStatus(t._id, e.target.value)}
+                    options={['upcoming', 'ongoing', 'completed', 'cancelled']}
+                  />
                 </td>
               </tr>
             ))}

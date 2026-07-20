@@ -1,0 +1,62 @@
+// ============================================================
+// SastiTripsWale — Brand color tokens
+// Two brand hues only: Navy (primary) + Orange (accent),
+// plus one blue support family and functional/semantic colors.
+// This file is the single source of truth for every color in
+// the app — nothing below should be hardcoded again elsewhere.
+// ============================================================
+
+// ── Navy (primary / surfaces) ──────────────────────────────
+$navy-950: #05070c; // deepest page background
+$navy-900: #0a1220; // secondary background
+$navy-850: #0e1a2e; // tertiary panel background
+$navy-800: #122238; // card / surface
+$navy-700: #1b2f4d; // elevated surface
+
+// ── Orange (brand accent — CTAs, active states, glows) ─────
+$orange-600: #e8650a; // deep / pressed
+$orange-500: #ff7a1a; // primary accent
+$orange-400: #ff9b4d; // light / hover
+
+// ── Blue (secondary accent — same family, two tints) ────────
+$blue-500: #2f6fe0;
+$blue-400: #3e8ef7;
+$blue-300: #7fb2ff;
+
+// ── Gold (functional — ratings/stars only, not decorative) ──
+$gold: #ffc94d;
+
+// ── Semantic status (independent of brand hues) ─────────────
+$success: #10b981;
+$success-light: #6ee7b7;
+$danger: #ef4444;
+$danger-light: #fca5a5;
+$info: $blue-400;
+$warning: $gold;
+
+// ── Third-party brand (kept literal, not part of our theme) ─
+$whatsapp-green: #25d366;
+
+// ── Text ─────────────────────────────────────────────────────
+$text-100: #f3f6fc; // primary text
+$text-300: #a9b4cc; // secondary text
+$text-500: #5c6a87; // muted text
+$text-inverse: $navy-950; // text on light/orange surfaces
+
+// ── Glass / overlay (white-alpha, theme-agnostic) ───────────
+$glass: rgba(255, 255, 255, 0.04);
+$glass-2: rgba(255, 255, 255, 0.08);
+$glass-border: rgba(255, 255, 255, 0.08);
+$glass-border-2: rgba(255, 255, 255, 0.16);
+
+// ── Gradients ────────────────────────────────────────────────
+$grad-brand: linear-gradient(135deg, $orange-500, $orange-600);
+$grad-duotone: linear-gradient(135deg, $blue-400, $orange-500);
+$grad-warm: linear-gradient(135deg, $orange-500, $gold);
+$grad-navy: linear-gradient(160deg, $navy-900 0%, $navy-700 100%);
+$grad-wash: linear-gradient(135deg, rgba($orange-500, 0.08) 0%, rgba($blue-400, 0.07) 100%);
+
+// ── Shadows ──────────────────────────────────────────────────
+$shadow-brand: 0 0 40px rgba($orange-500, 0.28), 0 20px 60px rgba(0, 0, 0, 0.5);
+$shadow-info: 0 0 40px rgba($blue-400, 0.22), 0 20px 60px rgba(0, 0, 0, 0.5);
+$shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);

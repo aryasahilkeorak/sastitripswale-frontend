@@ -7,9 +7,22 @@
       name="description"
       content="SastiTripsWale — India's #1 travel community. Find travel mates, split expenses, explore India together."
     />
+    <meta name="theme-color" content="#0a1220" />
+    <link rel="icon" href="/brand/logo-mark.png" />
     <title>SastiTripsWale — Travel Together • Split Expenses</title>
-    <script type="module" crossorigin src="/assets/index-B53ETN-9.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BBwhUV7J.css">
+    <script>
+      // Apply the persisted theme before first paint (avoids a flash of the
+      // wrong theme). Dark is the default when nothing is stored yet.
+      (function () {
+        try {
+          var raw = localStorage.getItem('stw-theme');
+          var theme = raw && JSON.parse(raw).state && JSON.parse(raw).state.theme;
+          if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-xL0NfsvK.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DVkFH9YE.css">
   </head>
   <body>
     <div id="root"></div>

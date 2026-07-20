@@ -1,0 +1,5 @@
+// Single entry point: `@use 'abstracts' as *;` exposes every
+// color/typography/shape token in this folder under one namespace.
+@forward 'colors';
+@forward 'typography';
+@forward 'tokens';

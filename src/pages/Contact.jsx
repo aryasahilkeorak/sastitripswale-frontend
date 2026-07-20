@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, apiError } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
+import CustomSelect from '../components/CustomSelect.jsx';
 
 const INFO = [
   { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
@@ -78,16 +79,25 @@ export default function Contact() {
               </div>
               <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
               <div className="form-group"><label>Subject</label>
-                <select className="form-input" value={form.subject} onChange={set('subject')}>
-                  <option value="">Select</option><option>Joining / Membership</option><option>Trip question</option><option>Safety</option><option>Feedback</option><option>Other</option>
-                </select>
+                <CustomSelect
+                  value={form.subject}
+                  onChange={set('subject')}
+                  options={[
+                    { value: '', label: 'Select' },
+                    'Joining / Membership',
+                    'Trip question',
+                    'Safety',
+                    'Feedback',
+                    'Other',
+                  ]}
+                />
               </div>
               <div className="form-group"><label>Message *</label><textarea className="form-input" required value={form.message} onChange={set('message')} /></div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={busy}>
                   {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Send Message
                 </button>
-                <button type="button" className="btn" style={{ background: '#25D366', color: '#06070d' }} onClick={whatsapp}>
+                <button type="button" className="btn" style={{ background: '#25D366', color: '#05070c' }} onClick={whatsapp}>
                   <i className="fa-brands fa-whatsapp" /> WhatsApp
                 </button>
               </div>

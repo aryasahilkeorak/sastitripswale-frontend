@@ -6,20 +6,24 @@ import { toast } from '../../lib/toast.js';
 import Loader from '../../components/Loader.jsx';
 import Modal from '../../components/Modal.jsx';
 
+const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
+
 export default function AdminUsers() {
   const isSuper = useAuth((s) => s.user?.role) === 'superadmin';
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
-  const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [detailId, setDetailId] = useState(null);
 
-  const load = () => {
+  // Live search — debounced so every keystroke doesn't fire a request.
+  useEffect(() => {
     setLoading(true);
-    api.get('/admin/users', { params: { search: q, limit: 60 } })
-      .then((r) => setUsers(r.data.users)).catch(() => {}).finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, [q]);
+    const t = setTimeout(() => {
+      api.get('/admin/users', { params: { search: search.trim(), limit: 60 } })
+        .then((r) => setUsers(r.data.users)).catch(() => {}).finally(() => setLoading(false));
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const patchLocal = (id, changes) => setUsers((us) => us.map((u) => (u.id === id ? { ...u, ...changes } : u)));
 
@@ -39,29 +43,54 @@ export default function AdminUsers() {
 
   return (
     <>
-      <form className="search-bar mb-3" style={{ maxWidth: 460 }} onSubmit={(e) => { e.preventDefault(); setQ(search.trim()); }}>
+      <form className="search-bar mb-3" style={{ maxWidth: 460 }} onSubmit={(e) => e.preventDefault()}>
         <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--text-3)' }} />
         <input placeholder="Search name / email / mobile" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <button className="btn btn-sm btn-primary">Search</button>
+        {search && (
+          <button type="button" className="btn btn-sm btn-outline" onClick={() => setSearch('')}>
+            <i className="fa-solid fa-xmark" />
+          </button>
+        )}
       </form>
 
       {loading ? <Loader /> : (
         <div className="table-wrap">
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Paid</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Paid</th><th>Coupon</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td><span className="admin-clickable" onClick={() => setDetailId(u.id)}>{u.fullName}</span></td>
-                  <td>{u.email}</td>
-                  <td>{u.mobile}</td>
-                  <td>{u.membershipPaid ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
-                  <td>{u.isVerified ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
-                  <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'active' : 'banned'}</span></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn btn-sm btn-outline" onClick={() => setDetailId(u.id)}><i className="fa-solid fa-eye" /></button>
-                      <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => toggle(u.id)}>{u.isActive ? 'Ban' : 'Unban'}</button>
+                  <td data-label="Name">
+                    <span className="admin-clickable" onClick={() => setDetailId(u.id)}>{u.fullName}</span>
+                    {u.role === 'admin' && <span className="badge badge-gold" style={{ marginLeft: 8, fontSize: '0.62rem' }}>Admin</span>}
+                  </td>
+                  <td data-label="Email">{u.email}</td>
+                  <td data-label="Mobile">{u.mobile}</td>
+                  <td data-label="Paid">{u.membershipPaid ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
+                  <td data-label="Coupon">{u.couponUsed ? <span className="badge badge-cyan">{u.couponUsed}</span> : '—'}</td>
+                  <td data-label="Verified">{u.isVerified ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
+                  <td data-label="Status"><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'active' : 'banned'}</span></td>
+                  <td data-label="Actions">
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button className="btn btn-sm btn-outline" title="View details" onClick={() => setDetailId(u.id)}><i className="fa-solid fa-eye" /></button>
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
+                        title={u.isActive ? 'Disable account' : 'Enable account'}
+                        onClick={() => toggle(u.id)}
+                      >
+                        {u.isActive ? 'Ban' : 'Unban'}
+                      </button>
+                      {(isSuper || u.role === 'member') && (
+                        <button
+                          className="btn btn-sm"
+                          style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5' }}
+                          title="Delete user permanently"
+                          onClick={() => removeUser(u.id)}
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -103,6 +132,16 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
   if (!id) return null;
   const u = d?.user;
 
+  const reviewDoc = async (docId, action) => {
+    try {
+      const { data } = await api.patch(`/admin/documents/${docId}`, { action });
+      setD((x) => ({ ...x, documents: x.documents.map((doc) => (doc._id === docId ? data.document : doc)) }));
+      toast(action === 'verify' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark', action === 'verify' ? 'Document verified' : 'Document rejected — member can re-upload it');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
   return (
     <Modal open={Boolean(id)} onClose={onClose} title="Member details" maxWidth={900}>
       {!d ? <Loader /> : (
@@ -134,6 +173,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <Row label="Travels with" value={PREF_LABEL[u.coTravelerPreference]} />
               <Row label="Vehicle" value={[u.vehicleType, u.vehicleModel].filter(Boolean).join(' · ')} />
               <Row label="Plan" value={u.membershipActive ? `${u.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(u.membershipExpiresAt)}` : 'Inactive'} />
+              <Row label="Signup coupon" value={u.couponUsed} />
               <Row label="Trips (host / joined)" value={`${d.stats.tripsOrganized} / ${d.stats.tripsJoined}`} />
               <Row label="Connections" value={d.stats.connections} />
             </div>
@@ -152,12 +192,43 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
           ) : (
             <div className="grid-2">
               {d.documents.map((doc) => (
-                <a key={doc._id} href={imageUrl(doc.fileUrl)} target="_blank" rel="noreferrer" className="card" style={{ padding: 8 }}>
-                  <img className="doc-thumb" src={imageUrl(doc.fileUrl)} alt={doc.docType} onError={(e) => (e.currentTarget.src = DOC_FALLBACK)} />
-                  <div className="text-muted" style={{ fontSize: '0.72rem', textTransform: 'uppercase', marginTop: 6 }}>{doc.docType} <i className="fa-solid fa-up-right-from-square" /></div>
-                </a>
+                <div key={doc._id} className="card" style={{ padding: 8 }}>
+                  <a href={imageUrl(doc.fileUrl)} target="_blank" rel="noreferrer">
+                    <img className="doc-thumb" src={imageUrl(doc.fileUrl)} alt={doc.docType} onError={(e) => (e.currentTarget.src = DOC_FALLBACK)} />
+                  </a>
+                  <div className="row-between" style={{ marginTop: 6, alignItems: 'center' }}>
+                    <div className="text-muted" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>
+                      {doc.docType.replace('_', ' ')}{doc.side ? ` (${doc.side})` : ''} <i className="fa-solid fa-up-right-from-square" />
+                    </div>
+                    <span className={`badge ${DOC_STATUS_BADGE[doc.status] || 'badge-gold'}`} style={{ fontSize: '0.6rem' }}>{doc.status || 'pending'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button className="btn btn-sm btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => reviewDoc(doc._id, 'verify')}>
+                      <i className="fa-solid fa-check" /> Verify
+                    </button>
+                    <button className="btn btn-sm" style={{ flex: 1, justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => reviewDoc(doc._id, 'reject')}>
+                      <i className="fa-solid fa-xmark" /> Reject
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
+          )}
+
+          {/* Couples Mode partner safety info — mobile + gov ID, collected once in the member's own profile */}
+          {(u.partnerMobile || u.partnerDocUrl) && (
+            <>
+              <h4 className="mt-3 mb-2" style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>
+                <i className="fa-solid fa-heart" style={{ color: '#ec4899' }} /> Couples Mode — Partner Safety Info
+              </h4>
+              <Row label="Partner's mobile" value={u.partnerMobile} />
+              {u.partnerDocUrl && (
+                <a href={imageUrl(u.partnerDocUrl)} target="_blank" rel="noreferrer" className="card mt-2" style={{ padding: 8, maxWidth: 160, display: 'inline-block' }}>
+                  <img className="doc-thumb" src={imageUrl(u.partnerDocUrl)} alt="Partner ID" onError={(e) => (e.currentTarget.src = DOC_FALLBACK)} />
+                  <div className="text-muted" style={{ fontSize: '0.72rem', textTransform: 'uppercase', marginTop: 6 }}>Partner ID <i className="fa-solid fa-up-right-from-square" /></div>
+                </a>
+              )}
+            </>
           )}
 
           {/* Payments */}
@@ -182,11 +253,9 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => { onToggle(u.id); setD((x) => ({ ...x, user: { ...x.user, isActive: !x.user.isActive } })); }}>
                 {u.isActive ? 'Ban' : 'Unban'}
               </button>
-              {isSuper && (
-                <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5', marginLeft: 'auto' }} onClick={() => onDelete(u.id)}>
-                  <i className="fa-solid fa-trash" /> Delete user
-                </button>
-              )}
+              <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5', marginLeft: 'auto' }} onClick={() => onDelete(u.id)}>
+                <i className="fa-solid fa-trash" /> Delete user
+              </button>
             </div>
           )}
         </>

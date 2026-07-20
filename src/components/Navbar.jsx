@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.js';
+import { useTheme } from '../store/theme.js';
 import { api } from '../lib/api.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import BrandLogo from './BrandLogo.jsx';
 
 const LINKS = [
   { to: '/', label: 'Home', end: true },
@@ -37,6 +39,16 @@ export default function Navbar() {
   const user = useAuth((s) => s.user);
   const accessToken = useAuth((s) => s.accessToken);
   const clear = useAuth((s) => s.clear);
+  const setViewMode = useAuth((s) => s.setViewMode);
+  const theme = useTheme((s) => s.theme);
+  const toggleTheme = useTheme((s) => s.toggleTheme);
+  const isAdminAccount = user?.role === 'admin' || user?.role === 'superadmin';
+
+  const goToAdmin = () => {
+    setViewMode('admin');
+    setMenuOpen(false);
+    setMobileOpen(false);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -88,7 +100,7 @@ export default function Navbar() {
     <>
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
         <Link to="/" className="nav-brand">
-          <span className="nav-brand-text">SastiTripsWale</span>
+          <BrandLogo variant="horizontal" />
         </Link>
 
         <div className="nav-links">
@@ -97,6 +109,15 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
+
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
+          >
+            <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
+          </button>
 
           {!accessToken ? (
             <NavLink to="/join" className="nav-cta">
@@ -132,8 +153,8 @@ export default function Navbar() {
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-map-location-dot" /> Plan a Trip
                   </Link>
-                  {user?.role === 'admin' && (
-                    <Link to="/admin" onClick={() => setMenuOpen(false)}>
+                  {isAdminAccount && (
+                    <Link to="/admin" onClick={goToAdmin}>
                       <i className="fa-solid fa-shield-halved" /> Admin Panel
                     </Link>
                   )}
@@ -158,6 +179,10 @@ export default function Navbar() {
       </nav>
 
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
+        <button className="theme-toggle-row" onClick={toggleTheme}>
+          <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
         {MOBILE_LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)}>
             <i className={l.icon} /> {l.label}
@@ -172,8 +197,8 @@ export default function Navbar() {
               <i className="fa-solid fa-comment-dots" /> Messages
               {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
             </NavLink>
-            {user?.role === 'admin' && (
-              <NavLink to="/admin" onClick={() => setMobileOpen(false)}>
+            {isAdminAccount && (
+              <NavLink to="/admin" onClick={goToAdmin}>
                 <i className="fa-solid fa-shield-halved" /> Admin Panel
               </NavLink>
             )}
