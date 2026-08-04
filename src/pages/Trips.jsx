@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import usePullToRefresh from '../lib/usePullToRefresh.js';
 import PageHero from '../components/PageHero.jsx';
+import PromoBanner from '../components/PromoBanner.jsx';
 import TripCard from '../components/TripCard.jsx';
 import Loader from '../components/Loader.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
@@ -48,25 +50,32 @@ export default function Trips() {
     setTo(from);
   };
 
+  const fetchTrips = useCallback(() => {
+    const params = { status: 'upcoming', limit: 30 };
+    if (filter !== 'all') params.type = filter;
+    if (sort) params.sort = sort;
+    if (from.trim()) params.from = from.trim();
+    if (to.trim()) params.to = to.trim();
+    if (date) params.date = date;
+    if (seats > 1) params.seats = seats;
+    return api
+      .get('/trips', { params })
+      .then((r) => setTrips(r.data.trips))
+      .catch(() => setTrips([]));
+  }, [filter, sort, from, to, date, seats]);
+
+  // Pull-to-refresh re-runs the same fetch immediately, with whatever
+  // filters are currently applied (mobile/tablet only, in practice).
+  const { containerRef, pullDistance, refreshing } = usePullToRefresh(fetchTrips);
+
   // Live search — debounced so every keystroke doesn't fire a request.
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
-      const params = { status: 'upcoming', limit: 30 };
-      if (filter !== 'all') params.type = filter;
-      if (sort) params.sort = sort;
-      if (from.trim()) params.from = from.trim();
-      if (to.trim()) params.to = to.trim();
-      if (date) params.date = date;
-      if (seats > 1) params.seats = seats;
-      api
-        .get('/trips', { params })
-        .then((r) => setTrips(r.data.trips))
-        .catch(() => setTrips([]))
-        .finally(() => setLoading(false));
+      fetchTrips().finally(() => setLoading(false));
     }, 350);
     return () => clearTimeout(t);
-  }, [filter, sort, from, to, date, seats]);
+  }, [fetchTrips]);
 
   return (
     <>
@@ -78,9 +87,24 @@ export default function Trips() {
         sub="Find your next adventure. Filter by vehicle, budget or destination and join a verified group."
       />
 
-      <section style={{ paddingTop: 40 }}>
+      <section style={{ paddingTop: 40 }} ref={containerRef}>
         <div className="container">
-          <form className="ride-search" onSubmit={(e) => e.preventDefault()}>
+          <div className="ptr-indicator" style={{ height: refreshing ? 40 : pullDistance }}>
+            {refreshing ? (
+              <span className="spinner" />
+            ) : pullDistance > 0 ? (
+              <i className="fa-solid fa-arrow-down" style={{ transform: `rotate(${Math.min(pullDistance / 70, 1) * 180}deg)` }} />
+            ) : null}
+          </div>
+
+          <PromoBanner
+            icon="fa-solid fa-ticket"
+            message="Have a coupon? Save on your next membership renewal."
+            cta="Redeem now"
+            to="/join"
+          />
+
+          <form className="ride-search ride-search-prominent mt-3" onSubmit={(e) => e.preventDefault()}>
             <div className="ride-search-field">
               <label>Leaving from</label>
               <div className="ride-search-input">
@@ -116,7 +140,7 @@ export default function Trips() {
             </button>
           </form>
 
-          <div className="row-between mb-3" style={{ alignItems: 'center' }}>
+          <div className="row-between mb-3 trips-filter-bar" style={{ alignItems: 'center' }}>
             <div className="filter-chips" style={{ marginBottom: 0 }}>
               {FILTERS.map((f) => (
                 <button

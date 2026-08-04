@@ -53,7 +53,7 @@ export default function ProfileEditForm({ user, onSaved }) {
   };
 
   return (
-    <form className="card" style={{ padding: 24 }} onSubmit={save}>
+    <form className="card" style={{ padding: 16 }} onSubmit={save}>
       <AvatarUploadField value={avatar} currentUrl={user?.avatarUrl} onChange={setAvatar} />
       <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
       <div className="form-row">

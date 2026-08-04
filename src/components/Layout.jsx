@@ -43,9 +43,12 @@ export default function Layout() {
         </ErrorBoundary>
       </main>
 
-      <Footer />
+      <div className={`footer-wrap${location.pathname === '/' ? ' is-home' : ''}`}>
+        <Footer />
+      </div>
 
       <div className="fab-group">
+        {/* WhatsApp FAB temporarily hidden along with the brand's mobile number.
         <div style={{ position: 'relative' }}>
           <a
             href="https://wa.me/919876543210?text=Hi! I want to know more about SastiTripsWale"
@@ -56,7 +59,7 @@ export default function Layout() {
             <i className="fa-brands fa-whatsapp" />
             <span className="fab-tooltip">Chat on WhatsApp</span>
           </a>
-        </div>
+        </div> */}
         <div style={{ position: 'relative' }}>
           <Link to="/plan-trip" className="fab fab-trip">
             <i className="fa-solid fa-map-location-dot" />

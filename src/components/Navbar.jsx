@@ -127,7 +127,8 @@ export default function Navbar() {
             <div className="nav-user" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                style={{ background: 'none', border: 'none', position: 'relative', padding: 0 }}
+                className="nav-avatar-btn"
+                style={{ background: 'none', border: 'none', position: 'relative' }}
                 aria-label="Account menu"
               >
                 <img
@@ -149,6 +150,9 @@ export default function Navbar() {
                   </Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-comment-dots" /> Messages
+                  </Link>
+                  <Link to="/referrals" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-gift" /> Referrals
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-map-location-dot" /> Plan a Trip
@@ -196,6 +200,9 @@ export default function Navbar() {
             <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
               <i className="fa-solid fa-comment-dots" /> Messages
               {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+            </NavLink>
+            <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-gift" /> Referrals
             </NavLink>
             {isAdminAccount && (
               <NavLink to="/admin" onClick={goToAdmin}>

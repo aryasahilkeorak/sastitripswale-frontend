@@ -24,7 +24,7 @@ export default class ErrorBoundary extends Component {
 
     return (
       <div className="container" style={{ paddingTop: 130, minHeight: '60vh' }}>
-        <div className="card" style={{ padding: 32, maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
+        <div className="card" style={{ padding: 22, maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '2.6rem', color: 'var(--fire)' }}><i className="fa-solid fa-face-dizzy" /></div>
           <h2 className="section-title" style={{ fontSize: '1.6rem' }}>Something went wrong</h2>
           <p className="text-muted">This page hit an unexpected error. You can retry or head home.</p>

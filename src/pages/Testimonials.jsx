@@ -60,12 +60,12 @@ export default function Testimonials() {
         <div className="container">
           {/* Overall stats */}
           <div className="grid-2 mb-4" style={{ alignItems: 'center' }}>
-            <div className="card" style={{ padding: 28, textAlign: 'center' }}>
+            <div className="card" style={{ padding: 20, textAlign: 'center' }}>
               <div className="stat-number" style={{ background: 'var(--grad-fire)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stats.average || '5.0'}</div>
               <Stars value={stats.average || 5} />
               <p className="text-muted mt-2">{total} member reviews</p>
             </div>
-            <div className="card" style={{ padding: 28 }}>
+            <div className="card" style={{ padding: 20 }}>
               {[5, 4, 3, 2, 1].map((n) => {
                 const c = stats.breakdown?.[n] || 0;
                 const pct = total ? Math.round((c / total) * 100) : 0;
@@ -82,7 +82,7 @@ export default function Testimonials() {
 
           {/* Write a review */}
           {accessToken ? (
-            <form className="card mb-4" style={{ padding: 28 }} onSubmit={submit}>
+            <form className="card mb-4" style={{ padding: 20 }} onSubmit={submit}>
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Write a review</h3>
               <div className="form-group">
                 <label>Your rating</label>
@@ -105,7 +105,7 @@ export default function Testimonials() {
               <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Submit review</button>
             </form>
           ) : (
-            <div className="card mb-4" style={{ padding: 20, textAlign: 'center' }}>
+            <div className="card mb-4" style={{ padding: 14, textAlign: 'center' }}>
               <span className="text-muted"><Link to="/login">Log in</Link> to write a review.</span>
             </div>
           )}
@@ -118,7 +118,7 @@ export default function Testimonials() {
           ) : (
             <div className="grid-3">
               {reviews.map((r) => (
-                <div className="card fade-up" style={{ padding: 24 }} key={r._id}>
+                <div className="card fade-up" style={{ padding: 16 }} key={r._id}>
                   <i className="fa-solid fa-quote-left" style={{ color: 'var(--fire)', fontSize: '1.6rem' }} />
                   <p style={{ color: 'var(--text-2)', lineHeight: 1.8, margin: '8px 0 16px', fontSize: '0.9rem' }}>{r.message}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

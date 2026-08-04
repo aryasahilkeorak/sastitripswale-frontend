@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl } from '../lib/helpers.js';
+import { imageUrl, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
@@ -56,7 +56,10 @@ export default function Gallery() {
     }
   };
 
-  const imgs = photos.map((p) => imageUrl(p.photoUrl));
+  // Fall back to curated North India shots whenever the real (member-uploaded)
+  // gallery has nothing for the selected category yet, so the page is never empty.
+  const fallback = photos.length === 0 ? NORTH_INDIA_GALLERY.filter((g) => cat === 'all' || g.category === cat) : [];
+  const imgs = photos.length ? photos.map((p) => imageUrl(p.photoUrl)) : fallback.map((g) => g.url);
 
   return (
     <>
@@ -84,9 +87,7 @@ export default function Gallery() {
 
           {loading ? (
             <Loader label="Loading gallery…" />
-          ) : photos.length === 0 ? (
-            <div className="empty-state"><i className="fa-regular fa-image" /><p>No photos yet in this category.</p></div>
-          ) : (
+          ) : photos.length > 0 ? (
             <div className="masonry">
               {photos.map((p, i) => (
                 <div className="masonry-item" key={p._id} onClick={() => setLb(i)}>
@@ -100,6 +101,19 @@ export default function Gallery() {
                 </div>
               ))}
             </div>
+          ) : fallback.length > 0 ? (
+            <div className="masonry">
+              {fallback.map((g, i) => (
+                <div className="masonry-item" key={g.url} onClick={() => setLb(i)}>
+                  <img className="gallery-img" src={g.url} alt={g.place} loading="lazy" />
+                  <div className="masonry-cap">
+                    <div style={{ fontWeight: 600 }}>{g.place}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state"><i className="fa-regular fa-image" /><p>No photos yet in this category.</p></div>
           )}
         </div>
       </section>

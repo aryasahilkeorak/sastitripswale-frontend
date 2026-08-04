@@ -97,13 +97,13 @@ export default function PlanTrip() {
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
           {!isMember ? (
-            <div className="card mb-4" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
+            <div className="card mb-4" style={{ padding: 16, borderColor: 'rgba(255,107,0,0.3)' }}>
               <strong>Membership required.</strong>
               <p className="text-muted mt-2">Activate a membership (free with coupon FREEJOIN) to post trips.</p>
               <Link to="/join" className="btn btn-primary mt-3"><i className="fa-solid fa-crown" /> View Plans</Link>
             </div>
           ) : !profileDone ? (
-            <div className="card mb-4" style={{ padding: 24, borderColor: 'rgba(255,107,0,0.3)' }}>
+            <div className="card mb-4" style={{ padding: 16, borderColor: 'rgba(255,107,0,0.3)' }}>
               <strong>Complete your profile first.</strong>
               <p className="text-muted mt-2">Add your name, city, interests, vehicle and ID to plan trips.</p>
               <Link to="/complete-profile" className="btn btn-primary mt-3"><i className="fa-solid fa-user-gear" /> Complete Profile</Link>
@@ -112,7 +112,7 @@ export default function PlanTrip() {
 
           <div className="detail-grid">
             {/* Create form */}
-            <form className="card" style={{ padding: 28 }} onSubmit={submit}>
+            <form className="card" style={{ padding: 20 }} onSubmit={submit}>
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Trip details</h3>
               <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}>
                 <i className="fa-solid fa-image" /> A destination photo is added automatically — no upload needed.
@@ -207,7 +207,7 @@ export default function PlanTrip() {
 
             {/* Right column */}
             <div>
-              <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+              <div className="card" style={{ padding: 16, marginBottom: 20 }}>
                 <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My posted trips</h3>
                 {trips.length === 0 ? (
                   <div className="empty-state-sm"><i className="fa-solid fa-map-pin" /><p>No trips yet. Create your first!</p></div>
@@ -228,7 +228,7 @@ export default function PlanTrip() {
                 )}
               </div>
 
-              <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+              <div className="card" style={{ padding: 16, marginBottom: 20 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}><i className="fa-solid fa-lightbulb" /> Tips</h4>
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {TIPS.map((t) => (
@@ -237,7 +237,7 @@ export default function PlanTrip() {
                 </ul>
               </div>
 
-              <div className="card" style={{ padding: 24 }}>
+              <div className="card" style={{ padding: 16 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Popular destinations</h4>
                 <div className="filter-chips" style={{ marginBottom: 0 }}>
                   {POPULAR.map((p) => (

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { imageUrl, rupee, AVATAR_FALLBACK } from '../lib/helpers.js';
+import { imageUrl, rupee, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
 import { useAuth } from '../store/auth.js';
 import TripCard from '../components/TripCard.jsx';
 import AnimatedCounter from '../components/AnimatedCounter.jsx';
 import Stars from '../components/Stars.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
+import HomeSearchWidget from '../components/HomeSearchWidget.jsx';
+import PromoBanner from '../components/PromoBanner.jsx';
 import AppHome from './AppHome.jsx';
 
 const HERO_BG_IMAGES = [
@@ -50,13 +52,10 @@ const FAQS = [
   { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to waive it entirely!' },
 ];
 
-const FALLBACK_GALLERY = [
-  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80',
-  'https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=500&q=80',
-  'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=500&q=80',
-  'https://images.unsplash.com/photo-1585789575701-f6ec571c1de4?w=500&q=80',
-  'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=500&q=80',
-];
+// Shown only until real trip photos exist in the gallery (see `gallery` state
+// below) — kept in one place (lib/helpers.js) since the full Gallery page
+// falls back to the same set.
+const FALLBACK_GALLERY = NORTH_INDIA_GALLERY.map((g) => g.url);
 
 export default function Home() {
   const user = useAuth((s) => s.user);
@@ -85,7 +84,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    api.get('/trips', { params: { status: 'upcoming', limit: 3 } }).then((r) => setTrips(r.data.trips)).catch(() => {});
+    api.get('/trips', { params: { status: 'upcoming', limit: 8 } }).then((r) => setTrips(r.data.trips)).catch(() => {});
     api.get('/reviews', { params: { featured: 'true', limit: 6 } }).then((r) => setReviews(r.data.reviews)).catch(() => {});
     api.get('/gallery', { params: { limit: 5 } }).then((r) => setGallery(r.data.photos)).catch(() => {});
     api.get('/stats').then((r) => setStats(r.data.stats)).catch(() => {});
@@ -237,6 +236,22 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Search widget — floats up over the hero's bottom edge (rendered as
+          a sibling, not a hero child, since .hero has overflow:hidden for
+          its background layers). */}
+      <div className="container hsw-wrap">
+        <HomeSearchWidget />
+      </div>
+
+      <div className="container">
+        <PromoBanner
+          icon="fa-solid fa-gift"
+          message="Invite friends and grow the tribe — get your referral link."
+          cta="View my referrals"
+          to="/referrals"
+        />
+      </div>
+
       {/* Stats */}
       <section className="stats-section">
         <div className="container">
@@ -311,9 +326,11 @@ export default function Home() {
           {trips.length === 0 ? (
             <div className="empty-state"><i className="fa-solid fa-compass" /><p>No trips yet — be the first to plan one!</p></div>
           ) : (
-            <div className="trips-grid">
+            <div className="deal-carousel">
               {trips.map((t) => (
-                <TripCard key={t._id} trip={t} />
+                <div className="deal-carousel-item" key={t._id}>
+                  <TripCard trip={t} />
+                </div>
               ))}
             </div>
           )}
@@ -378,7 +395,12 @@ export default function Home() {
           <div className="gallery-preview-grid fade-up">
             {galleryImgs.slice(0, 5).map((src, i) => (
               <div className="gallery-thumb" key={i} onClick={() => setLb(i)}>
-                <img src={src} alt="Trip memory" loading="lazy" />
+                <img
+                  src={src}
+                  alt="Trip memory"
+                  loading="lazy"
+                  onError={(e) => { e.currentTarget.src = DESTINATION_PLACEHOLDER; }}
+                />
                 <div className="gallery-overlay"><i className="fa-solid fa-magnifying-glass-plus" /></div>
               </div>
             ))}

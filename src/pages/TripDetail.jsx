@@ -83,10 +83,10 @@ export default function TripDetail() {
     }
   };
 
-  if (loading) return <div style={{ paddingTop: 120 }}><Loader label="Loading trip…" /></div>;
+  if (loading) return <div className="detail-section-loading"><Loader label="Loading trip…" /></div>;
   if (!trip)
     return (
-      <div className="empty-state" style={{ paddingTop: 160 }}>
+      <div className="empty-state detail-section-empty">
         <i className="fa-solid fa-triangle-exclamation" />
         <p>Trip not found.</p>
         <Link to="/trips" className="btn btn-primary mt-3">Browse trips</Link>
@@ -116,7 +116,7 @@ export default function TripDetail() {
 
   return (
     <>
-      <section style={{ paddingTop: 110 }}>
+      <section className="detail-section">
         <div className="container">
           <Link to="/trips" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
             <i className="fa-solid fa-arrow-left" /> All trips
@@ -199,7 +199,7 @@ export default function TripDetail() {
             </div>
 
             {/* RIGHT — sticky action card (static on mobile) */}
-            <div className="card trip-side-card" style={{ padding: 24 }}>
+            <div className="card trip-side-card" style={{ padding: 16 }}>
               <div className="text-muted" style={{ fontSize: '0.75rem' }}>{trip.isCouplesMode ? 'Per couple' : 'Per head'}</div>
               <div className="trip-price" style={{ fontSize: '2rem' }}>{rupee(trip.isCouplesMode ? trip.budgetPerHead * 2 : trip.budgetPerHead)}</div>
               {trip.isCouplesMode && (

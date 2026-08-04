@@ -43,7 +43,7 @@ export default function AdminLayout() {
   const visibleLinks = LINKS.filter((l) => !l.perm || hasPerm(l.perm));
   const visibleTabs = BOTTOM_TABS.filter((l) => !l.perm || hasPerm(l.perm));
   const blockedLink = LINKS.find((l) => l.perm && location.pathname.startsWith(l.to) && !hasPerm(l.perm));
-  const currentLabel = [...LINKS, { to: '/admin/admins', label: 'Admins' }, { to: '/admin/profile', label: 'My Profile' }]
+  const currentLabel = [...LINKS, { to: '/admin/admins', label: 'Admins' }, { to: '/admin/referral-settings', label: 'Referral Settings' }, { to: '/admin/profile', label: 'My Profile' }]
     .filter((l) => location.pathname === l.to || (l.to !== '/admin' && location.pathname.startsWith(l.to)))
     .sort((a, b) => b.to.length - a.to.length)[0]?.label || 'Overview';
 
@@ -84,6 +84,9 @@ export default function AdminLayout() {
             <div className="admin-nav-label">Super Admin</div>
             <NavLink to="/admin/admins" className={({ isActive }) => `admin-link${isActive ? ' active' : ''}`}>
               <i className="fa-solid fa-user-shield" /> Admins
+            </NavLink>
+            <NavLink to="/admin/referral-settings" className={({ isActive }) => `admin-link${isActive ? ' active' : ''}`}>
+              <i className="fa-solid fa-gift" /> Referral Settings
             </NavLink>
           </>
         )}

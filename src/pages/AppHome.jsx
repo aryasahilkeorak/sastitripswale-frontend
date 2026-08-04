@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
+import usePullToRefresh from '../lib/usePullToRefresh.js';
 import TripCard from '../components/TripCard.jsx';
 import Loader from '../components/Loader.jsx';
 
@@ -37,22 +38,42 @@ export default function AppHome() {
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const loadData = useCallback(
+    () =>
+      Promise.all([
+        api.get('/trips/my').then((r) => setMyTrips(r.data.trips)).catch(() => {}),
+        api.get('/trips', { params: { status: 'upcoming', limit: 8 } }).then((r) => setUpcoming(r.data.trips)).catch(() => {}),
+        api.get('/members/notifications').then((r) => setNotifs(r.data.notifications)).catch(() => {}),
+      ]),
+    []
+  );
+
   useEffect(() => {
-    Promise.all([
-      api.get('/trips/my').then((r) => setMyTrips(r.data.trips)).catch(() => {}),
-      api.get('/trips', { params: { status: 'upcoming', limit: 8 } }).then((r) => setUpcoming(r.data.trips)).catch(() => {}),
-      api.get('/members/notifications').then((r) => setNotifs(r.data.notifications)).catch(() => {}),
-    ]).finally(() => setLoading(false));
-  }, []);
+    loadData().finally(() => setLoading(false));
+  }, [loadData]);
+
+  // Mobile/tablet only in practice — desktop pointers don't fire touch events.
+  const { containerRef, pullDistance, refreshing } = usePullToRefresh(loadData);
 
   if (loading) return <Loader label="Getting things ready…" />;
 
   const unread = notifs.filter((n) => !n.isRead).length;
   const firstName = (user?.fullName || '').split(' ')[0] || 'Traveler';
   const nextTrip = myTrips[0];
+  const daysLeft = user?.membershipActive && user?.membershipExpiresAt
+    ? Math.ceil((new Date(user.membershipExpiresAt) - Date.now()) / 86400000)
+    : null;
 
   return (
-    <div className="app-home">
+    <div className="app-home" ref={containerRef}>
+      <div className="ptr-indicator" style={{ height: refreshing ? 40 : pullDistance }}>
+        {refreshing ? (
+          <span className="spinner" />
+        ) : pullDistance > 0 ? (
+          <i className="fa-solid fa-arrow-down" style={{ transform: `rotate(${Math.min(pullDistance / 70, 1) * 180}deg)` }} />
+        ) : null}
+      </div>
+
       <section className="app-home-greeting">
         <div className="container">
           <div className="ahg-row">
@@ -68,10 +89,49 @@ export default function AppHome() {
                 <span className={`badge ${user?.membershipActive ? 'badge-green' : 'badge-red'}`}>
                   {user?.membershipActive ? '● Active member' : '○ Membership inactive'}
                 </span>
+                {daysLeft != null && (
+                  <span className="badge badge-gold">{daysLeft > 0 ? `${daysLeft}d left` : 'Expires today'}</span>
+                )}
                 {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
               </div>
             </div>
           </div>
+
+          <div className="ahg-stats">
+            <div className="ahg-stat">
+              <strong>{myTrips.length}</strong>
+              <span>My trips</span>
+            </div>
+            <div className="ahg-stat-divider" />
+            <div className="ahg-stat">
+              <strong>{unread}</strong>
+              <span>Alerts</span>
+            </div>
+            <div className="ahg-stat-divider" />
+            <div className="ahg-stat">
+              <strong>{upcoming.length}</strong>
+              <span>Open trips</span>
+            </div>
+          </div>
+
+          {(!user?.profileComplete || !user?.membershipPaid) && (
+            <div className="ahg-alert-stack">
+              {!user?.profileComplete && (
+                <Link to="/complete-profile" className="ahg-alert ahg-alert-magenta">
+                  <i className="fa-solid fa-user-gear" />
+                  <span>Complete your profile to unlock trips</span>
+                  <i className="fa-solid fa-chevron-right" />
+                </Link>
+              )}
+              {!user?.membershipPaid && (
+                <Link to="/join" className="ahg-alert ahg-alert-fire">
+                  <i className="fa-solid fa-crown" />
+                  <span>Activate membership to plan &amp; join trips</span>
+                  <i className="fa-solid fa-chevron-right" />
+                </Link>
+              )}
+            </div>
+          )}
 
           <div className="app-tile-grid">
             <Link to="/plan-trip" className="app-tile">
@@ -97,8 +157,12 @@ export default function AppHome() {
         </div>
       </section>
 
-      <section className="app-section">
-        <div className="container">
+      {/* Below $bp-lg this is normal stacked document flow (identical to the
+          old markup); at $bp-lg+ it becomes a 2-column dashboard grid — see
+          .app-home-grid in app.scss. Source order intentionally matches the
+          mobile visual order so nothing changes for touch users. */}
+      <div className="app-home-grid container">
+        <section className="app-section app-home-next fade-up">
           <div className="app-section-head">
             <h2>Your next trip</h2>
           </div>
@@ -116,11 +180,9 @@ export default function AppHome() {
               </div>
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      <section className="app-section">
-        <div className="container">
+        <section className="app-section app-home-cats fade-up">
           <div className="app-section-head">
             <h2>Categories</h2>
           </div>
@@ -131,11 +193,9 @@ export default function AppHome() {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="app-section">
-        <div className="container">
+        <section className="app-section app-home-trips fade-up">
           <div className="app-section-head">
             <h2>Trips for you</h2>
             <Link to="/trips">View all <i className="fa-solid fa-arrow-right" /></Link>
@@ -151,11 +211,9 @@ export default function AppHome() {
               ))}
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      <section className="app-section">
-        <div className="container">
+        <section className="app-section app-home-activity fade-up">
           <div className="app-section-head">
             <h2>Recent activity</h2>
             <Link to="/dashboard">View all <i className="fa-solid fa-arrow-right" /></Link>
@@ -175,8 +233,8 @@ export default function AppHome() {
               ))}
             </div>
           )}
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

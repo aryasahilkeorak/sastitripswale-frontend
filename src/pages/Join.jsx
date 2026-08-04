@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { rupee, planPrice, PREF_LABEL } from '../lib/helpers.js';
@@ -48,10 +48,12 @@ function loadRazorpay() {
 
 export default function Join() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const user = useAuth((s) => s.user);
   const accessToken = useAuth((s) => s.accessToken);
   const setSession = useAuth((s) => s.setSession);
   const setUser = useAuth((s) => s.setUser);
+  const [referralsEnabled, setReferralsEnabled] = useState(false);
 
   // Already an active member? go complete profile or dashboard.
   useEffect(() => {
@@ -63,7 +65,12 @@ export default function Join() {
   const [step, setStep] = useState(accessToken ? 2 : 1);
   const [form, setForm] = useState({
     email: '', mobile: '', password: '', gender: '', coTravelerPreference: '',
+    referralCode: searchParams.get('ref') || '',
   });
+
+  useEffect(() => {
+    api.get('/referrals/status').then((r) => setReferralsEnabled(r.data.enabled)).catch(() => {});
+  }, []);
   const [duration, setDuration] = useState('6m');
   const [coupon, setCoupon] = useState('');
   const [applied, setApplied] = useState(null); // { code, finalRupees, isFree }
@@ -107,6 +114,7 @@ export default function Join() {
         password: form.password,
         gender: form.gender,
         coTravelerPreference: form.coTravelerPreference,
+        referralCode: form.referralCode || undefined,
       });
       setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
       toast('fa-solid fa-champagne-glasses', 'Account created! Choose your plan.');
@@ -185,11 +193,11 @@ export default function Join() {
   };
 
   return (
-    <section style={{ paddingTop: 110 }}>
+    <section className="join-section">
       <div className="container" style={{ maxWidth: 560 }}>
         <div className="text-center mb-4">
           <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-rocket" /> Join the Tribe</div>
-          <h1 className="section-title" style={{ fontSize: '2rem' }}>Become a <span className="highlight">Member</span></h1>
+          <h1 className="section-title join-title">Become a <span className="highlight">Member</span></h1>
         </div>
 
         {/* Step indicator */}
@@ -204,7 +212,7 @@ export default function Join() {
           ))}
         </div>
 
-        <div className="card" style={{ padding: 32 }}>
+        <div className="card join-card">
           {/* STEP 1 — minimal signup */}
           {step === 1 && (
             <div className="form-step active">
@@ -223,30 +231,24 @@ export default function Join() {
 
               <div className="form-group">
                 <label>Who do you want to travel with? *</label>
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {PREFS.map((p) => (
-                    <button
-                      key={p.key}
-                      type="button"
-                      className="card"
-                      onClick={() => setForm((f) => ({ ...f, coTravelerPreference: p.key }))}
-                      style={{
-                        padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-                        borderColor: form.coTravelerPreference === p.key ? 'var(--fire)' : 'var(--glass-bdr)',
-                        background: form.coTravelerPreference === p.key ? 'rgba(255,107,0,0.08)' : 'var(--surface)',
-                        cursor: 'pointer', color: 'inherit',
-                      }}
-                    >
-                      <i className={p.icon} style={{ fontSize: '1.4rem', color: 'var(--fire)' }} />
-                      <div style={{ flex: 1 }}>
-                        <strong style={{ fontSize: '0.92rem' }}>{p.label}</strong>
-                        <div className="text-muted" style={{ fontSize: '0.75rem' }}>{p.note}</div>
-                      </div>
-                      <i className={form.coTravelerPreference === p.key ? 'fa-solid fa-circle-dot' : 'fa-regular fa-circle'} style={{ color: form.coTravelerPreference === p.key ? 'var(--fire)' : 'var(--text-3)' }} />
-                    </button>
-                  ))}
-                </div>
+                <CustomSelect
+                  value={form.coTravelerPreference}
+                  onChange={set('coTravelerPreference')}
+                  options={[{ value: '', label: 'Select' }, ...PREFS.map((p) => ({ value: p.key, label: p.label }))]}
+                />
               </div>
+
+              {referralsEnabled && (
+                <div className="form-group">
+                  <label>Referral code (optional)</label>
+                  <input
+                    className="form-input"
+                    value={form.referralCode}
+                    onChange={(e) => setForm((f) => ({ ...f, referralCode: e.target.value.toUpperCase() }))}
+                    placeholder="Got a code from a friend?"
+                  />
+                </div>
+              )}
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={register} disabled={busy}>
                 {busy ? <span className="spinner" /> : <i className="fa-solid fa-arrow-right" />} Continue to Plan
@@ -263,7 +265,7 @@ export default function Join() {
                 Preference: <strong>{PREF_LABEL[preference]}</strong>
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+              <div className="plan-duration-grid">
                 {DURATIONS.map((d) => {
                   const price = planPrice(preference, d.key);
                   const activeSel = duration === d.key;
@@ -271,17 +273,16 @@ export default function Join() {
                     <button
                       key={d.key}
                       type="button"
-                      className="card"
+                      className="card plan-duration-card"
                       onClick={() => setDuration(d.key)}
                       style={{
-                        padding: 18, textAlign: 'center', cursor: 'pointer', color: 'inherit',
                         borderColor: activeSel ? 'var(--fire)' : 'var(--glass-bdr)',
                         background: activeSel ? 'rgba(255,107,0,0.08)' : 'var(--surface)',
                       }}
                     >
-                      {d.tag && <span className="badge badge-fire" style={{ marginBottom: 6 }}>{d.tag}</span>}
-                      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{d.label}</div>
-                      <div className="price-amount" style={{ fontSize: '1.8rem' }}>{rupee(price)}</div>
+                      {d.tag && <span className="badge badge-fire plan-duration-tag">{d.tag}</span>}
+                      <div className="plan-duration-label">{d.label}</div>
+                      <div className="price-amount plan-duration-price">{rupee(price)}</div>
                     </button>
                   );
                 })}
@@ -298,7 +299,7 @@ export default function Join() {
 
               <div className="search-bar mb-3">
                 <i className="fa-solid fa-ticket" style={{ color: 'var(--text-3)' }} />
-                <input placeholder="Coupon code (try FREEJOIN)" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+                <input placeholder="Enter coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
                 <button className="btn btn-sm btn-outline" type="button" onClick={applyCoupon}>Apply</button>
               </div>
 

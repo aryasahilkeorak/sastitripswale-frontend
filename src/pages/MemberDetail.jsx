@@ -147,10 +147,10 @@ export default function MemberDetail() {
     }
   };
 
-  if (loading) return <div style={{ paddingTop: 120 }}><Loader /></div>;
+  if (loading) return <div className="detail-section-loading"><Loader /></div>;
   if (!member)
     return (
-      <div className="empty-state" style={{ paddingTop: 160 }}>
+      <div className="empty-state detail-section-empty">
         <i className="fa-solid fa-user" /><p>Member not found.</p>
         <Link to="/members" className="btn btn-primary mt-3">All members</Link>
       </div>
@@ -159,7 +159,7 @@ export default function MemberDetail() {
   const photoImgs = (member.recentPhotos || []).map((p) => imageUrl(p.photoUrl));
 
   return (
-    <section style={{ paddingTop: 110, paddingBottom: 60 }}>
+    <section className="detail-section">
       <div className="container" style={{ maxWidth: 1120 }}>
         <Link to="/members" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
           <i className="fa-solid fa-arrow-left" /> All members
@@ -385,7 +385,7 @@ export default function MemberDetail() {
 function SuggestedTravelers({ members }) {
   if (!members?.length) return null;
   return (
-    <div className="card suggested-card" style={{ padding: 20 }}>
+    <div className="card suggested-card" style={{ padding: 14 }}>
       <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem' }}>
         <i className="fa-solid fa-user-group" style={{ color: 'var(--fire)' }} /> Suggested Travelers
       </h4>

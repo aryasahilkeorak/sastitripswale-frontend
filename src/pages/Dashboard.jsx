@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import { useSwipeable } from 'react-swipeable';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import {
@@ -40,6 +41,20 @@ export default function Dashboard() {
   const setUser = useAuth((s) => s.setUser);
   const viewMode = useAuth((s) => s.viewMode);
   const [tab, setTab] = useState('trips');
+
+  // Swipe between tabs on mobile/tablet (trackMouse stays off, so this never
+  // interferes with desktop clicks/drags inside the tab content).
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      const i = TABS.findIndex((t) => t.key === tab);
+      if (i >= 0 && i < TABS.length - 1) setTab(TABS[i + 1].key);
+    },
+    onSwipedRight: () => {
+      const i = TABS.findIndex((t) => t.key === tab);
+      if (i > 0) setTab(TABS[i - 1].key);
+    },
+    preventScrollOnSwipe: false,
+  });
 
   const [trips, setTrips] = useState([]);
   const [notifs, setNotifs] = useState([]);
@@ -105,8 +120,8 @@ export default function Dashboard() {
   };
 
   return (
-    <section style={{ paddingTop: 110, paddingBottom: 60 }}>
-      <div className="container" style={{ maxWidth: 900 }}>
+    <section className="detail-section">
+      <div className="container dashboard-container">
         {/* Profile header — matches the real Instagram profile layout: a
             top row of avatar + stats, then name/bio/links full-width below. */}
         <div className="ig-header">
@@ -186,7 +201,7 @@ export default function Dashboard() {
 
         {/* Complete-profile gate banner */}
         {!user?.profileComplete && (
-          <div className="card mt-3" style={{ padding: 20, borderColor: 'rgba(224,64,251,0.4)' }}>
+          <div className="card mt-3" style={{ padding: 14, borderColor: 'rgba(224,64,251,0.4)' }}>
             <div className="row-between">
               <div>
                 <strong>Complete your profile to unlock trips</strong>
@@ -198,7 +213,7 @@ export default function Dashboard() {
         )}
 
         {!user?.membershipPaid && (
-          <div className="card mt-3" style={{ padding: 20, borderColor: 'rgba(255,107,0,0.3)' }}>
+          <div className="card mt-3" style={{ padding: 14, borderColor: 'rgba(255,107,0,0.3)' }}>
             <div className="row-between">
               <div>
                 <strong>Activate your membership</strong>
@@ -227,7 +242,9 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — pill row on mobile/tablet, replaced by a persistent left
+            sidebar at $bp-lg+ (same TABS/tab state, see .ig-dashboard-* in
+            app.scss). Both render; CSS shows only one per breakpoint. */}
         <div className="ig-tabs mt-4">
           {TABS.map((t) => (
             <button key={t.key} className={`ig-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)} title={t.label}>
@@ -237,10 +254,22 @@ export default function Dashboard() {
           ))}
         </div>
 
+        <div className="ig-dashboard-body mt-4">
+          <nav className="ig-dashboard-sidebar">
+            {TABS.map((t) => (
+              <button key={t.key} className={`ig-dashboard-sidebar-link${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
+                <i className={t.icon} /> {t.label}
+                {t.key === 'notifications' && unread > 0 && <span className="ig-tab-dot" />}
+              </button>
+            ))}
+          </nav>
+
+          <div className="ig-dashboard-content" {...swipeHandlers}>
+
         {/* OVERVIEW */}
         {tab === 'overview' && (
           <div className="grid-2">
-            <div className="card" style={{ padding: 24 }}>
+            <div className="card" style={{ padding: 16 }}>
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Profile</h3>
               <Detail label="Profession" value={user?.profession} />
               <Detail label="City / State" value={[user?.city, user?.state].filter(Boolean).join(', ')} />
@@ -254,7 +283,7 @@ export default function Dashboard() {
               />
             </div>
             <div>
-              <div className="card" style={{ padding: 24 }}>
+              <div className="card" style={{ padding: 16 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick actions</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <Link to="/trips" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-compass" /> Browse Trips</Link>
@@ -304,7 +333,7 @@ export default function Dashboard() {
         {tab === 'notifications' && (
           <div style={{ maxWidth: 680 }}>
             {pendingReceived.length > 0 && (
-              <div className="card mb-4" style={{ padding: 20 }}>
+              <div className="card mb-4" style={{ padding: 14 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Connection requests</h4>
                 {pendingReceived.map((c) => (
                   <div key={c._id} className="row-between" style={{ marginBottom: 10 }}>
@@ -370,6 +399,8 @@ export default function Dashboard() {
 
         {/* SETTINGS */}
         {tab === 'settings' && <SettingsForm user={user} setUser={setUser} />}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -400,7 +431,7 @@ function SettingsForm({ user, setUser }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <DocumentsCard />
-        <div className="card" style={{ padding: 24, borderColor: 'rgba(239,68,68,0.25)' }}>
+        <div className="card" style={{ padding: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
           <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
           <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
           <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
@@ -457,7 +488,7 @@ function DocumentsCard() {
   if (docs.length === 0) return null;
 
   return (
-    <div className="card" style={{ padding: 24 }}>
+    <div className="card" style={{ padding: 16 }}>
       <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My Documents</h4>
       <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={onFile} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

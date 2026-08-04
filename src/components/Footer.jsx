@@ -21,7 +21,8 @@ export default function Footer() {
               <a href="#" aria-label="Instagram"><i className="fa-brands fa-instagram" /></a>
               <a href="#" aria-label="Facebook"><i className="fa-brands fa-facebook-f" /></a>
               <a href="#" aria-label="YouTube"><i className="fa-brands fa-youtube" /></a>
-              <a href="https://wa.me/919876543210" aria-label="WhatsApp"><i className="fa-brands fa-whatsapp" /></a>
+              {/* WhatsApp temporarily hidden along with the brand's mobile number.
+              <a href="https://wa.me/919876543210" aria-label="WhatsApp"><i className="fa-brands fa-whatsapp" /></a> */}
             </div>
           </div>
           <div className="footer-col">
@@ -46,9 +47,10 @@ export default function Footer() {
           <div className="footer-col">
             <h4>Contact</h4>
             <ul>
-              <li><a href="mailto:hello@SastiTripsWale.com"><i className="fa-solid fa-envelope" />  info@sastitripswale.com</a></li>
+              {/* Email temporarily hidden along with the brand's mobile number.
+              <li><a href="mailto:hello@SastiTripsWale.com"><i className="fa-solid fa-envelope" />  info@sastitripswale.com</a></li> */}
               {/* <li><a href="tel:+919876543210"><i className="fa-solid fa-phone" /> +91 98765 43210</a></li> */}
-              <li><a href="#"><i className="fa-solid fa-location-dot" /> Panchkula, Haryana</a></li>
+              <li><a href="#"><i className="fa-solid fa-location-dot" /> Sector 119, Mohali, Punjab 160055</a></li>
             </ul>
           </div>
         </div>

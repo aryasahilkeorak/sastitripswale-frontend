@@ -113,7 +113,7 @@ export default function About() {
               </p>
             </div>
             <div style={{ flex: '1 1 320px' }} className="fade-right">
-              <div className="card" style={{ padding: 36 }}>
+              <div className="card" style={{ padding: 24 }}>
                 <i className="fa-solid fa-quote-left" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
                 <p style={{ fontSize: '1.05rem', fontStyle: 'italic', color: 'var(--text)', margin: '16px 0 20px', lineHeight: 1.8 }}>
                   &ldquo;{team[0].quote}&rdquo;
@@ -156,7 +156,7 @@ export default function About() {
         <div className="container">
           {/* Mission / Vision */}
           <div className="grid-2" style={{ marginBottom: 70 }}>
-            <div className="card fade-up" style={{ padding: 32 }}>
+            <div className="card fade-up" style={{ padding: 22 }}>
               <div className="why-icon" style={{ background: 'rgba(255,122,26,0.12)', color: 'var(--fire)' }}><i className="fa-solid fa-bullseye" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Mission</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
@@ -164,7 +164,7 @@ export default function About() {
                 travelers into verified groups that split costs and explore together.
               </p>
             </div>
-            <div className="card fade-up" style={{ padding: 32 }}>
+            <div className="card fade-up" style={{ padding: 22 }}>
               <div className="why-icon" style={{ background: 'rgba(62,142,247,0.12)', color: 'var(--cyan)' }}><i className="fa-solid fa-binoculars" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Vision</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
@@ -181,7 +181,7 @@ export default function About() {
           </div>
           <div className="grid-4" style={{ marginBottom: 70 }}>
             {STEPS.map((s) => (
-              <div className="card fade-up" style={{ padding: 26 }} key={s.n}>
+              <div className="card fade-up" style={{ padding: 18 }} key={s.n}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-3)', letterSpacing: '0.08em' }}>
                   STEP {s.n}
                 </div>

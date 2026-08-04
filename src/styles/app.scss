@@ -53,8 +53,8 @@
 /* ── Toast stack ── */
 .toast-stack {
   position: fixed;
-  top: 80px;
-  right: 20px;
+  top: max(80px, var(--safe-t));
+  right: max(20px, var(--safe-r));
   z-index: 9100;
   display: flex;
   flex-direction: column;
@@ -83,6 +83,23 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Pull-to-refresh indicator — see lib/usePullToRefresh.js. Height is driven
+   inline (pullDistance/refreshing), this just styles what sits inside it. */
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--fire);
+  font-size: 1.1rem;
+  transition: height 0.15s var(--ease-out);
+}
+
+.ptr-indicator .spinner {
+  border-color: rgba($orange-500, 0.25);
+  border-top-color: var(--fire);
 }
 
 .page-loader {
@@ -410,6 +427,225 @@
   font-family: var(--font-display);
 }
 
+/* ── Home search widget — OTA-style "search box over the banner" ── */
+.hsw-wrap {
+  position: relative;
+  z-index: 5;
+  margin-top: -64px;
+}
+
+.home-search-widget {
+  background: var(--surface);
+  border: 1px solid var(--glass-bdr-2);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.hsw-types {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--glass-bdr);
+}
+
+.hsw-type {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--glass-bdr);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--t);
+
+  @include hover-only {
+    border-color: rgba($orange-500, 0.4);
+    color: var(--text);
+  }
+}
+
+.hsw-type.active {
+  background: var(--grad-fire);
+  border-color: transparent;
+  color: var(--text-inv);
+}
+
+.hsw-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hsw-field {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.hsw-field-seats {
+  flex: 0 1 140px;
+}
+
+.hsw-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.hsw-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  background: var(--surface-2);
+  border: 1px solid var(--glass-bdr);
+}
+
+.hsw-input i {
+  color: var(--fire);
+}
+
+.hsw-input input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.hsw-search-btn {
+  flex: 1 1 100%;
+  justify-content: center;
+}
+
+@include above($bp-md) {
+  .hsw-search-btn {
+    flex: 0 0 auto;
+  }
+}
+
+@include below($bp-md) {
+  .hsw-wrap {
+    margin-top: -40px;
+  }
+
+  .home-search-widget {
+    padding: 16px;
+  }
+
+  /* One field per row on phones — two cramped ~140px columns are hard to
+     read/tap, so stack them full-width instead. */
+  .hsw-fields {
+    gap: 12px;
+  }
+
+  .hsw-field,
+  .hsw-field-seats {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+}
+
+/* ── Promo banner — slim OTA-style offer strip, always real content ── */
+.promo-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  margin: 24px 0;
+  border-radius: var(--r-lg);
+  background: var(--grad-surface);
+  border: 1px solid rgba($orange-500, 0.2);
+  color: inherit;
+
+  @include hover-only {
+    border-color: rgba($orange-500, 0.4);
+  }
+}
+
+.promo-banner-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--grad-fire);
+  color: var(--text-inv);
+  font-size: 1.05rem;
+}
+
+.promo-banner-msg {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.promo-banner-cta {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--fire-2);
+  white-space: nowrap;
+}
+
+@include below($bp-sm) {
+  .promo-banner {
+    flex-wrap: wrap;
+  }
+
+  .promo-banner-cta {
+    width: 100%;
+    padding-left: 52px;
+  }
+}
+
+/* ── Deal carousel — horizontal scroll-snap row of TripCards, the OTA
+   "deals for you" pattern (mobile already scrolls this way; desktop mouse
+   users can still drag/scroll it, unlike a plain overflow grid). ── */
+.deal-carousel {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  overflow-y: hidden !important;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+}
+
+.deal-carousel-item {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+}
+
+@include below($bp-md) {
+  .deal-carousel-item {
+    flex-basis: 260px;
+  }
+}
+
+/* ── Ride search — "prominent card" variant used on Trips.jsx, matching
+   the Home search widget's elevation ── */
+.ride-search-prominent {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  border-color: var(--glass-bdr-2);
+}
+
 /* ── Stats ── */
 .stats-section {
   background: var(--bg-2);
@@ -432,10 +668,12 @@
   transition: all var(--t-slow) var(--ease-out);
 }
 
-.stat-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba($orange-500, 0.3);
-  box-shadow: var(--shadow-fire);
+.stat-card {
+  @include hover-only {
+    transform: translateY(-4px);
+    border-color: rgba($orange-500, 0.3);
+    box-shadow: var(--shadow-fire);
+  }
 }
 
 .stat-icon {
@@ -473,10 +711,12 @@
   transition: all var(--t-slow) var(--ease-out);
 }
 
-.why-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba($orange-500, 0.3);
-  box-shadow: var(--shadow-fire);
+.why-card {
+  @include hover-only {
+    transform: translateY(-6px);
+    border-color: rgba($orange-500, 0.3);
+    box-shadow: var(--shadow-fire);
+  }
 }
 
 .why-icon {
@@ -521,10 +761,16 @@
   transition: all var(--t-slow) var(--ease-out);
 }
 
-.cat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  border-color: rgba($orange-500, 0.3);
+.cat-card {
+  @include hover-only {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-color: rgba($orange-500, 0.3);
+
+    img {
+      transform: scale(1.08);
+    }
+  }
 }
 
 .cat-card img {
@@ -532,10 +778,6 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.7s var(--ease-out);
-}
-
-.cat-card:hover img {
-  transform: scale(1.08);
 }
 
 .cat-overlay {
@@ -576,6 +818,25 @@
   gap: 22px;
 }
 
+@include above($bp-xl) {
+  .trips-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 26px;
+  }
+}
+
+// Keeps the filter chips + sort reachable while scrolling a long trip list
+// on desktop; mobile leaves it in normal flow (no room to spare there).
+@include above($bp-lg) {
+  .trips-filter-bar {
+    position: sticky;
+    top: 88px;
+    z-index: 5;
+    background: var(--bg);
+    padding: 12px 0;
+  }
+}
+
 /* ── Testimonials ── */
 .testi-section {
   background: var(--bg-2);
@@ -614,10 +875,12 @@
   transition: all var(--t) var(--ease-out);
 }
 
-.testi-card-mini:hover {
-  border-color: rgba($orange-500, 0.3);
-  transform: translateY(-4px);
-  box-shadow: $shadow-card;
+.testi-card-mini {
+  @include hover-only {
+    border-color: rgba($orange-500, 0.3);
+    transform: translateY(-4px);
+    box-shadow: $shadow-card;
+  }
 }
 
 .testi-mini-head {
@@ -675,12 +938,14 @@
   transition: all var(--t) var(--ease-spring);
 }
 
-.prev:hover,
-.next:hover {
-  background: var(--fire);
-  color: var(--text-inv);
-  border-color: var(--fire);
-  box-shadow: 0 0 20px var(--fire-glow);
+.prev,
+.next {
+  @include hover-only {
+    background: var(--fire);
+    color: var(--text-inv);
+    border-color: var(--fire);
+    box-shadow: 0 0 20px var(--fire-glow);
+  }
 }
 
 .dots {
@@ -752,8 +1017,12 @@
   transition: transform 0.5s var(--ease-out);
 }
 
-.gallery-thumb:hover img {
-  transform: scale(1.06);
+.gallery-thumb {
+  @include hover-only {
+    img {
+      transform: scale(1.06);
+    }
+  }
 }
 
 .gallery-thumb:first-child {
@@ -774,8 +1043,12 @@
   font-size: 1.5rem;
 }
 
-.gallery-thumb:hover .gallery-overlay {
-  opacity: 1;
+.gallery-thumb {
+  @include hover-only {
+    .gallery-overlay {
+      opacity: 1;
+    }
+  }
 }
 
 @media (max-width: 768px) {
@@ -796,6 +1069,12 @@
   column-gap: 14px;
 }
 
+@include above($bp-xl) {
+  .masonry {
+    columns: 4;
+  }
+}
+
 .masonry-item {
   break-inside: avoid;
   margin-bottom: 14px;
@@ -812,8 +1091,12 @@
   transition: transform 0.5s var(--ease-out);
 }
 
-.masonry-item:hover img {
-  transform: scale(1.05);
+.masonry-item {
+  @include hover-only {
+    img {
+      transform: scale(1.05);
+    }
+  }
 }
 
 .masonry-cap {
@@ -828,8 +1111,12 @@
   transition: opacity var(--t);
 }
 
-.masonry-item:hover .masonry-cap {
-  opacity: 1;
+.masonry-item {
+  @include hover-only {
+    .masonry-cap {
+      opacity: 1;
+    }
+  }
 }
 
 @media (max-width: 1024px) {
@@ -1025,6 +1312,141 @@
   gap: 16px;
 }
 
+/* ── Shared "plain content page" section (no decorative PageHero above it,
+   so it clears the fixed navbar itself) — Dashboard, TripDetail,
+   MemberDetail, Referrals, and the loading/empty states of the detail
+   pages all reuse these instead of repeating inline paddingTop.
+   NOTE: named .detail-section (not .app-section) on purpose — .app-section
+   is already used inside AppHome.jsx for its inner content blocks, with a
+   totally different meaning (30px vertical rhythm, not navbar clearance). ── */
+.detail-section {
+  padding-top: 110px;
+  padding-bottom: 60px;
+}
+
+.detail-section-loading {
+  padding-top: 120px;
+}
+
+.detail-section-empty {
+  padding-top: 160px;
+}
+
+@media (max-width: 640px) {
+  /* The fixed navbar's own top padding already grows with the notch/Dynamic
+     Island via var(--safe-t) (see .navbar) — add that same inset here too,
+     or a tall safe-area pushes the navbar down further than this fixed
+     value accounts for, and page content overlaps it underneath. */
+  .detail-section {
+    padding-top: calc(84px + var(--safe-t));
+    padding-bottom: 32px;
+  }
+
+  .detail-section-loading {
+    padding-top: calc(90px + var(--safe-t));
+  }
+
+  .detail-section-empty {
+    padding-top: calc(100px + var(--safe-t));
+  }
+}
+
+/* ── Join page ── */
+.join-section {
+  padding-top: 110px;
+  padding-bottom: 40px;
+}
+
+.join-card {
+  padding: 32px;
+}
+
+.plan-duration-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.plan-duration-card {
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  color: inherit;
+}
+
+.plan-duration-tag {
+  margin-bottom: 6px;
+}
+
+.plan-duration-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.plan-duration-price {
+  font-size: 1.8rem;
+}
+
+/* Generous inline card padding (24-36px) reads fine on desktop but eats a lot
+   of vertical space on a phone — opt individual cards into this on top of
+   their existing "card" class instead of a blanket .card override (some
+   cards intentionally use padding:0/8 for edge-to-edge images/thumbnails). */
+@media (max-width: 640px) {
+  .card-compact {
+    padding: 16px !important;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .join-section {
+    padding-top: 84px;
+    padding-bottom: 20px;
+  }
+
+  .join-section .text-center.mb-4 {
+    margin-bottom: 14px;
+  }
+
+  .join-title {
+    font-size: 1.6rem;
+  }
+
+  .join-section .steps-head {
+    margin: 0 auto 16px;
+  }
+
+  .join-card {
+    padding: 18px 16px;
+  }
+
+  .join-section .form-group {
+    margin-bottom: 12px;
+  }
+
+  .join-section h3.mb-3,
+  .join-section h3.mb-2 {
+    margin-bottom: 10px;
+  }
+
+  .plan-duration-grid {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .plan-duration-card {
+    padding: 12px;
+  }
+
+  .plan-duration-price {
+    font-size: 1.4rem;
+  }
+}
+
 /* ── Upload box ── */
 .upload-box {
   border: 1.5px dashed var(--glass-bdr-2);
@@ -1036,9 +1458,11 @@
   background: var(--surface);
 }
 
-.upload-box:hover {
-  border-color: rgba($orange-500, 0.5);
-  background: rgba($orange-500, 0.04);
+.upload-box {
+  @include hover-only {
+    border-color: rgba($orange-500, 0.5);
+    background: rgba($orange-500, 0.04);
+  }
 }
 
 .upload-label {
@@ -1182,6 +1606,12 @@
   gap: 20px;
 }
 
+@include above($bp-xl) {
+  .member-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 .member-card {
   padding: 24px;
   border-radius: var(--r-xl);
@@ -1191,10 +1621,12 @@
   transition: all var(--t-slow) var(--ease-out);
 }
 
-.member-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba($orange-500, 0.3);
-  box-shadow: var(--shadow-fire);
+.member-card {
+  @include hover-only {
+    transform: translateY(-5px);
+    border-color: rgba($orange-500, 0.3);
+    box-shadow: var(--shadow-fire);
+  }
 }
 
 .member-avatar {
@@ -1438,8 +1870,10 @@
   transition: background var(--t);
 }
 
-.suggested-row:hover {
-  background: var(--glass);
+.suggested-row {
+  @include hover-only {
+    background: var(--glass);
+  }
 }
 
 .suggested-ava {
@@ -1473,8 +1907,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid var(--glass-bdr-2);
   background: var(--glass);
@@ -1482,9 +1916,15 @@
   cursor: pointer;
   transition: all var(--t);
   flex-shrink: 0;
+
+  @include hover-only {
+    color: var(--fire-2);
+    border-color: rgba($orange-500, 0.4);
+    background: rgba($orange-500, 0.1);
+  }
 }
 
-.ig-id-btn:hover {
+.ig-id-btn:active {
   color: var(--fire-2);
   border-color: rgba($orange-500, 0.4);
   background: rgba($orange-500, 0.1);
@@ -1638,14 +2078,86 @@
   border-bottom-color: var(--fire);
 }
 
-.ig-tab:hover {
-  color: var(--text-2);
+.ig-tab {
+  @include hover-only {
+    color: var(--text-2);
+  }
 }
 
 @media (min-width: 641px) {
   .ig-tab span {
     display: inline;
   }
+}
+
+// Member dashboard shell — below $bp-lg this whole block is transparent
+// (the pill row above is the only tab UI, content stacks in normal flow,
+// identical to the old markup). At $bp-lg+ the pill row hides and a
+// persistent left sidebar (mirroring AdminLayout's) takes over.
+.dashboard-container {
+  max-width: 900px;
+}
+
+.ig-dashboard-sidebar {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 100px;
+}
+
+@include above($bp-lg) {
+  .dashboard-container {
+    max-width: 1100px;
+  }
+
+  .ig-tabs {
+    display: none;
+  }
+
+  .ig-dashboard-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .ig-dashboard-sidebar {
+    display: flex;
+  }
+}
+
+.ig-dashboard-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--r);
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-2);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  transition: all var(--t);
+
+  @include hover-only {
+    background: var(--glass-2);
+    color: var(--text);
+  }
+}
+
+.ig-dashboard-sidebar-link.active {
+  background: rgba($orange-500, 0.12);
+  color: var(--fire-2);
+  border-color: rgba($orange-500, 0.25);
+}
+
+.ig-dashboard-sidebar-link .ig-tab-dot {
+  position: static;
+  margin-left: auto;
+  border-color: transparent;
 }
 
 .ig-actions {
@@ -1679,7 +2191,13 @@
   transition: background var(--t);
 }
 
-.ig-flat-btn:hover {
+.ig-flat-btn {
+  @include hover-only {
+    background: var(--glass-2);
+  }
+}
+
+.ig-flat-btn:active {
   background: var(--glass-2);
 }
 
@@ -1812,8 +2330,10 @@
   transition: background var(--t);
 }
 
-.ig-menu-dropdown button:hover {
-  background: var(--glass);
+.ig-menu-dropdown button {
+  @include hover-only {
+    background: var(--glass);
+  }
 }
 
 .ig-menu-dropdown button.danger {
@@ -1843,8 +2363,12 @@
   transition: transform var(--t-slow) var(--ease-out);
 }
 
-.ig-tile:hover img {
-  transform: scale(1.06);
+.ig-tile {
+  @include hover-only {
+    img {
+      transform: scale(1.06);
+    }
+  }
 }
 
 .ig-tile-overlay {
@@ -1883,8 +2407,12 @@
   transition: opacity var(--t);
 }
 
-.ig-tile:hover .ig-tile-overlay-hover {
-  opacity: 1;
+.ig-tile {
+  @include hover-only {
+    .ig-tile-overlay-hover {
+      opacity: 1;
+    }
+  }
 }
 
 /* Delete button on the dashboard's own "My Trips" grid (not shown on the
@@ -1907,7 +2435,14 @@
   transition: background var(--t), color var(--t);
 }
 
-.ig-tile-delete:hover {
+.ig-tile-delete {
+  @include hover-only {
+    background: rgba($danger, 0.9);
+    color: #fff;
+  }
+}
+
+.ig-tile-delete:active {
   background: rgba($danger, 0.9);
   color: #fff;
 }
@@ -2031,8 +2566,12 @@ table.data-table {
   color: var(--text-2);
 }
 
-.data-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+.data-table tr {
+  @include hover-only {
+    td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
 }
 
 /* ── Timeline (completed trips) ── */
@@ -2147,6 +2686,10 @@ table.data-table {
   position: relative;
 }
 
+.nav-avatar-btn {
+  padding: 5px; // brings the 34px avatar up to a ~44px tap target
+}
+
 .nav-menu {
   position: absolute;
   right: 0;
@@ -2176,16 +2719,27 @@ table.data-table {
   cursor: pointer;
 }
 
-.nav-menu a:hover,
-.nav-menu button:hover {
+.nav-menu a,
+.nav-menu button {
+  @include hover-only {
+    background: var(--glass-2);
+    color: var(--text);
+  }
+}
+
+.nav-menu a:active,
+.nav-menu button:active {
   background: var(--glass-2);
   color: var(--text);
 }
 
 .notif-badge {
   position: absolute;
-  top: -3px;
-  right: -3px;
+  // Anchored to .nav-avatar-btn, which has 5px padding around the 34px
+  // avatar for a larger tap target — offset compensates so the badge still
+  // sits at the avatar's visual corner, not the (larger) button's corner.
+  top: 2px;
+  right: 2px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -2212,6 +2766,16 @@ table.data-table {
   grid-template-columns: 1.7fr 1fr;
   gap: 28px;
   align-items: start;
+}
+
+/* Grid items default to min-width: auto, so a non-wrapping horizontal-
+   scroll row nested anywhere inside a column (e.g. .filter-chips on
+   PlanTrip's "Popular destinations" card) can force the whole track —
+   and the page — wider than the viewport. Let columns shrink below
+   their content's intrinsic width so nested overflow-x scrollers stay
+   contained instead of blowing out .detail-grid itself. */
+.detail-grid > * {
+  min-width: 0;
 }
 
 .member-pill {
@@ -2281,8 +2845,10 @@ table.data-table {
   color: inherit;
 }
 
-.chat-group-item:hover {
-  background: var(--glass);
+.chat-group-item {
+  @include hover-only {
+    background: var(--glass);
+  }
 }
 
 .chat-group-item.active {
@@ -2547,9 +3113,11 @@ table.data-table {
   text-align: center;
 }
 
-.admin-link:hover {
-  background: var(--glass-2);
-  color: var(--text);
+.admin-link {
+  @include hover-only {
+    background: var(--glass-2);
+    color: var(--text);
+  }
 }
 
 .admin-link.active {
@@ -2637,9 +3205,11 @@ table.data-table {
   transition: all var(--t);
 }
 
-.admin-stat:hover {
-  border-color: rgba($orange-500, 0.25);
-  transform: translateY(-2px);
+.admin-stat {
+  @include hover-only {
+    border-color: rgba($orange-500, 0.25);
+    transform: translateY(-2px);
+  }
 }
 
 .admin-stat .ico {
@@ -2697,8 +3267,10 @@ table.data-table {
   font-weight: 600;
 }
 
-.admin-clickable:hover {
-  text-decoration: underline;
+.admin-clickable {
+  @include hover-only {
+    text-decoration: underline;
+  }
 }
 
 /* ── Hover effects disabled throughout the admin panel — shared classes
@@ -2825,7 +3397,7 @@ table.data-table {
     overflow-x: hidden;
     overflow-y: auto;
     z-index: 10001;
-    padding: 16px 14px;
+    padding: max(16px, var(--safe-t)) 14px 16px max(14px, var(--safe-l));
     transform: translateX(-100%);
     transition: transform 0.3s var(--ease-out);
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
@@ -2881,7 +3453,7 @@ table.data-table {
   }
 
   .admin-topbar {
-    padding: 12px 16px;
+    padding: max(12px, var(--safe-t)) max(16px, var(--safe-r)) 12px max(16px, var(--safe-l));
     gap: 10px;
   }
 
@@ -2924,7 +3496,7 @@ table.data-table {
     background: rgba(var(--bg-rgb), 0.94);
     backdrop-filter: blur(24px) saturate(150%);
     border-top: 1px solid var(--glass-bdr);
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    padding: 8px max(0px, var(--safe-r)) max(8px, env(safe-area-inset-bottom)) max(0px, var(--safe-l));
   }
 
   .admin-bottom-tab {
@@ -3127,6 +3699,13 @@ table.data-table {
   /* Landing hero — don't force a full empty screen */
   .hero {
     min-height: auto;
+  }
+
+  /* .hero-content below now owns the top clearance for the fixed header,
+     so the container's own padding-top (set at the 900px breakpoint)
+     would otherwise stack on top of it and leave a large empty gap. */
+  .hero>.container {
+    padding-top: 0;
   }
 
   .hero-content {
@@ -3415,11 +3994,24 @@ table.data-table {
    ============================================================ */
 
 .app-home {
-  padding: 120px 0 60px;
+  padding: calc(120px + var(--safe-t)) 0 60px;
 }
 
 .app-home-greeting {
+  position: relative;
   padding-bottom: 36px;
+  overflow: hidden;
+}
+
+/* Soft brand-color wash behind the greeting, same recipe as .hero-canvas
+   but much subtler — this is a dashboard, not a landing page. */
+.app-home-greeting::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 70% 100% at 15% 0%, rgba($orange-500, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 100% 20%, rgba($blue-500, 0.08) 0%, transparent 55%);
 }
 
 .ahg-row {
@@ -3434,7 +4026,9 @@ table.data-table {
   height: 58px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--glass-bdr-2);
+  border: 3px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad-fire) border-box;
+  box-shadow: 0 0 0 3px var(--bg), 0 4px 16px rgba($orange-500, 0.25);
 }
 
 .ahg-hi {
@@ -3449,6 +4043,101 @@ table.data-table {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.ahg-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 14px 10px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border: 1px solid var(--glass-bdr);
+  border-radius: var(--r-xl);
+}
+
+.ahg-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ahg-stat strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.ahg-stat span {
+  color: var(--text-3);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ahg-stat-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--glass-bdr);
+}
+
+.ahg-alert-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ahg-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--r-lg);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  border: 1px solid transparent;
+  transition: transform var(--t) var(--ease-spring);
+}
+
+.ahg-alert span {
+  flex: 1;
+}
+
+.ahg-alert > i:first-child {
+  font-size: 1rem;
+}
+
+.ahg-alert > i:last-child {
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+.ahg-alert {
+  @include hover-only {
+    transform: translateX(2px);
+  }
+}
+
+.ahg-alert-magenta {
+  background: rgba($blue-500, 0.08);
+  border-color: rgba($blue-500, 0.25);
+}
+
+.ahg-alert-magenta > i:first-child {
+  color: var(--magenta);
+}
+
+.ahg-alert-fire {
+  background: rgba($orange-500, 0.08);
+  border-color: rgba($orange-500, 0.25);
+}
+
+.ahg-alert-fire > i:first-child {
+  color: var(--fire);
 }
 
 .app-tile-grid {
@@ -3473,10 +4162,17 @@ table.data-table {
   transition: all var(--t) var(--ease-spring);
 }
 
-.app-tile:hover {
-  transform: translateY(-4px);
+.app-tile {
+  @include hover-only {
+    transform: translateY(-4px);
+    border-color: rgba($orange-500, 0.35);
+    color: var(--text);
+  }
+}
+
+.app-tile:active {
+  transform: scale(0.96);
   border-color: rgba($orange-500, 0.35);
-  color: var(--text);
 }
 
 .app-tile-icon {
@@ -3491,6 +4187,23 @@ table.data-table {
   background: var(--grad-fire);
   color: var(--text-inv);
   box-shadow: 0 0 18px var(--fire-glow);
+}
+
+/* A little color variety across the four quick-action tiles instead of
+   four identical orange squares in a row. */
+.app-tile:nth-child(2) .app-tile-icon {
+  background: linear-gradient(135deg, $blue-500, $blue-400);
+  box-shadow: 0 0 18px rgba($blue-500, 0.35);
+}
+
+.app-tile:nth-child(3) .app-tile-icon {
+  background: linear-gradient(135deg, $blue-400, $blue-300);
+  box-shadow: 0 0 18px rgba($blue-400, 0.3);
+}
+
+.app-tile:nth-child(4) .app-tile-icon {
+  background: linear-gradient(135deg, $success, #34d399);
+  box-shadow: 0 0 18px rgba($success, 0.3);
 }
 
 .app-tile-badge {
@@ -3526,6 +4239,17 @@ table.data-table {
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-section-head h2::before {
+  content: '';
+  width: 5px;
+  height: 18px;
+  border-radius: var(--r-pill);
+  background: var(--grad-fire);
 }
 
 .app-section-head a {
@@ -3546,14 +4270,21 @@ table.data-table {
   gap: 12px;
   text-align: center;
   padding: 40px 20px;
-  background: var(--surface);
+  background: var(--grad-surface);
   border: 1px dashed var(--glass-bdr-2);
   border-radius: var(--r-xl);
   color: var(--text-3);
 }
 
 .app-empty-card i {
-  font-size: 1.8rem;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba($orange-500, 0.12);
+  font-size: 1.4rem;
   color: var(--fire);
 }
 
@@ -3600,7 +4331,14 @@ table.data-table {
   transition: all var(--t);
 }
 
-.app-cat-chip:hover {
+.app-cat-chip {
+  @include hover-only {
+    border-color: rgba($orange-500, 0.4);
+    color: var(--text);
+  }
+}
+
+.app-cat-chip:active {
   border-color: rgba($orange-500, 0.4);
   color: var(--text);
 }
@@ -3679,6 +4417,64 @@ table.data-table {
     width: 38px;
     height: 38px;
     font-size: 1rem;
+  }
+}
+
+// Desktop dashboard layout for the logged-in home — below $bp-lg, this
+// container is invisible (sections just stack in normal document flow,
+// identical to the mobile markup); at $bp-lg+ it becomes a real 2-column
+// grid instead of the horizontal-scroll-row mobile pattern, since a mouse
+// user won't drag-scroll a carousel.
+@include above($bp-lg) {
+  .app-home-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-areas:
+      'next   cats'
+      'trips  activity';
+    column-gap: 32px;
+  }
+
+  .app-home-next {
+    grid-area: next;
+  }
+
+  .app-home-cats {
+    grid-area: cats;
+  }
+
+  .app-home-trips {
+    grid-area: trips;
+  }
+
+  .app-home-activity {
+    grid-area: activity;
+  }
+
+  .app-next-trip {
+    max-width: none;
+  }
+
+  .app-home-trips .app-scroll-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .app-home-trips .app-scroll-item {
+    flex: initial;
+  }
+
+  .app-home-cats .app-scroll-row {
+    flex-direction: column;
+    align-items: stretch;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .app-home-cats .app-cat-chip {
+    justify-content: flex-start;
   }
 }
 
@@ -3784,8 +4580,15 @@ table.data-table {
   transition: all var(--t) var(--ease-spring);
 }
 
-.ride-search-swap:hover {
-  transform: rotate(180deg);
+.ride-search-swap {
+  @include hover-only {
+    transform: rotate(180deg);
+    border-color: rgba($orange-500, 0.4);
+  }
+}
+
+.ride-search-swap:active {
+  transform: rotate(180deg) scale(0.92);
   border-color: rgba($orange-500, 0.4);
 }
 

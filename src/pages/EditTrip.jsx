@@ -113,7 +113,7 @@ export default function EditTrip() {
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container" style={{ maxWidth: 640 }}>
-          <form className="card" style={{ padding: 28 }} onSubmit={submit}>
+          <form className="card" style={{ padding: 20 }} onSubmit={submit}>
             <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Trip details</h3>
 
             <div className="form-group"><label>Starting from *</label><input className="form-input" required value={form.origin} onChange={set('origin')} placeholder="e.g. Chandigarh" /></div>

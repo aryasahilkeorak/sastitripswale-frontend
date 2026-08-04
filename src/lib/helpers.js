@@ -98,6 +98,23 @@ const DOC_ICON_SVG =
   "<rect x='37' y='54' width='18' height='4' rx='2' fill='#0e1a2e'/></svg>";
 export const DOC_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DOC_ICON_SVG)}`;
 
+// Shown wherever the real (member-uploaded) gallery has nothing yet — Home's
+// gallery preview and the full Gallery page both fall back to this so the
+// site never shows an empty grid. North India, since that's where most of
+// this community's bike/road-trip groups actually go.
+export const NORTH_INDIA_GALLERY = [
+  { url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=80', place: 'Taj Mahal, Agra', category: 'group' },
+  { url: 'https://images.unsplash.com/photo-1623059508779-2542c6e83753?w=800&q=80', place: 'Golden Temple, Amritsar', category: 'group' },
+  { url: 'https://images.unsplash.com/photo-1597074866923-dc0589150358?w=800&q=80', place: 'Shimla', category: 'mountain' },
+  { url: 'https://images.unsplash.com/photo-1712388430474-ace0c16051e2?w=800&q=80', place: 'Manali', category: 'mountain' },
+  { url: 'https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?w=800&q=80', place: 'Leh-Ladakh', category: 'bike' },
+  { url: 'https://images.unsplash.com/photo-1720819029162-8500607ae232?w=800&q=80', place: 'Rishikesh', category: 'camp' },
+  { url: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?w=800&q=80', place: 'Jaipur', category: 'car' },
+  { url: 'https://images.unsplash.com/photo-1564329494258-3f72215ba175?w=800&q=80', place: 'Dal Lake, Srinagar', category: 'mountain' },
+  { url: 'https://images.unsplash.com/photo-1667029838861-2fe3a590a1d2?w=800&q=80', place: 'Nainital', category: 'mountain' },
+  { url: 'https://images.unsplash.com/photo-1698753935121-153a106616d5?w=800&q=80', place: 'Spiti Valley', category: 'bike' },
+];
+
 // Plan pricing (kept in sync with backend utils/plans.js) for display.
 export const PLAN_PRICES = {
   single: { '6m': 199, '1y': 299 },

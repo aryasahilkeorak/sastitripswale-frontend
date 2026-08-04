@@ -5,10 +5,11 @@ import PageHero from '../components/PageHero.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 
 const INFO = [
-  { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
-  { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@SastiTripsWale.com', href: 'mailto:hello@SastiTripsWale.com' },
-  { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
-  { icon: 'fa-solid fa-location-dot', label: 'Location', value: 'Delhi, India', href: '#' },
+  // Mobile/WhatsApp/email temporarily hidden across the app — see Footer.jsx and Layout.jsx.
+  // { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
+  // { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@SastiTripsWale.com', href: 'mailto:hello@SastiTripsWale.com' },
+  // { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
+  { icon: 'fa-solid fa-location-dot', label: 'Location', value: 'Sector 119, Mohali, Punjab 160055', href: '#' },
 ];
 
 const QA = [
@@ -36,10 +37,11 @@ export default function Contact() {
     }
   };
 
-  const whatsapp = () => {
-    const text = encodeURIComponent(`Hi SastiTripsWale! I'm ${form.name || 'a traveler'}. ${form.message || ''}`);
-    window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
-  };
+  // Unused while the WhatsApp button above is temporarily hidden.
+  // const whatsapp = () => {
+  //   const text = encodeURIComponent(`Hi SastiTripsWale! I'm ${form.name || 'a traveler'}. ${form.message || ''}`);
+  //   window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
+  // };
 
   return (
     <>
@@ -52,14 +54,14 @@ export default function Contact() {
             <div>
               <div className="grid-2 mb-3">
                 {INFO.map((i) => (
-                  <a key={i.label} href={i.href} target={i.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className="card" style={{ padding: 20 }}>
+                  <a key={i.label} href={i.href} target={i.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className="card" style={{ padding: 14 }}>
                     <div className="notif-icon" style={{ marginBottom: 10 }}><i className={i.icon} /></div>
                     <div className="text-muted" style={{ fontSize: '0.72rem' }}>{i.label}</div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{i.value}</div>
                   </a>
                 ))}
               </div>
-              <div className="card" style={{ padding: 24 }}>
+              <div className="card" style={{ padding: 16 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick answers</h4>
                 {QA.map((x) => (
                   <div key={x.q} style={{ marginBottom: 14 }}>
@@ -71,7 +73,7 @@ export default function Contact() {
             </div>
 
             {/* Right: form */}
-            <form className="card" style={{ padding: 28 }} onSubmit={submit}>
+            <form className="card" style={{ padding: 20 }} onSubmit={submit}>
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Send a message</h3>
               <div className="form-row">
                 <div className="form-group"><label>Name *</label><input className="form-input" required value={form.name} onChange={set('name')} /></div>
@@ -97,9 +99,10 @@ export default function Contact() {
                 <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={busy}>
                   {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Send Message
                 </button>
+                {/* WhatsApp temporarily hidden along with the brand's mobile number.
                 <button type="button" className="btn" style={{ background: '#25D366', color: '#05070c' }} onClick={whatsapp}>
                   <i className="fa-brands fa-whatsapp" /> WhatsApp
-                </button>
+                </button> */}
               </div>
             </form>
           </div>

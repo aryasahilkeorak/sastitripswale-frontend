@@ -26,6 +26,7 @@ import PlanTrip from './pages/PlanTrip.jsx';
 import EditTrip from './pages/EditTrip.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Chat from './pages/Chat.jsx';
+import Referrals from './pages/Referrals.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 import AdminOverview from './pages/admin/AdminOverview.jsx';
@@ -36,6 +37,7 @@ import AdminReviews from './pages/admin/AdminReviews.jsx';
 import AdminGallery from './pages/admin/AdminGallery.jsx';
 import AdminMessages from './pages/admin/AdminMessages.jsx';
 import AdminAdmins from './pages/admin/AdminAdmins.jsx';
+import AdminReferralSettings from './pages/admin/AdminReferralSettings.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
 
 export default function App() {
@@ -74,6 +76,7 @@ export default function App() {
           <Route path="/plan-trip" element={<ProtectedRoute><PlanTrip /></ProtectedRoute>} />
           <Route path="/trips/:id/edit" element={<ProtectedRoute><EditTrip /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/chat/:groupId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
@@ -89,6 +92,7 @@ export default function App() {
           <Route path="gallery" element={<AdminGallery />} />
           <Route path="messages" element={<AdminMessages />} />
           <Route path="admins" element={<ProtectedRoute superadmin><AdminAdmins /></ProtectedRoute>} />
+          <Route path="referral-settings" element={<ProtectedRoute superadmin><AdminReferralSettings /></ProtectedRoute>} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>
       </Routes>
