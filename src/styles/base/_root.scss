@@ -85,6 +85,15 @@
   --danger: #{$danger};
   --info: #{$info};
   --warning: #{$warning};
+
+  // Safe-area insets (notches / home-indicator / rounded corners on phones).
+  // Falls back to 0 on devices without one — always combine with
+  // max(existing-space, var(--safe-*)) rather than adding outright, so
+  // normal (non-notch) viewports don't gain extra padding.
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
 }
 
 // ============================================================

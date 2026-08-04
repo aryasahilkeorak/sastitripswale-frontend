@@ -14,11 +14,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
+    "react-swipeable": "^7.0.2",
+    "vite-plugin-pwa": "^1.3.0",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "sass": "^1.101.0",
+    "sharp": "^0.35.3",
     "vite": "^5.4.8"
   }
 }
