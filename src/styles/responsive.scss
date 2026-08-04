@@ -20,8 +20,25 @@
 
 /* ── Mobile (≤ 768px) ── */
 @media (max-width: 768px) {
+  /* Everything below is sized in rem, so scaling the root down here
+     shrinks all type (and anything else keyed off it) proportionally
+     instead of needing a per-component override. */
+  html {
+    font-size: 15px;
+  }
+
   section {
     padding: 64px 0;
+  }
+
+  /* Footer is a lot of scroll for a phone — keep it only on the homepage,
+     right above the fixed bottom-nav's Join/Login entry. */
+  .footer-wrap {
+    display: none;
+  }
+
+  .footer-wrap.is-home {
+    display: block;
   }
 
   .container {
@@ -45,7 +62,7 @@
   }
 
   .fab-group {
-    bottom: 82px;
+    bottom: calc(82px + var(--safe-b));
   }
 
   .grid-2,
@@ -88,6 +105,10 @@
 
 /* ── Small mobile (≤ 480px) ── */
 @media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
   .grid-4 {
     grid-template-columns: 1fr;
   }
