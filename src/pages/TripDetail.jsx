@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, rupee, dateRange, tripDays, routeLabel, AVATAR_FALLBACK, DOC_FALLBACK } from '../lib/helpers.js';
+import { imageUrl, rupee, dateRange, tripDays, routeLabel, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
@@ -20,6 +20,8 @@ export default function TripDetail() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [lb, setLb] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef(null);
   const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
 
   const load = () => {
@@ -73,6 +75,24 @@ export default function TripDetail() {
     }
   };
 
+  const uploadPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('photo', file);
+      await api.post(`/trips/${id}/photos`, fd);
+      toast('fa-solid fa-images', 'Photo added to the trip gallery!');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const changeStatus = async (status) => {
     try {
       await api.put(`/trips/${id}`, { status });
@@ -102,6 +122,8 @@ export default function TripDetail() {
   const photos = (trip.photos || []).map((p) => imageUrl(p.photoUrl));
   const isOrganizer = user && trip.organizer && String(trip.organizer._id) === String(user.id);
   const isAdminViewer = user?.role === 'admin' || user?.role === 'superadmin';
+  // Strictly trip members only (not admins) — matches the backend check.
+  const canAddPhoto = Boolean(isOrganizer || trip.requestStatus === 'accepted');
   const coupleSafetyEntries = isAdminViewer
     ? [
         ...(trip.isCouplesMode ? [{ key: 'host', label: `${trip.organizer?.fullName} (host)`, mobile: trip.organizer?.partnerMobile, doc: trip.organizer?.partnerDocUrl }] : []),
@@ -181,19 +203,38 @@ export default function TripDetail() {
                 </>
               )}
 
-              {/* Photos */}
-              {photos.length > 0 && (
+              {/* Photos — only the organizer, an accepted co-traveler, or an
+                  admin can add to a trip's gallery. */}
+              {(photos.length > 0 || canAddPhoto) && (
                 <>
-                  <h3 className="section-title" style={{ fontSize: '1.3rem', margin: '28px 0 14px' }}>
-                    Trip <span className="highlight">photos</span>
-                  </h3>
-                  <div className="masonry">
-                    {trip.photos.map((p, i) => (
-                      <div className="masonry-item" key={p._id} onClick={() => setLb(i)}>
-                        <img src={imageUrl(p.photoUrl)} alt={p.caption || 'Trip'} loading="lazy" />
-                      </div>
-                    ))}
+                  <div className="row-between" style={{ margin: '28px 0 14px', alignItems: 'center' }}>
+                    <h3 className="section-title" style={{ fontSize: '1.3rem', margin: 0 }}>
+                      Trip <span className="highlight">photos</span>
+                    </h3>
+                    {canAddPhoto && (
+                      <>
+                        <button className="btn btn-sm btn-outline" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}>
+                          {uploadingPhoto ? <span className="spinner" /> : <i className="fa-solid fa-camera" />} Add photo
+                        </button>
+                        <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={uploadPhoto} />
+                      </>
+                    )}
                   </div>
+                  {photos.length > 0 ? (
+                    <div className="masonry">
+                      {trip.photos.map((p, i) => (
+                        <div className="masonry-item" key={p._id} onClick={() => setLb(i)}>
+                          <img src={imageUrl(p.photoUrl)} alt={p.caption || 'Trip'} loading="lazy" />
+                          <div className="masonry-cap">
+                            {p.user?.fullName && <div style={{ fontWeight: 600 }}>{p.user.fullName}</div>}
+                            <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>{timeAgo(p.createdAt)}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No photos yet — be the first to add one!</p>
+                  )}
                 </>
               )}
             </div>

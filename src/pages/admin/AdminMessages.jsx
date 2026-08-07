@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../../lib/api.js';
 import { timeAgo } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
@@ -24,10 +24,27 @@ export default function AdminMessages() {
 }
 
 function ContactQueries() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [filter, setFilter] = useState('all'); // all | open | handled
+  const [replyBusy, setReplyBusy] = useState(null);
   const load = () => api.get('/admin/contact-messages').then((r) => setMessages(r.data.messages)).catch(() => {});
   useEffect(() => { load(); }, []);
+
+  // Opens (or starts) a direct chat with the sender, so support can reply
+  // in-app instead of by email. Only possible if they submitted the form
+  // while logged in — otherwise there's no account to message.
+  const replyInChat = async (m) => {
+    setReplyBusy(m._id);
+    try {
+      const { data } = await api.get(`/chat/dm/${m.user._id}`);
+      navigate(`/chat/${data.groupId}`);
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setReplyBusy(null);
+    }
+  };
 
   const markHandled = async (id, handled) => {
     try {
@@ -74,7 +91,15 @@ function ContactQueries() {
                 <button className={`btn btn-sm ${m.handled ? 'btn-outline' : 'btn-primary'}`} onClick={() => markHandled(m._id, !m.handled)}>
                   <i className="fa-solid fa-circle-check" /> {m.handled ? 'Mark open' : 'Mark handled'}
                 </button>
-                {m.email && <a className="btn btn-sm btn-outline" href={`mailto:${m.email}`}><i className="fa-solid fa-envelope" /> Reply</a>}
+                {m.user?.isActive ? (
+                  <button className="btn btn-sm btn-outline" onClick={() => replyInChat(m)} disabled={replyBusy === m._id}>
+                    {replyBusy === m._id ? <span className="spinner" /> : <i className="fa-solid fa-comment-dots" />} Reply in chat
+                  </button>
+                ) : (
+                  <span className="btn btn-sm btn-outline" style={{ opacity: 0.5, cursor: 'not-allowed' }} title="No member account matches this sender's email/mobile — nothing to chat with">
+                    <i className="fa-solid fa-comment-slash" /> No linked account
+                  </span>
+                )}
                 <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5', marginLeft: 'auto' }} onClick={() => remove(m._id)}><i className="fa-solid fa-trash" /></button>
               </div>
             </div>

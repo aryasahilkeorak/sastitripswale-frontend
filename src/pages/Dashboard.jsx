@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useSwipeable } from 'react-swipeable';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
@@ -14,33 +14,32 @@ import {
   SOCIAL_PLATFORMS,
   socialUrl,
   TRAVEL_INTEREST_ICONS,
+  isVehicleModelYearMistake,
+  VEHICLE_MODEL_YEAR_MISTAKE_MSG,
 } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
-import ProfileEditForm from '../components/ProfileEditForm.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
+import Modal from '../components/Modal.jsx';
+import CustomSelect from '../components/CustomSelect.jsx';
+import SelfieCapture from '../components/SelfieCapture.jsx';
+import VerificationBadge from '../components/VerificationBadge.jsx';
 
 const TABS = [
   { key: 'trips', label: 'My Trips', icon: 'fa-solid fa-map-location-dot' },
   { key: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
-  { key: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
   { key: 'payments', label: 'Payments', icon: 'fa-solid fa-credit-card' },
   { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear' },
 ];
 
-const NOTIF_ICON = {
-  welcome: 'fa-solid fa-hand-holding-heart',
-  trip_interest: 'fa-solid fa-fire',
-  payment: 'fa-solid fa-credit-card',
-  connection: 'fa-solid fa-user-plus',
-  verification: 'fa-solid fa-circle-check',
-  system: 'fa-solid fa-circle-info',
-};
-
 export default function Dashboard() {
   const user = useAuth((s) => s.user);
-  const setUser = useAuth((s) => s.setUser);
   const viewMode = useAuth((s) => s.viewMode);
-  const [tab, setTab] = useState('trips');
+  const [searchParams] = useSearchParams();
+  const validTabs = TABS.map((t) => t.key);
+  const [tab, setTab] = useState(() => {
+    const requested = searchParams.get('tab');
+    return validTabs.includes(requested) ? requested : 'trips';
+  });
 
   // Swipe between tabs on mobile/tablet (trackMouse stays off, so this never
   // interferes with desktop clicks/drags inside the tab content).
@@ -57,13 +56,11 @@ export default function Dashboard() {
   });
 
   const [trips, setTrips] = useState([]);
-  const [notifs, setNotifs] = useState([]);
   const [connections, setConnections] = useState([]);
   const [payments, setPayments] = useState([]);
 
   useEffect(() => {
     api.get('/trips/my').then((r) => setTrips(r.data.trips)).catch(() => {});
-    api.get('/members/notifications').then((r) => setNotifs(r.data.notifications)).catch(() => {});
     api.get('/members/connections').then((r) => setConnections(r.data.connections)).catch(() => {});
     api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
   }, []);
@@ -74,24 +71,7 @@ export default function Dashboard() {
     return <Navigate to="/admin" replace />;
   }
 
-  const unread = notifs.filter((n) => !n.isRead).length;
-  const pendingReceived = connections.filter((c) => c.status === 'pending' && String(c.receiver?._id) === String(user?.id));
   const acceptedCount = connections.filter((c) => c.status === 'accepted').length;
-
-  const markRead = async () => {
-    await api.patch('/members/notifications/read').catch(() => {});
-    setNotifs((ns) => ns.map((n) => ({ ...n, isRead: true })));
-  };
-
-  const respond = async (id, action) => {
-    try {
-      await api.patch(`/members/connect/${id}`, { action });
-      setConnections((cs) => cs.map((c) => (c._id === id ? { ...c, status: action === 'accept' ? 'accepted' : 'rejected' } : c)));
-      toast(action === 'accept' ? 'fa-solid fa-handshake' : 'fa-solid fa-hand', action === 'accept' ? 'Connection accepted!' : 'Request declined');
-    } catch (err) {
-      toast('fa-solid fa-circle-xmark', apiError(err));
-    }
-  };
 
   const removeTrip = async (id) => {
     if (!window.confirm('Delete this trip? This cannot be undone.')) return;
@@ -135,7 +115,6 @@ export default function Dashboard() {
             <div className="ig-stats">
               <div className="ig-stat"><strong>{trips.length}</strong><span>Trips</span></div>
               <div className="ig-stat"><strong>{acceptedCount}</strong><span>Connections</span></div>
-              <div className="ig-stat"><strong>{unread}</strong><span>Alerts</span></div>
               <div className="ig-stat"><strong>{payments.length}</strong><span>Payments</span></div>
             </div>
           </div>
@@ -143,17 +122,7 @@ export default function Dashboard() {
           <div className="ig-header-body">
             <div className="ig-name-row">
               <h1>{user?.fullName}</h1>
-              {user?.role === 'superadmin' ? (
-                <span className="verified-badge founder-badge"><i className="fa-solid fa-crown" /> Founder</span>
-              ) : user?.isVerified && (
-                <span className="verified-badge"><i className="fa-solid fa-circle-check" /> Verified</span>
-              )}
-              <button className="ig-id-btn" onClick={copyId} title="Copy user ID">
-                <i className="fa-solid fa-copy" />
-              </button>
-              <button className="ig-id-btn" style={{ marginLeft: 'auto' }} onClick={() => setTab('settings')} title="Settings">
-                <i className="fa-solid fa-gear" />
-              </button>
+              <VerificationBadge role={user?.role} verificationLevel={user?.verificationLevel} isVerified={user?.isVerified} />
             </div>
 
             {user?.username && <p className="ig-username">@{user.username}</p>}
@@ -225,8 +194,11 @@ export default function Dashboard() {
         )}
 
         <div className="ig-action-row mt-3">
-          <button className="ig-flat-btn" onClick={() => setTab('settings')}><i className="fa-solid fa-pen" /> Edit profile</button>
+          <Link to="/edit-profile" className="ig-flat-btn"><i className="fa-solid fa-pen" /> Edit profile</Link>
           <button className="ig-flat-btn" onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
+          <button className="ig-flat-btn" onClick={copyId} title="Copy your User ID — share it to be added to groups">
+            <i className="fa-solid fa-copy" /> Copy ID
+          </button>
         </div>
 
         <div className="ig-highlights mt-3">
@@ -249,7 +221,6 @@ export default function Dashboard() {
           {TABS.map((t) => (
             <button key={t.key} className={`ig-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)} title={t.label}>
               <i className={t.icon} /> <span>{t.label}</span>
-              {t.key === 'notifications' && unread > 0 && <span className="ig-tab-dot" />}
             </button>
           ))}
         </div>
@@ -259,7 +230,6 @@ export default function Dashboard() {
             {TABS.map((t) => (
               <button key={t.key} className={`ig-dashboard-sidebar-link${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
                 <i className={t.icon} /> {t.label}
-                {t.key === 'notifications' && unread > 0 && <span className="ig-tab-dot" />}
               </button>
             ))}
           </nav>
@@ -329,49 +299,6 @@ export default function Dashboard() {
           </>
         )}
 
-        {/* NOTIFICATIONS */}
-        {tab === 'notifications' && (
-          <div style={{ maxWidth: 680 }}>
-            {pendingReceived.length > 0 && (
-              <div className="card mb-4" style={{ padding: 14 }}>
-                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Connection requests</h4>
-                {pendingReceived.map((c) => (
-                  <div key={c._id} className="row-between" style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <img src={imageUrl(c.sender?.avatarUrl, AVATAR_FALLBACK)} alt="" style={{ width: 36, height: 36, borderRadius: '50%' }} />
-                      <span style={{ fontSize: '0.88rem' }}>{c.sender?.fullName}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn btn-sm btn-primary" onClick={() => respond(c._id, 'accept')}>Accept</button>
-                      <button className="btn btn-sm btn-outline" onClick={() => respond(c._id, 'reject')}>Decline</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="row-between mb-3">
-              <h4 style={{ fontFamily: 'var(--font-display)' }}>Notifications</h4>
-              {unread > 0 && <button className="btn btn-sm btn-outline" onClick={markRead}>Mark all read</button>}
-            </div>
-            {notifs.length === 0 ? (
-              <div className="empty-state"><i className="fa-solid fa-bell-slash" /><p>No notifications yet.</p></div>
-            ) : (
-              notifs.map((n) => (
-                <div key={n._id} className={`notif-item${n.isRead ? '' : ' unread'}`}>
-                  <div className="notif-icon"><i className={NOTIF_ICON[n.type] || 'fa-solid fa-circle-info'} /></div>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ fontSize: '0.88rem' }}>{n.title}</strong>
-                    <p className="text-muted" style={{ fontSize: '0.82rem' }}>{n.message}</p>
-                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>{timeAgo(n.createdAt)}</span>
-                  </div>
-                  {!n.isRead && <span className="notif-dot" />}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
         {/* PAYMENTS */}
         {tab === 'payments' && (
           <div style={{ maxWidth: 680 }}>
@@ -398,7 +325,7 @@ export default function Dashboard() {
         )}
 
         {/* SETTINGS */}
-        {tab === 'settings' && <SettingsForm user={user} setUser={setUser} />}
+        {tab === 'settings' && <SettingsForm user={user} />}
           </div>
         </div>
       </div>
@@ -416,7 +343,7 @@ function Detail({ label, value }) {
   );
 }
 
-function SettingsForm({ user, setUser }) {
+function SettingsForm({ user }) {
   const clear = useAuth((s) => s.clear);
 
   const logout = async () => {
@@ -426,16 +353,29 @@ function SettingsForm({ user, setUser }) {
   };
 
   return (
-    <div className="grid-2">
-      <ProfileEditForm user={user} onSaved={setUser} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <DocumentsCard />
-        <div className="card" style={{ padding: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
-          <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
-          <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
-          <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
+      <Link to="/edit-profile" className="card row-between" style={{ padding: 16, alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img
+            src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)}
+            alt=""
+            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }}
+            onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+          />
+          <div>
+            <strong style={{ fontSize: '0.92rem' }}>Edit profile</strong>
+            <div className="text-muted" style={{ fontSize: '0.78rem' }}>Name, bio, socials, contact info</div>
+          </div>
         </div>
+        <i className="fa-solid fa-chevron-right text-muted" />
+      </Link>
+
+      <DocumentsCard />
+      <VehiclesCard />
+      <div className="card" style={{ padding: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
+        <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
+        <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
+        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
       </div>
     </div>
   );
@@ -447,6 +387,7 @@ const DOC_TYPE_LABEL = {
   voter_id: 'Voter ID',
   driving_license: 'Driving Licence',
   rc: 'RC',
+  selfie: 'Live Selfie',
 };
 const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
 
@@ -454,6 +395,7 @@ function DocumentsCard() {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reuploadingId, setReuploadingId] = useState(null);
+  const [selfieReuploadId, setSelfieReuploadId] = useState(null);
   const fileRef = useRef(null);
 
   const load = () => {
@@ -462,8 +404,12 @@ function DocumentsCard() {
   };
   useEffect(load, []);
 
-  const pickReupload = (id) => {
-    setReuploadingId(id);
+  const pickReupload = (doc) => {
+    if (doc.docType === 'selfie') {
+      setSelfieReuploadId(doc._id);
+      return;
+    }
+    setReuploadingId(doc._id);
     setTimeout(() => fileRef.current?.click(), 0);
   };
 
@@ -484,6 +430,21 @@ function DocumentsCard() {
     }
   };
 
+  const submitSelfieReupload = async (file) => {
+    if (!file || !selfieReuploadId) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api.put(`/members/documents/${selfieReuploadId}`, fd);
+      toast('fa-solid fa-circle-check', 'Selfie re-uploaded — pending review');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setSelfieReuploadId(null);
+    }
+  };
+
   if (loading) return null;
   if (docs.length === 0) return null;
 
@@ -499,13 +460,135 @@ function DocumentsCard() {
               <span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span>
             </div>
             {d.status === 'rejected' && (
-              <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d._id)}>
+              <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
                 <i className="fa-solid fa-rotate" /> Reupload
               </button>
             )}
           </div>
         ))}
       </div>
+
+      <Modal open={Boolean(selfieReuploadId)} onClose={() => setSelfieReuploadId(null)} title="Retake your live selfie">
+        <SelfieCapture onChange={submitSelfieReupload} />
+      </Modal>
     </div>
+  );
+}
+
+function VehiclesCard() {
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    api.get('/members/vehicles').then((r) => setVehicles(r.data.vehicles)).catch(() => {}).finally(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  return (
+    <div className="card" style={{ padding: 16 }}>
+      <div className="row-between mb-3">
+        <h4 style={{ fontFamily: 'var(--font-display)' }}>My Vehicles</h4>
+        <button className="btn btn-sm btn-outline" onClick={() => setShowAdd(true)}>
+          <i className="fa-solid fa-plus" /> Add vehicle
+        </button>
+      </div>
+
+      {loading ? null : vehicles.length === 0 ? (
+        <p className="text-muted" style={{ fontSize: '0.82rem' }}>No vehicles added yet. Add one to work toward the Verified Vehicle Owner badge.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {vehicles.map((v) => (
+            <div key={v.id} className="row-between" style={{ alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '0.85rem' }}>{v.vehicleType}{v.vehicleModel ? ` · ${v.vehicleModel}` : ''}</div>
+                <div className="text-muted" style={{ fontSize: '0.72rem' }}>{v.regNumber}</div>
+              </div>
+              <span className={`badge ${DOC_STATUS_BADGE[v.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem' }}>{v.status}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add a vehicle">
+        <AddVehicleForm
+          onDone={() => {
+            setShowAdd(false);
+            load();
+          }}
+        />
+      </Modal>
+    </div>
+  );
+}
+
+function AddVehicleForm({ onDone }) {
+  const [vehicleType, setVehicleType] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
+  const [regNumber, setRegNumber] = useState('');
+  const [rcFront, setRcFront] = useState(null);
+  const [rcBack, setRcBack] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select a vehicle type');
+    if (isVehicleModelYearMistake(vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
+    if (!regNumber.trim()) return toast('fa-solid fa-triangle-exclamation', 'Enter the vehicle registration number');
+    if (!rcFront || !rcBack) return toast('fa-solid fa-triangle-exclamation', 'RC (front & back) is required to add a vehicle');
+
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('vehicleType', vehicleType);
+      fd.append('vehicleModel', vehicleModel);
+      fd.append('regNumber', regNumber.trim());
+      fd.append('rcFront', rcFront);
+      fd.append('rcBack', rcBack);
+      await api.post('/members/vehicles', fd);
+      toast('fa-solid fa-circle-check', 'Vehicle added — RC pending review');
+      onDone();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="form-group">
+        <label>Vehicle type *</label>
+        <CustomSelect
+          value={vehicleType}
+          onChange={(e) => setVehicleType(e.target.value)}
+          options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Other']}
+        />
+      </div>
+      <div className="form-group"><label>Model name</label><input className="form-input" value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} placeholder="e.g. Honda Activa" /></div>
+      <div className="form-group"><label>Registration number *</label><input className="form-input" value={regNumber} onChange={(e) => setRegNumber(e.target.value)} placeholder="e.g. DL01AB1234" /></div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>RC — front *</label>
+          <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-front')?.click()}>
+            <div className="upload-label">{rcFront ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcFront.name}</> : 'Upload photo'}</div>
+            <input id="vehicle-rc-front" type="file" accept="image/*,application/pdf" onChange={(e) => setRcFront(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+        <div className="form-group">
+          <label>RC — back *</label>
+          <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-back')?.click()}>
+            <div className="upload-label">{rcBack ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcBack.name}</> : 'Upload photo'}</div>
+            <input id="vehicle-rc-back" type="file" accept="image/*,application/pdf" onChange={(e) => setRcBack(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+      </div>
+
+      <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
+        {busy ? <span className="spinner" /> : <i className="fa-solid fa-car" />} Add vehicle
+      </button>
+    </form>
   );
 }

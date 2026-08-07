@@ -25,6 +25,8 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import PlanTrip from './pages/PlanTrip.jsx';
 import EditTrip from './pages/EditTrip.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import EditProfile from './pages/EditProfile.jsx';
+import Notifications from './pages/Notifications.jsx';
 import Chat from './pages/Chat.jsx';
 import Referrals from './pages/Referrals.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -76,6 +78,8 @@ export default function App() {
           <Route path="/plan-trip" element={<ProtectedRoute><PlanTrip /></ProtectedRoute>} />
           <Route path="/trips/:id/edit" element={<ProtectedRoute><EditTrip /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/chat/:groupId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />

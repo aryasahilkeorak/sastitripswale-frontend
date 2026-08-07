@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
+import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../lib/helpers.js';
 import CustomSelect from '../components/CustomSelect.jsx';
 import AvatarUploadField from '../components/AvatarUploadField.jsx';
+import SelfieCapture from '../components/SelfieCapture.jsx';
 
 const INTERESTS = ['Mountains', 'Beaches', 'Camping', 'Trekking', 'Road Trips', 'Backpacking', 'Photography', 'Food Travel', 'Night Rides'];
 
@@ -38,6 +40,7 @@ export default function CompleteProfile() {
   });
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [selfieFile, setSelfieFile] = useState(null);
   const [aadhaarFront, setAadhaarFront] = useState(null);
   const [aadhaarBack, setAadhaarBack] = useState(null);
   const [panFile, setPanFile] = useState(null);
@@ -74,6 +77,8 @@ export default function CompleteProfile() {
     if (!form.gender) return toast('fa-solid fa-triangle-exclamation', 'Please select your gender');
     if (interests.length === 0) return toast('fa-solid fa-triangle-exclamation', 'Pick at least one travel interest');
     if (form.hasVehicle && !form.vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select your vehicle type');
+    if (isVehicleModelYearMistake(form.vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
+    if (!selfieFile) return toast('fa-solid fa-triangle-exclamation', 'A live selfie photo is mandatory for verification');
     if (!aadhaarFront || !aadhaarBack) return toast('fa-solid fa-triangle-exclamation', 'Aadhaar front and back photos are required for verification');
     if (form.hasVehicle && (!dlFront || !dlBack || !rcFront || !rcBack)) {
       return toast('fa-solid fa-triangle-exclamation', 'Driving Licence and RC (front & back) are mandatory for vehicle owners');
@@ -89,6 +94,7 @@ export default function CompleteProfile() {
       fd.append('travelInterests', JSON.stringify(interests));
       fd.append('partnerMobile', partnerMobile.trim());
       if (avatarFile) fd.append('avatar', avatarFile);
+      if (selfieFile) fd.append('selfie', selfieFile);
       if (aadhaarFront) fd.append('aadhaarFront', aadhaarFront);
       if (aadhaarBack) fd.append('aadhaarBack', aadhaarBack);
       if (panFile) fd.append('pan', panFile);
@@ -169,7 +175,7 @@ export default function CompleteProfile() {
                   options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Other']}
                 />
               </div>
-              <div className="form-group"><label>Vehicle model</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} /></div>
+              <div className="form-group"><label>Vehicle model name</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} placeholder="e.g. Honda Activa" /></div>
             </div>
           )}
 
@@ -183,6 +189,11 @@ export default function CompleteProfile() {
           </div>
 
           <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 8px' }}>
+            <i className="fa-solid fa-camera-retro" /> A live selfie is mandatory — required to verify it's really you
+          </p>
+          <SelfieCapture onChange={setSelfieFile} />
+
+          <p className="text-muted" style={{ fontSize: '0.78rem', margin: '16px 0 8px' }}>
             <i className="fa-solid fa-id-card" /> Aadhaar (required) — both sides
           </p>
           <div className="form-row">

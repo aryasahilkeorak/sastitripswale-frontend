@@ -7,6 +7,8 @@ import Loader from '../../components/Loader.jsx';
 import Modal from '../../components/Modal.jsx';
 
 const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
+const TIER_LABEL = { verified: 'Verified', vehicle_verified: 'Verified Vehicle Owner' };
+const TIER_ICON = { verified: 'fa-solid fa-circle-check', vehicle_verified: 'fa-solid fa-car-side' };
 
 export default function AdminUsers() {
   const isSuper = useAuth((s) => s.user?.role) === 'superadmin';
@@ -27,9 +29,14 @@ export default function AdminUsers() {
 
   const patchLocal = (id, changes) => setUsers((us) => us.map((u) => (u.id === id ? { ...u, ...changes } : u)));
 
-  const verify = async (id, verified) => {
-    try { await api.patch(`/admin/users/${id}/verify`, { verified }); patchLocal(id, { isVerified: verified }); toast('fa-solid fa-circle-check', verified ? 'Verified' : 'Unverified'); }
-    catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
+  const verify = async (id, level) => {
+    try {
+      const { data } = await api.patch(`/admin/users/${id}/verify`, { level });
+      patchLocal(id, { verificationLevel: data.verificationLevel, isVerified: data.isVerified });
+      toast('fa-solid fa-circle-check', level === 'none' ? 'Unverified' : `Verified: ${TIER_LABEL[level]}`);
+    } catch (e) {
+      toast('fa-solid fa-circle-xmark', apiError(e));
+    }
   };
   const toggle = async (id) => {
     try { const { data } = await api.patch(`/admin/users/${id}/toggle`); patchLocal(id, { isActive: data.isActive }); toast(data.isActive ? 'fa-solid fa-circle-check' : 'fa-solid fa-ban', data.isActive ? 'Unbanned' : 'Banned'); }
@@ -68,7 +75,13 @@ export default function AdminUsers() {
                   <td data-label="Mobile">{u.mobile}</td>
                   <td data-label="Paid">{u.membershipPaid ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
                   <td data-label="Coupon">{u.couponUsed ? <span className="badge badge-cyan">{u.couponUsed}</span> : '—'}</td>
-                  <td data-label="Verified">{u.isVerified ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
+                  <td data-label="Verified">
+                    {u.verificationLevel && u.verificationLevel !== 'none' ? (
+                      <span className={`badge ${u.verificationLevel === 'vehicle_verified' ? 'badge-fire' : 'badge-green'}`} style={{ fontSize: '0.62rem' }}>
+                        <i className={TIER_ICON[u.verificationLevel]} /> {TIER_LABEL[u.verificationLevel]}
+                      </span>
+                    ) : '—'}
+                  </td>
                   <td data-label="Status"><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'active' : 'banned'}</span></td>
                   <td data-label="Actions">
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
@@ -135,11 +148,21 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
   const reviewDoc = async (docId, action) => {
     try {
       const { data } = await api.patch(`/admin/documents/${docId}`, { action });
-      setD((x) => ({ ...x, documents: x.documents.map((doc) => (doc._id === docId ? data.document : doc)) }));
+      setD((x) => ({
+        ...x,
+        documents: x.documents.map((doc) => (doc._id === docId ? data.document : doc)),
+        user: data.verificationLevel ? { ...x.user, verificationLevel: data.verificationLevel, isVerified: data.verificationLevel !== 'none' } : x.user,
+      }));
       toast(action === 'verify' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark', action === 'verify' ? 'Document verified' : 'Document rejected — member can re-upload it');
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
     }
+  };
+
+  const vehicleLabel = (doc) => {
+    if (doc.docType !== 'rc' || !doc.vehicle) return '';
+    const v = d?.vehicles?.find((x) => String(x.id) === String(doc.vehicle));
+    return v ? ` — ${v.regNumber}` : '';
   };
 
   return (
@@ -153,7 +176,11 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                 {u.role !== 'member' && <span className={`role-badge ${u.role === 'superadmin' ? 'super' : 'admin'}`}>{u.role}</span>}
                 <span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'active' : 'banned'}</span>
-                {u.isVerified && <span className="badge badge-cyan"><i className="fa-solid fa-circle-check" /> verified</span>}
+                {u.verificationLevel && u.verificationLevel !== 'none' && (
+                  <span className={`badge ${u.verificationLevel === 'vehicle_verified' ? 'badge-fire' : 'badge-cyan'}`}>
+                    <i className={TIER_ICON[u.verificationLevel]} /> {TIER_LABEL[u.verificationLevel]}
+                  </span>
+                )}
                 <span className={`badge ${u.membershipActive ? 'badge-green' : 'badge-gold'}`}>{u.membershipActive ? 'member' : 'inactive'}</span>
               </div>
             </div>
@@ -179,6 +206,19 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
             </div>
           </div>
 
+          {d.vehicles?.length > 0 && (
+            <>
+              <h4 className="mt-3 mb-2" style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>Vehicles</h4>
+              <div className="member-tags mt-2" style={{ justifyContent: 'flex-start' }}>
+                {d.vehicles.map((v) => (
+                  <span key={v.id} className={`badge ${DOC_STATUS_BADGE[v.status] || 'badge-gold'}`}>
+                    <i className="fa-solid fa-car" /> {v.vehicleType}{v.vehicleModel ? ` · ${v.vehicleModel}` : ''} — {v.regNumber} ({v.status})
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
           {u.travelInterests?.length > 0 && (
             <div className="member-tags mt-2" style={{ justifyContent: 'flex-start' }}>
               {u.travelInterests.map((t) => <span key={t} className="badge badge-cyan">{t}</span>)}
@@ -198,18 +238,20 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
                   </a>
                   <div className="row-between" style={{ marginTop: 6, alignItems: 'center' }}>
                     <div className="text-muted" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>
-                      {doc.docType.replace('_', ' ')}{doc.side ? ` (${doc.side})` : ''} <i className="fa-solid fa-up-right-from-square" />
+                      {doc.docType === 'selfie' ? 'Live Selfie' : doc.docType.replace('_', ' ')}{doc.side ? ` (${doc.side})` : ''}{vehicleLabel(doc)} <i className="fa-solid fa-up-right-from-square" />
                     </div>
                     <span className={`badge ${DOC_STATUS_BADGE[doc.status] || 'badge-gold'}`} style={{ fontSize: '0.6rem' }}>{doc.status || 'pending'}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <button className="btn btn-sm btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => reviewDoc(doc._id, 'verify')}>
-                      <i className="fa-solid fa-check" /> Verify
-                    </button>
-                    <button className="btn btn-sm" style={{ flex: 1, justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => reviewDoc(doc._id, 'reject')}>
-                      <i className="fa-solid fa-xmark" /> Reject
-                    </button>
-                  </div>
+                  {(!doc.status || doc.status === 'pending') && (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                      <button className="btn btn-sm btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={() => reviewDoc(doc._id, 'verify')}>
+                        <i className="fa-solid fa-check" /> Verify
+                      </button>
+                      <button className="btn btn-sm" style={{ flex: 1, justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => reviewDoc(doc._id, 'reject')}>
+                        <i className="fa-solid fa-xmark" /> Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -247,8 +289,27 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
           {/* Actions */}
           {u.role === 'member' && (
             <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-              <button className="btn btn-sm btn-outline" onClick={() => { onVerify(u.id, !u.isVerified); setD((x) => ({ ...x, user: { ...x.user, isVerified: !x.user.isVerified } })); }}>
-                <i className="fa-solid fa-circle-check" /> {u.isVerified ? 'Unverify' : 'Verify'}
+              <button
+                className={`btn btn-sm ${u.verificationLevel === 'verified' ? 'btn-primary' : 'btn-outline'}`}
+                title="Manually grant/revoke the Normal Traveler verified badge, independent of document review"
+                onClick={() => {
+                  const level = u.verificationLevel === 'verified' ? 'none' : 'verified';
+                  onVerify(u.id, level);
+                  setD((x) => ({ ...x, user: { ...x.user, verificationLevel: level, isVerified: level !== 'none' } }));
+                }}
+              >
+                <i className="fa-solid fa-circle-check" /> {u.verificationLevel === 'verified' ? 'Unverify' : 'Verify: Normal Traveler'}
+              </button>
+              <button
+                className={`btn btn-sm ${u.verificationLevel === 'vehicle_verified' ? 'btn-primary' : 'btn-outline'}`}
+                title="Manually grant/revoke the Verified Vehicle Owner badge, independent of document review"
+                onClick={() => {
+                  const level = u.verificationLevel === 'vehicle_verified' ? 'none' : 'vehicle_verified';
+                  onVerify(u.id, level);
+                  setD((x) => ({ ...x, user: { ...x.user, verificationLevel: level, isVerified: level !== 'none' } }));
+                }}
+              >
+                <i className="fa-solid fa-car-side" /> {u.verificationLevel === 'vehicle_verified' ? 'Unverify' : 'Verify: Vehicle Owner'}
               </button>
               <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => { onToggle(u.id); setD((x) => ({ ...x, user: { ...x.user, isActive: !x.user.isActive } })); }}>
                 {u.isActive ? 'Ban' : 'Unban'}

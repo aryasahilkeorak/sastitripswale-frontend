@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { api, apiError } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
+import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../lib/helpers.js';
 import CustomSelect from './CustomSelect.jsx';
 import AvatarUploadField from './AvatarUploadField.jsx';
 
@@ -35,6 +36,7 @@ export default function ProfileEditForm({ user, onSaved }) {
     }
     if (!form.email.trim()) return toast('fa-solid fa-triangle-exclamation', 'Email cannot be empty');
     if (!/^[0-9]{10,15}$/.test(form.mobile.trim())) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid mobile number');
+    if (isVehicleModelYearMistake(form.vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
     setBusy(true);
     try {
       const fd = new FormData();
@@ -58,7 +60,7 @@ export default function ProfileEditForm({ user, onSaved }) {
       <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
       <div className="form-row">
         <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
-        <div className="form-group"><label>Vehicle model</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} /></div>
+        <div className="form-group"><label>Vehicle model name</label><input className="form-input" value={form.vehicleModel} onChange={set('vehicleModel')} placeholder="e.g. Honda Activa" /></div>
       </div>
       <div className="form-row">
         <div className="form-group"><label>City</label><input className="form-input" value={form.city} onChange={set('city')} /></div>

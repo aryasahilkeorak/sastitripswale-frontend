@@ -431,7 +431,10 @@
 .hsw-wrap {
   position: relative;
   z-index: 5;
-  margin-top: -64px;
+  // Was -64px — deep enough to fully cover .hero-stat-strip (~60px tall),
+  // leaving no visible gap/content between the hero and the search card.
+  // A smaller overlap keeps the "floating card" effect while leaving the
+  // stat strip visible and some breathing room above the card.
 }
 
 .home-search-widget {
@@ -540,10 +543,6 @@
 }
 
 @include below($bp-md) {
-  .hsw-wrap {
-    margin-top: -40px;
-  }
-
   .home-search-widget {
     padding: 16px;
   }
@@ -1884,6 +1883,36 @@
   flex-shrink: 0;
 }
 
+// Instagram-style quick "Follow"-equivalent action on a suggested-profile row.
+.suggested-connect-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($orange-500, 0.14);
+  border: 1px solid rgba($orange-500, 0.3);
+  color: var(--fire);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background var(--t);
+}
+
+.suggested-connect-btn {
+  @include hover-only {
+    background: rgba($orange-500, 0.24);
+  }
+}
+
+.suggested-connect-btn.done {
+  background: rgba($success, 0.16);
+  border-color: rgba($success, 0.32);
+  color: #6ee7b7;
+  cursor: default;
+}
+
 .ig-header-body {
   flex: 1;
   min-width: 0;
@@ -1954,36 +1983,68 @@
 }
 
 .profile-interests-label {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-3);
-  font-weight: 700;
+  color: var(--text-2);
+  font-weight: 800;
   margin-bottom: 8px;
 }
 
 .interest-pill-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .interest-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: var(--r-pill);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   background: rgba($blue-400, 0.1);
   border: 1px solid rgba($blue-400, 0.22);
   color: var(--cyan);
+  white-space: nowrap;
+  transition: background var(--t), transform var(--t), border-color var(--t);
+}
+
+.interest-pill {
+  @include hover-only {
+    background: rgba($blue-400, 0.18);
+    border-color: rgba($blue-400, 0.4);
+    transform: translateY(-1px);
+  }
 }
 
 .interest-pill i {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   opacity: 0.9;
+}
+
+// The "+N more / Show less" toggle sits inline in the same wrapping row as
+// the pills themselves — an accordion control that reads as a horizontal
+// extension of the list rather than a separate stacked button.
+.interest-pill-toggle {
+  background: rgba($orange-500, 0.12);
+  border-color: rgba($orange-500, 0.3);
+  color: var(--fire);
+  cursor: pointer;
+}
+
+.interest-pill-toggle {
+  @include hover-only {
+    background: rgba($orange-500, 0.22);
+    border-color: rgba($orange-500, 0.45);
+    transform: translateY(-1px);
+  }
+}
+
+.interest-pill-toggle i {
+  font-size: 0.65rem;
 }
 
 .ig-stats {
@@ -2171,7 +2232,7 @@
    the two-button row real Instagram shows under its own profile. */
 .ig-action-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .ig-flat-btn {
@@ -2179,16 +2240,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 9px 12px;
+  gap: 6px;
+  padding: 9px 6px;
   border-radius: var(--r);
   background: var(--surface-2);
   border: 1px solid var(--glass-bdr);
   color: var(--text);
   font-size: 0.85rem;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
   transition: background var(--t);
+}
+
+@media (max-width: 420px) {
+  .ig-action-row {
+    gap: 4px;
+  }
+
+  .ig-flat-btn {
+    gap: 4px;
+    padding: 8px 4px;
+    font-size: 0.72rem;
+  }
 }
 
 .ig-flat-btn {
@@ -2265,10 +2339,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
-  padding: 24px 28px;
+  padding: 16px 20px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 130%);
+  border-top: 1px solid rgba($orange-500, 0.18);
 }
 
 .ig-secondary-card .profile-interests {
@@ -2289,14 +2365,39 @@
   }
 }
 
+// A horizontal rule replaces the (hidden) vertical divider once the card
+// stacks — without it the button row and the interests section below just
+// float with no visual separation.
+.ig-h-divider {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .ig-h-divider {
+    display: block;
+    height: 1px;
+    width: 100%;
+    background: var(--glass-bdr);
+    margin: 4px 0 2px;
+  }
+}
+
 .profile-interests-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .profile-interests-label i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba($orange-500, 0.15);
   color: var(--fire);
+  font-size: 0.68rem;
 }
 
 /* "More options" kebab menu, next to the copy-ID button in the name row */
@@ -2464,13 +2565,23 @@
   }
 
   .ig-actions {
+    width: 100%;
+  }
+
+  .ig-actions .btn,
+  .ig-actions > a {
+    flex: 1;
     justify-content: center;
   }
 
   .ig-secondary-card {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .ig-secondary-card .profile-interests {
+    min-width: 0;
   }
 }
 
@@ -2778,6 +2889,49 @@ table.data-table {
   min-width: 0;
 }
 
+/* ── Contact page ── */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.contact-grid > * {
+  min-width: 0;
+}
+
+.contact-info-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.contact-faq-card {
+  padding: 20px;
+}
+
+.contact-faq-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--glass-bdr);
+}
+
+.contact-faq-item:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.contact-faq-item:last-child {
+  padding-bottom: 0;
+}
+
+.contact-form-card {
+  padding: 24px;
+}
+
 .member-pill {
   display: inline-flex;
   align-items: center;
@@ -2944,6 +3098,17 @@ table.data-table {
   object-fit: cover;
   flex-shrink: 0;
   align-self: flex-end;
+}
+
+/* Admins chat as official support — a badge icon instead of their own
+   photo, wherever their avatar would otherwise show. */
+.chat-support-ava {
+  background: rgba($orange-500, 0.15);
+  color: var(--fire);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
 }
 
 .chat-sender {
@@ -3651,7 +3816,8 @@ table.data-table {
 }
 
 @media (max-width: 900px) {
-  .detail-grid {
+  .detail-grid,
+  .contact-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -3671,6 +3837,13 @@ table.data-table {
 /* Complete-profile page */
 .cp-section {
   padding-top: 110px;
+}
+
+.edit-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .cp-form {
@@ -3958,9 +4131,62 @@ table.data-table {
     grid-template-columns: 1fr 1fr;
   }
 
-  .trips-grid,
-  .member-grid {
+  .trips-grid {
     grid-template-columns: 1fr;
+  }
+
+  // Member cards become a small, horizontally-swipeable slider on mobile
+  // instead of a tall single-column stack (same scroll-snap mechanics as
+  // .app-scroll-row / .deal-carousel elsewhere in the app).
+  .member-grid {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    gap: 12px;
+    padding-bottom: 8px;
+  }
+
+  .member-card {
+    flex: 0 0 160px;
+    scroll-snap-align: start;
+    padding: 14px 10px;
+    overflow-y: hidden;
+  }
+
+  // .member-card's hover lift is guarded by @include hover-only (hover:hover
+  // + pointer:fine), which correctly excludes real touchscreens — but a
+  // desktop browser resized down to this width still has a real mouse, so
+  // the lift/glow can still fire there. Kill it outright at mobile widths.
+  .member-card:hover {
+    transform: none;
+    border-color: var(--glass-bdr);
+    box-shadow: none;
+  }
+
+  .member-avatar {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 8px;
+  }
+
+  .member-card h3 {
+    font-size: 0.85rem;
+  }
+
+  .member-meta,
+  .member-tags .badge {
+    font-size: 0.68rem;
+  }
+
+  .member-tags {
+    margin: 8px 0;
+  }
+
+  .member-card .btn {
+    padding: 6px 10px;
+    font-size: 0.72rem;
   }
 
   .form-row {

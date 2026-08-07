@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => {
         // see live data. No offline page for API routes.
         workbox: {
           navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//],
+          // Adds Web Push (notification) support to the generated service
+          // worker without switching build strategy.
+          importScripts: ['/push-handlers.js'],
         },
       }),
     ],
