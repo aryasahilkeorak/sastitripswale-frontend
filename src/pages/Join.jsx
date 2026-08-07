@@ -84,6 +84,22 @@ export default function Join() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // A male can only travel with "male" or "both" groups, never a
+  // female-only group — and symmetrically for female users.
+  const setGender = (e) => {
+    const gender = e.target.value;
+    setForm((f) => {
+      const incompatible =
+        (gender === 'Male' && f.coTravelerPreference === 'female') ||
+        (gender === 'Female' && f.coTravelerPreference === 'male');
+      return { ...f, gender, coTravelerPreference: incompatible ? '' : f.coTravelerPreference };
+    });
+  };
+  const availablePrefs =
+    form.gender === 'Male' ? PREFS.filter((p) => p.key !== 'female')
+    : form.gender === 'Female' ? PREFS.filter((p) => p.key !== 'male')
+    : PREFS;
+
   // Re-validate an applied coupon when the duration changes.
   useEffect(() => {
     if (!applied?.code) return;
@@ -224,7 +240,7 @@ export default function Join() {
                 <label>Your gender *</label>
                 <CustomSelect
                   value={form.gender}
-                  onChange={set('gender')}
+                  onChange={setGender}
                   options={[{ value: '', label: 'Select' }, 'Male', 'Female', 'Prefer not to say']}
                 />
               </div>
@@ -234,7 +250,7 @@ export default function Join() {
                 <CustomSelect
                   value={form.coTravelerPreference}
                   onChange={set('coTravelerPreference')}
-                  options={[{ value: '', label: 'Select' }, ...PREFS.map((p) => ({ value: p.key, label: p.label }))]}
+                  options={[{ value: '', label: 'Select' }, ...availablePrefs.map((p) => ({ value: p.key, label: p.label }))]}
                 />
               </div>
 

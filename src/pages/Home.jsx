@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { imageUrl, rupee, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
 import { useAuth } from '../store/auth.js';
 import TripCard from '../components/TripCard.jsx';
+import CompletedTripCard from '../components/CompletedTripCard.jsx';
 import AnimatedCounter from '../components/AnimatedCounter.jsx';
 import Stars from '../components/Stars.jsx';
 import Lightbox from '../components/Lightbox.jsx';
@@ -67,6 +68,7 @@ export default function Home() {
   const forcePublic = searchParams.get('view') === 'site';
 
   const [trips, setTrips] = useState([]);
+  const [completedTrips, setCompletedTrips] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [stats, setStats] = useState(null);
@@ -85,6 +87,7 @@ export default function Home() {
 
   useEffect(() => {
     api.get('/trips', { params: { status: 'upcoming', limit: 8 } }).then((r) => setTrips(r.data.trips)).catch(() => {});
+    api.get('/trips', { params: { status: 'completed', limit: 8, sort: 'date_desc' } }).then((r) => setCompletedTrips(r.data.trips)).catch(() => {});
     api.get('/reviews', { params: { featured: 'true', limit: 6 } }).then((r) => setReviews(r.data.reviews)).catch(() => {});
     api.get('/gallery', { params: { limit: 5 } }).then((r) => setGallery(r.data.photos)).catch(() => {});
     api.get('/stats').then((r) => setStats(r.data.stats)).catch(() => {});
@@ -218,15 +221,15 @@ export default function Home() {
             <div className="hero-stat-strip-inner">
               <div className="hero-stat-item">
                 <i className="fa-solid fa-shield-halved" />
-                <strong>{stats?.members ? `${stats.members}+` : '5000+'}</strong> Verified Members
+                <strong>{stats ? `${stats.members}+` : '—'}</strong> Verified Members
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-route" />
-                <strong>{stats?.completedTrips ? `${stats.completedTrips}+` : '300+'}</strong> Trips Completed
+                <strong>{stats ? `${stats.completedTrips}+` : '—'}</strong> Trips Completed
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-location-dot" />
-                <strong>{stats?.cities ? `${stats.cities}+` : '50+'}</strong> Cities Covered
+                <strong>{stats ? `${stats.cities}+` : '—'}</strong> Cities Covered
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-venus" /> Safe for Women
@@ -336,6 +339,28 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Completed Journeys */}
+      {completedTrips.length > 0 && (
+        <section>
+          <div className="container">
+            <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 44 }}>
+              <div className="fade-left">
+                <div className="section-tag"><i className="fa-solid fa-trophy" /> Real Trips, Real Recaps</div>
+                <h2 className="section-title" style={{ marginBottom: 0 }}>Completed <span className="highlight">Journeys</span></h2>
+              </div>
+              <Link to="/completed-trips" className="btn btn-outline fade-right">View All <i className="fa-solid fa-arrow-right" /></Link>
+            </div>
+            <div className="deal-carousel">
+              {completedTrips.map((t) => (
+                <div className="deal-carousel-item" key={t._id}>
+                  <CompletedTripCard trip={t} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Testimonials */}
       {reviews.length > 0 && (

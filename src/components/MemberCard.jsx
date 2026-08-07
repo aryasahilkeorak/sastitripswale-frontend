@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import VerificationBadge from './VerificationBadge.jsx';
 
 export default function MemberCard({ member }) {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ export default function MemberCard({ member }) {
   }
 
   return (
-    <div className="member-card fade-up">
+    <div className="member-card">
       <Link to={`/members/${member.id}`} style={{ color: 'inherit' }}>
         <div className="member-avatar">
           <img
@@ -68,30 +69,13 @@ export default function MemberCard({ member }) {
           />
         </div>
         <h3>{member.fullName}</h3>
-        {member.role === 'superadmin' ? (
-          <div className="verified-badge founder-badge" style={{ justifyContent: 'center' }}>
-            <i className="fa-solid fa-crown" /> Founder
-          </div>
-        ) : member.isVerified && (
-          <div className="verified-badge" style={{ justifyContent: 'center' }}>
-            <i className="fa-solid fa-circle-check" /> Verified
-          </div>
-        )}
+        <VerificationBadge role={member.role} verificationLevel={member.verificationLevel} isVerified={member.isVerified} block />
       </Link>
       <p className="member-meta">
         {member.city || 'India'}
         {member.age ? ` • ${member.age}` : ''}
       </p>
       {member.profession && <p className="member-meta">{member.profession}</p>}
-
-      <div className="member-tags">
-        {member.vehicleType && <span className="badge badge-fire">{member.vehicleType}</span>}
-        {(member.travelInterests || []).slice(0, 2).map((t) => (
-          <span key={t} className="badge badge-cyan">
-            {t}
-          </span>
-        ))}
-      </div>
 
       <div style={{ marginTop: 14 }}>{btn}</div>
     </div>

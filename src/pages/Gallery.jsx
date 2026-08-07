@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
+import { imageUrl, timeAgo, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
@@ -95,7 +95,11 @@ export default function Gallery() {
                   {(p.caption || p.user?.fullName) && (
                     <div className="masonry-cap">
                       {p.caption && <div style={{ fontWeight: 600 }}>{p.caption}</div>}
-                      {p.user?.fullName && <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>by {p.user.fullName}</div>}
+                      {p.user?.fullName && (
+                        <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>
+                          by {p.user.fullName} · {timeAgo(p.createdAt)}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

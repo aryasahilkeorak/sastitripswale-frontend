@@ -7,7 +7,7 @@ import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import Modal from '../components/Modal.jsx';
-import ProfileEditForm from '../components/ProfileEditForm.jsx';
+import VerificationBadge from '../components/VerificationBadge.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
 
 const TABS = [
@@ -15,22 +15,25 @@ const TABS = [
   { key: 'photos', label: 'Photos', icon: 'fa-regular fa-image' },
 ];
 
+// How many interest pills show before the row collapses behind a toggle.
+const INTERESTS_COLLAPSED_LIMIT = 5;
+
 export default function MemberDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const accessToken = useAuth((s) => s.accessToken);
-  const authUser = useAuth((s) => s.user);
-  const setAuthUser = useAuth((s) => s.setUser);
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState('trips');
   const [lb, setLb] = useState(null);
-  const [showEdit, setShowEdit] = useState(false);
+  const [selfieUrl, setSelfieUrl] = useState(null);
+  const [showSelfie, setShowSelfie] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportBusy, setReportBusy] = useState(false);
+  const [interestsExpanded, setInterestsExpanded] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -85,6 +88,31 @@ export default function MemberDetail() {
     }
   };
 
+  const disconnect = async () => {
+    const isPending = member.connection?.status === 'pending';
+    if (!window.confirm(isPending ? 'Withdraw your connection request?' : `Remove ${member.fullName} from your connections?`)) return;
+    setBusy(true);
+    try {
+      await api.delete(`/members/connect/${member.connection.connectionId}`);
+      toast('fa-solid fa-user-minus', isPending ? 'Request withdrawn' : 'Connection removed');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const viewSelfie = async () => {
+    try {
+      const { data } = await api.get(`/members/${id}/selfie`);
+      setSelfieUrl(data.url);
+      setShowSelfie(true);
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err, 'No verification photo on file'));
+    }
+  };
+
   const message = async () => {
     setBusy(true);
     try {
@@ -112,6 +140,12 @@ export default function MemberDetail() {
     setMenuOpen(false);
     navigator.clipboard?.writeText(window.location.href);
     toast('fa-solid fa-clipboard', 'Profile link copied!');
+  };
+
+  const copyUserId = () => {
+    setMenuOpen(false);
+    navigator.clipboard?.writeText(String(member.id));
+    toast('fa-solid fa-clipboard', 'User ID copied — use it to add them to a group');
   };
 
   const toggleBlockUser = async () => {
@@ -161,9 +195,32 @@ export default function MemberDetail() {
   return (
     <section className="detail-section">
       <div className="container" style={{ maxWidth: 1120 }}>
-        <Link to="/members" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
-          <i className="fa-solid fa-arrow-left" /> All members
-        </Link>
+        <div className="row-between" style={{ alignItems: 'center' }}>
+          <Link to="/members" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
+            <i className="fa-solid fa-arrow-left" /> All members
+          </Link>
+
+          <div className="ig-menu" ref={menuRef} style={{ position: 'relative' }}>
+            <button className="ig-id-btn" onClick={() => setMenuOpen((v) => !v)} title="More options">
+              <i className="fa-solid fa-ellipsis-vertical" />
+            </button>
+            {menuOpen && (
+              <div className="ig-menu-dropdown">
+                <button onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
+                <button onClick={copyProfileUrl}><i className="fa-solid fa-link" /> Copy profile URL</button>
+                <button onClick={copyUserId}><i className="fa-solid fa-copy" /> Copy user ID</button>
+                {!member.isSelf && accessToken && (
+                  <>
+                    <button onClick={openReport}><i className="fa-solid fa-flag" /> Report user</button>
+                    <button className="danger" onClick={toggleBlockUser}>
+                      <i className="fa-solid fa-ban" /> {member.isBlockedByMe ? 'Unblock user' : 'Block user'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="detail-grid mt-3">
           <div>
@@ -185,41 +242,7 @@ export default function MemberDetail() {
           <div className="ig-header-body">
             <div className="ig-name-row">
               <h1>{member.fullName}</h1>
-              {member.role === 'superadmin' ? (
-                <span className="verified-badge founder-badge"><i className="fa-solid fa-crown" /> Founder</span>
-              ) : member.isVerified && (
-                <span className="verified-badge"><i className="fa-solid fa-circle-check" /> Verified</span>
-              )}
-              <button
-                className="ig-id-btn"
-                onClick={() => {
-                  navigator.clipboard?.writeText(String(member.id));
-                  toast('fa-solid fa-clipboard', 'User ID copied — use it to add them to a group');
-                }}
-                title="Copy user ID"
-              >
-                <i className="fa-solid fa-copy" />
-              </button>
-
-              <div className="ig-menu" ref={menuRef} style={{ marginLeft: 'auto', position: 'relative' }}>
-                <button className="ig-id-btn" onClick={() => setMenuOpen((v) => !v)} title="More options">
-                  <i className="fa-solid fa-ellipsis-vertical" />
-                </button>
-                {menuOpen && (
-                  <div className="ig-menu-dropdown">
-                    <button onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
-                    <button onClick={copyProfileUrl}><i className="fa-solid fa-link" /> Copy profile URL</button>
-                    {!member.isSelf && accessToken && (
-                      <>
-                        <button onClick={openReport}><i className="fa-solid fa-flag" /> Report user</button>
-                        <button className="danger" onClick={toggleBlockUser}>
-                          <i className="fa-solid fa-ban" /> {member.isBlockedByMe ? 'Unblock user' : 'Block user'}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+              <VerificationBadge role={member.role} verificationLevel={member.verificationLevel} isVerified={member.isVerified} />
             </div>
 
             {member.username && <p className="ig-username">@{member.username}</p>}
@@ -255,13 +278,18 @@ export default function MemberDetail() {
         <div className="card ig-secondary-card mt-3">
           <div className="ig-actions">
             {member.isSelf ? (
-              <button className="btn btn-outline" onClick={() => setShowEdit(true)}>
+              <Link to="/edit-profile" className="btn btn-outline">
                 <i className="fa-solid fa-pen" /> Edit Profile
-              </button>
+              </Link>
             ) : member.connection?.status === 'accepted' ? (
-              <button className="btn btn-primary" onClick={message} disabled={busy}>
-                <i className="fa-solid fa-comment-dots" /> Message
-              </button>
+              <>
+                <button className="btn btn-primary" onClick={message} disabled={busy}>
+                  <i className="fa-solid fa-comment-dots" /> Message
+                </button>
+                <button className="btn btn-outline" style={{ color: '#fca5a5', borderColor: 'rgba(239,68,68,0.35)' }} onClick={disconnect} disabled={busy}>
+                  <i className="fa-solid fa-user-minus" /> Disconnect
+                </button>
+              </>
             ) : member.connection?.status === 'pending' && member.connection.direction === 'received' ? (
               <>
                 <button className="btn btn-primary" onClick={() => respond('accept')} disabled={busy}>
@@ -272,12 +300,17 @@ export default function MemberDetail() {
                 </button>
               </>
             ) : member.connection?.status === 'pending' ? (
-              <span className="btn btn-outline" style={{ opacity: 0.7 }}>
-                <i className="fa-regular fa-clock" /> Request pending
-              </span>
+              <button className="btn btn-outline" onClick={disconnect} disabled={busy}>
+                <i className="fa-regular fa-clock" /> Request pending — Withdraw
+              </button>
             ) : (
               <button className="btn btn-primary" onClick={connect} disabled={busy}>
                 {busy ? <span className="spinner" /> : <i className="fa-solid fa-user-plus" />} Connect
+              </button>
+            )}
+            {(member.isSelf || member.connection?.status === 'accepted') && (
+              <button className="btn btn-outline" onClick={viewSelfie}>
+                <i className="fa-solid fa-id-badge" /> Verification photo
               </button>
             )}
           </div>
@@ -285,14 +318,27 @@ export default function MemberDetail() {
           {member.travelInterests?.length > 0 && (
             <>
               <div className="ig-v-divider" />
+              <div className="ig-h-divider" />
               <div className="profile-interests">
                 <div className="profile-interests-label"><i className="fa-solid fa-compass" /> Travel Interests</div>
                 <div className="interest-pill-row">
-                  {member.travelInterests.map((t) => (
+                  {(interestsExpanded ? member.travelInterests : member.travelInterests.slice(0, INTERESTS_COLLAPSED_LIMIT)).map((t) => (
                     <span key={t} className="interest-pill">
                       <i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /> {t}
                     </span>
                   ))}
+                  {member.travelInterests.length > INTERESTS_COLLAPSED_LIMIT && (
+                    <button
+                      className="interest-pill interest-pill-toggle"
+                      onClick={() => setInterestsExpanded((v) => !v)}
+                    >
+                      {interestsExpanded ? (
+                        <>Show less <i className="fa-solid fa-chevron-up" /></>
+                      ) : (
+                        <>+{member.travelInterests.length - INTERESTS_COLLAPSED_LIMIT} more <i className="fa-solid fa-chevron-down" /></>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </>
@@ -343,18 +389,12 @@ export default function MemberDetail() {
 
       <Lightbox images={photoImgs} index={lb} onClose={() => setLb(null)} onIndex={setLb} />
 
-      {member.isSelf && (
-        <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Edit profile" maxWidth={640}>
-          <ProfileEditForm
-            user={authUser}
-            onSaved={(updated) => {
-              setAuthUser(updated);
-              setShowEdit(false);
-              load();
-            }}
-          />
-        </Modal>
-      )}
+      <Lightbox
+        images={selfieUrl ? [imageUrl(selfieUrl)] : []}
+        index={showSelfie ? 0 : null}
+        onClose={() => setShowSelfie(false)}
+        onIndex={() => {}}
+      />
 
       {!member.isSelf && (
         <Modal open={showReport} onClose={() => setShowReport(false)} title={`Report ${member.fullName}`}>
@@ -383,11 +423,30 @@ export default function MemberDetail() {
 }
 
 function SuggestedTravelers({ members }) {
+  const [requested, setRequested] = useState(() => new Set());
+  const [busyId, setBusyId] = useState(null);
+
   if (!members?.length) return null;
+
+  const quickConnect = async (e, otherId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setBusyId(otherId);
+    try {
+      await api.post('/members/connect', { receiverId: otherId });
+      setRequested((s) => new Set(s).add(otherId));
+      toast('fa-solid fa-handshake', 'Connection request sent!');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="card suggested-card" style={{ padding: 14 }}>
       <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem' }}>
-        <i className="fa-solid fa-user-group" style={{ color: 'var(--fire)' }} /> Suggested Travelers
+        <i className="fa-solid fa-user-group" style={{ color: 'var(--fire)' }} /> Suggested for you
       </h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {members.map((m) => (
@@ -411,6 +470,20 @@ function SuggestedTravelers({ members }) {
                 </div>
               )}
             </div>
+            {requested.has(m.id) ? (
+              <span className="suggested-connect-btn done" title="Request sent">
+                <i className="fa-solid fa-check" />
+              </span>
+            ) : (
+              <button
+                className="suggested-connect-btn"
+                onClick={(e) => quickConnect(e, m.id)}
+                disabled={busyId === m.id}
+                title="Connect"
+              >
+                {busyId === m.id ? <span className="spinner" /> : <i className="fa-solid fa-user-plus" />}
+              </button>
+            )}
           </Link>
         ))}
       </div>

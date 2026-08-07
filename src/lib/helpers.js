@@ -43,6 +43,13 @@ export function tripDays(a, b) {
   return days > 0 ? days : null;
 }
 
+// Catches the common mistake of typing the vehicle's year (e.g. "2023")
+// into the model field instead of its name (e.g. "Royal Enfield Classic 350").
+export function isVehicleModelYearMistake(value) {
+  return /^\d+$/.test(String(value || '').trim());
+}
+export const VEHICLE_MODEL_YEAR_MISTAKE_MSG = "Enter the vehicle's model name (e.g. Honda Activa), not the model year";
+
 export function initials(name = '') {
   return name
     .split(' ')

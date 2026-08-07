@@ -14,7 +14,18 @@ export default function Layout() {
   const location = useLocation();
   const accessToken = useAuth((s) => s.accessToken);
 
-  useScrollReveal(mainRef);
+  // Scroll-triggered fade-ins read as sluggish rather than polished in the
+  // logged-in mobile app views (Dashboard, Members slider, etc.) — skip
+  // them there, but keep them for the public marketing pages / desktop.
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useScrollReveal(mainRef, Boolean(accessToken) && isMobile);
 
   useEffect(() => {
     window.scrollTo(0, 0);

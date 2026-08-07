@@ -5,6 +5,7 @@ import { useTheme } from '../store/theme.js';
 import { api } from '../lib/api.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { enablePushNotifications, pushPermissionState } from '../lib/push.js';
 import BrandLogo from './BrandLogo.jsx';
 
 const LINKS = [
@@ -33,6 +34,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [showEnablePush, setShowEnablePush] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -83,6 +85,23 @@ export default function Navbar() {
       clearInterval(id);
     };
   }, [accessToken]);
+
+  // Offer to enable browser push once per session, only if the browser
+  // supports it and the user hasn't already granted/denied permission.
+  useEffect(() => {
+    if (accessToken && pushPermissionState() === 'default') setShowEnablePush(true);
+  }, [accessToken]);
+
+  const handleEnablePush = async () => {
+    setMenuOpen(false);
+    setShowEnablePush(false);
+    try {
+      await enablePushNotifications();
+      toast('fa-solid fa-bell', "You're all set — we'll notify you of new activity right in your browser.");
+    } catch (err) {
+      toast('fa-solid fa-bell-slash', err.message || 'Could not enable notifications');
+    }
+  };
 
   const logout = async () => {
     try {
@@ -157,6 +176,11 @@ export default function Navbar() {
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-map-location-dot" /> Plan a Trip
                   </Link>
+                  {showEnablePush && (
+                    <button onClick={handleEnablePush}>
+                      <i className="fa-solid fa-bell" /> Enable notifications
+                    </button>
+                  )}
                   {isAdminAccount && (
                     <Link to="/admin" onClick={goToAdmin}>
                       <i className="fa-solid fa-shield-halved" /> Admin Panel
@@ -171,15 +195,24 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
-          className={`hamburger${mobileOpen ? ' open' : ''}`}
-          aria-label="Menu"
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        <div className="nav-mobile-actions">
+          {accessToken && (
+            <Link to="/notifications" className="nav-bell-btn" aria-label="Notifications">
+              <i className="fa-regular fa-bell" />
+              {unread > 0 && <span className="notif-badge">{unread}</span>}
+            </Link>
+          )}
+
+          <button
+            className={`hamburger${mobileOpen ? ' open' : ''}`}
+            aria-label="Menu"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
       </nav>
 
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
@@ -204,6 +237,11 @@ export default function Navbar() {
             <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
               <i className="fa-solid fa-gift" /> Referrals
             </NavLink>
+            {showEnablePush && (
+              <button onClick={() => { setMobileOpen(false); handleEnablePush(); }}>
+                <i className="fa-solid fa-bell" /> Enable notifications
+              </button>
+            )}
             {isAdminAccount && (
               <NavLink to="/admin" onClick={goToAdmin}>
                 <i className="fa-solid fa-shield-halved" /> Admin Panel

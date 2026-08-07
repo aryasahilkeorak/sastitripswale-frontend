@@ -434,6 +434,28 @@ select {
   z-index: 1;
 }
 
+// Keeps the bell and hamburger a fixed 8px apart regardless of how much
+// space .navbar's own space-between leaves on the right — both are
+// display:none on desktop, so this wrapper is invisible there too.
+.nav-mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Mobile-only bell — desktop already shows the unread count on the avatar
+// menu (.nav-avatar-btn), which .nav-links hides below the same breakpoint.
+.nav-bell-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
 .hamburger span {
   display: block;
   width: 22px;

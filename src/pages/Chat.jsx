@@ -13,6 +13,13 @@ function dmPartner(members, meId) {
   return members.find((m) => String(m._id) !== String(meId)) || null;
 }
 
+// Admins/superadmins chat as official support, not as themselves — a member
+// talking to "support" shouldn't see an individual admin's name or personal
+// photo.
+const SUPPORT_NAME = 'SastiTripsWale Support';
+const isSupportAccount = (m) => Boolean(m) && (m.role === 'admin' || m.role === 'superadmin');
+const displayName = (m) => (isSupportAccount(m) ? SUPPORT_NAME : m?.fullName);
+
 export default function Chat() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -143,7 +150,9 @@ export default function Chat() {
                       onClick={() => navigate(`/chat/${g._id}`)}
                     >
                       <div className="chat-group-ava">
-                        {partner ? (
+                        {isSupportAccount(partner) ? (
+                          <div className="chat-support-ava"><i className="fa-solid fa-headset" /></div>
+                        ) : partner ? (
                           <img src={imageUrl(partner.avatarUrl, AVATAR_FALLBACK)} alt="" onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                         ) : g.photoUrl ? (
                           <img src={imageUrl(g.photoUrl)} alt="" />
@@ -156,7 +165,7 @@ export default function Chat() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
                           <strong style={{ fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {partner?.fullName || g.name}
+                            {displayName(partner) || g.name}
                           </strong>
                           {g.type === 'trip' && <span className="badge badge-fire" style={{ fontSize: '0.55rem' }}>TRIP</span>}
                         </div>
@@ -185,10 +194,16 @@ export default function Chat() {
                     <button className="btn btn-sm btn-outline chat-back" onClick={() => navigate('/chat')}><i className="fa-solid fa-arrow-left" /></button>
                     <div style={{ minWidth: 0 }}>
                       <strong style={{ fontFamily: 'var(--font-display)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {detailPartner?.fullName || listPartner?.fullName || detail?.name || activeGroup?.name || 'Chat'}
+                        {displayName(detailPartner) || displayName(listPartner) || detail?.name || activeGroup?.name || 'Chat'}
                       </strong>
                       <span className="text-muted" style={{ fontSize: '0.72rem' }}>
-                        {isDm ? (detailPartner?.city || listPartner?.city || '') : detail ? `${detail.members.length} members` : ''}
+                        {isDm
+                          ? isSupportAccount(detailPartner) || isSupportAccount(listPartner)
+                            ? "We're here to help"
+                            : detailPartner?.city || listPartner?.city || ''
+                          : detail
+                          ? `${detail.members.length} members`
+                          : ''}
                         {detail?.trip ? ' · ' : ''}
                         {detail?.trip && <Link to={`/trips/${detail.trip._id}`} style={{ color: 'var(--fire-2)' }}>View trip</Link>}
                       </span>
@@ -213,10 +228,14 @@ export default function Chat() {
                       return (
                         <div key={m._id} className={`chat-row ${mine ? 'mine' : 'theirs'}`}>
                           {!mine && (
-                            <img className="chat-msg-ava" src={imageUrl(m.sender?.avatarUrl, AVATAR_FALLBACK)} alt="" onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+                            isSupportAccount(m.sender) ? (
+                              <div className="chat-msg-ava chat-support-ava"><i className="fa-solid fa-headset" /></div>
+                            ) : (
+                              <img className="chat-msg-ava" src={imageUrl(m.sender?.avatarUrl, AVATAR_FALLBACK)} alt="" onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+                            )
                           )}
                           <div>
-                            {!isDm && <div className="chat-sender">{mine ? 'You' : (m.sender?.fullName || 'Member')}</div>}
+                            {!isDm && <div className="chat-sender">{mine ? 'You' : (displayName(m.sender) || 'Member')}</div>}
                             <div className="chat-bubble">{m.text}</div>
                             <div className="chat-time">{timeAgo(m.createdAt)}</div>
                           </div>

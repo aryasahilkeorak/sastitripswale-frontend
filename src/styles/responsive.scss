@@ -49,6 +49,10 @@
     display: none;
   }
 
+  .nav-bell-btn {
+    display: flex;
+  }
+
   .hamburger {
     display: flex;
   }
@@ -59,6 +63,13 @@
 
   .bottom-nav {
     display: block;
+  }
+
+  // .auth-wrap fills a full 100vh on top of body's own 72px reserved for
+  // the fixed bottom-nav — that combination is taller than the viewport,
+  // forcing a scroll to reveal nothing but blank space. Reclaim it here.
+  .auth-wrap {
+    min-height: calc(100vh - 72px);
   }
 
   .fab-group {

@@ -5,6 +5,7 @@ import usePullToRefresh from '../lib/usePullToRefresh.js';
 import PageHero from '../components/PageHero.jsx';
 import PromoBanner from '../components/PromoBanner.jsx';
 import TripCard from '../components/TripCard.jsx';
+import CompletedTripCard from '../components/CompletedTripCard.jsx';
 import Loader from '../components/Loader.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import CustomDatePicker from '../components/CustomDatePicker.jsx';
@@ -38,6 +39,7 @@ export default function Trips() {
 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(() => (searchParams.get('status') === 'completed' ? 'completed' : 'upcoming'));
   const [filter, setFilter] = useState(() => searchParams.get('type') || 'all');
   const [sort, setSort] = useState(() => searchParams.get('sort') || '');
   const [from, setFrom] = useState(() => searchParams.get('from') || '');
@@ -51,18 +53,21 @@ export default function Trips() {
   };
 
   const fetchTrips = useCallback(() => {
-    const params = { status: 'upcoming', limit: 30 };
+    const params = { status, limit: 30 };
     if (filter !== 'all') params.type = filter;
     if (sort) params.sort = sort;
-    if (from.trim()) params.from = from.trim();
-    if (to.trim()) params.to = to.trim();
-    if (date) params.date = date;
-    if (seats > 1) params.seats = seats;
+    // The route/date/seats search only makes sense for trips you could still join.
+    if (status === 'upcoming') {
+      if (from.trim()) params.from = from.trim();
+      if (to.trim()) params.to = to.trim();
+      if (date) params.date = date;
+      if (seats > 1) params.seats = seats;
+    }
     return api
       .get('/trips', { params })
       .then((r) => setTrips(r.data.trips))
       .catch(() => setTrips([]));
-  }, [filter, sort, from, to, date, seats]);
+  }, [status, filter, sort, from, to, date, seats]);
 
   // Pull-to-refresh re-runs the same fetch immediately, with whatever
   // filters are currently applied (mobile/tablet only, in practice).
@@ -104,6 +109,16 @@ export default function Trips() {
             to="/join"
           />
 
+          <div className="filter-chips mt-3">
+            <button className={`chip${status === 'upcoming' ? ' active' : ''}`} onClick={() => setStatus('upcoming')}>
+              <i className="fa-solid fa-compass" /> Upcoming
+            </button>
+            <button className={`chip${status === 'completed' ? ' active' : ''}`} onClick={() => setStatus('completed')}>
+              <i className="fa-solid fa-trophy" /> Completed
+            </button>
+          </div>
+
+          {status === 'upcoming' && (
           <form className="ride-search ride-search-prominent mt-3" onSubmit={(e) => e.preventDefault()}>
             <div className="ride-search-field">
               <label>Leaving from</label>
@@ -139,8 +154,9 @@ export default function Trips() {
               <i className="fa-solid fa-magnifying-glass" /> Search
             </button>
           </form>
+          )}
 
-          <div className="row-between mb-3 trips-filter-bar" style={{ alignItems: 'center' }}>
+          <div className="row-between mb-3 trips-filter-bar mt-3" style={{ alignItems: 'center' }}>
             <div className="filter-chips" style={{ marginBottom: 0 }}>
               {FILTERS.map((f) => (
                 <button
@@ -159,17 +175,19 @@ export default function Trips() {
             <Loader label="Loading trips…" />
           ) : trips.length === 0 ? (
             <div className="empty-state">
-              <i className="fa-solid fa-compass" />
-              <p>No trips match your filters.</p>
-              <Link to="/plan-trip" className="btn btn-primary mt-3 plan-trip-btn">
-                <i className="fa-solid fa-plus" /> Plan a Trip
-              </Link>
+              <i className={status === 'completed' ? 'fa-solid fa-trophy' : 'fa-solid fa-compass'} />
+              <p>{status === 'completed' ? 'No completed trips match your filters.' : 'No trips match your filters.'}</p>
+              {status === 'upcoming' && (
+                <Link to="/plan-trip" className="btn btn-primary mt-3 plan-trip-btn">
+                  <i className="fa-solid fa-plus" /> Plan a Trip
+                </Link>
+              )}
             </div>
           ) : (
             <div className="trips-grid">
-              {trips.map((t) => (
-                <TripCard key={t._id} trip={t} />
-              ))}
+              {trips.map((t) =>
+                status === 'completed' ? <CompletedTripCard key={t._id} trip={t} /> : <TripCard key={t._id} trip={t} />
+              )}
             </div>
           )}
         </div>
