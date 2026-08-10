@@ -145,7 +145,7 @@ export default function MemberDetail() {
   const copyUserId = () => {
     setMenuOpen(false);
     navigator.clipboard?.writeText(String(member.id));
-    toast('fa-solid fa-clipboard', 'User ID copied — use it to add them to a group');
+    toast('fa-solid fa-clipboard', 'User ID copied - use it to add them to a group');
   };
 
   const toggleBlockUser = async () => {
@@ -172,7 +172,7 @@ export default function MemberDetail() {
     setReportBusy(true);
     try {
       await api.post(`/members/${id}/report`, { reason: reportReason.trim() });
-      toast('fa-solid fa-flag', 'Report sent to our team — thanks for flagging this');
+      toast('fa-solid fa-flag', 'Report sent to our team - thanks for flagging this');
       setShowReport(false);
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -301,7 +301,7 @@ export default function MemberDetail() {
               </>
             ) : member.connection?.status === 'pending' ? (
               <button className="btn btn-outline" onClick={disconnect} disabled={busy}>
-                <i className="fa-regular fa-clock" /> Request pending — Withdraw
+                <i className="fa-regular fa-clock" /> Request pending - Withdraw
               </button>
             ) : (
               <button className="btn btn-primary" onClick={connect} disabled={busy}>
@@ -405,7 +405,7 @@ export default function MemberDetail() {
                 className="form-input"
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                placeholder="Describe the issue — fake profile, harassment, scam, etc."
+                placeholder="Describe the issue - fake profile, harassment, scam, etc."
                 rows={5}
               />
             </div>

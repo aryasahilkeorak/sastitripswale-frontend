@@ -31,7 +31,7 @@ const WHY = [
   { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-solid fa-magnifying-glass', h: 'Find Your Travel Tribe', p: 'Connect with verified bikers, car owners & backpackers. Filter by vehicle, interests, age & destination.' },
   { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-solid fa-wallet', h: 'Split Expenses Smartly', p: 'Budget trips from ₹500/day by dividing fuel, hotel & food. Ladakh for ₹8,500 vs ₹40,000 alone.' },
   { glow: 'var(--cyan)', bg: 'rgba(0,212,255,0.1)', icon: 'fa-solid fa-shield-halved', h: 'Travel Safely Together', p: 'All members are ID-verified. Women-only sections. Emergency contacts shared within the group.' },
-  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-solid fa-motorcycle', h: 'Bike & Car Trips', p: 'Royal Enfield or Maruti Swift — find co-travelers for epic road trips across every corner of India.' },
+  { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-solid fa-motorcycle', h: 'Bike & Car Trips', p: 'Royal Enfield or Maruti Swift - find co-travelers for epic road trips across every corner of India.' },
   { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-solid fa-camera', h: 'Make Lifelong Memories', p: 'Shared trips create bonds that last forever. Our gallery has 2000+ real photos from real trips.' },
   { glow: '#25D366', bg: 'rgba(37,211,102,0.1)', icon: 'fa-brands fa-whatsapp', h: 'WhatsApp Group Access', p: 'Join dedicated groups for every trip. Co-ordinate, share live locations & stay connected real-time.' },
 ];
@@ -54,7 +54,7 @@ const FAQS = [
 ];
 
 // Shown only until real trip photos exist in the gallery (see `gallery` state
-// below) — kept in one place (lib/helpers.js) since the full Gallery page
+// below) - kept in one place (lib/helpers.js) since the full Gallery page
 // falls back to the same set.
 const FALLBACK_GALLERY = NORTH_INDIA_GALLERY.map((g) => g.url);
 
@@ -221,15 +221,15 @@ export default function Home() {
             <div className="hero-stat-strip-inner">
               <div className="hero-stat-item">
                 <i className="fa-solid fa-shield-halved" />
-                <strong>{stats ? `${stats.members}+` : '—'}</strong> Verified Members
+                <strong>{stats ? `${stats.members}+` : '-'}</strong> Verified Members
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-route" />
-                <strong>{stats ? `${stats.completedTrips}+` : '—'}</strong> Trips Completed
+                <strong>{stats ? `${stats.completedTrips}+` : '-'}</strong> Trips Completed
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-location-dot" />
-                <strong>{stats ? `${stats.cities}+` : '—'}</strong> Cities Covered
+                <strong>{stats ? `${stats.cities}+` : '-'}</strong> Cities Covered
               </div>
               <div className="hero-stat-item">
                 <i className="fa-solid fa-venus" /> Safe for Women
@@ -239,7 +239,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Search widget — floats up over the hero's bottom edge (rendered as
+      {/* Search widget - floats up over the hero's bottom edge (rendered as
           a sibling, not a hero child, since .hero has overflow:hidden for
           its background layers). */}
       <div className="container hsw-wrap">
@@ -249,7 +249,7 @@ export default function Home() {
       <div className="container">
         <PromoBanner
           icon="fa-solid fa-gift"
-          message="Invite friends and grow the tribe — get your referral link."
+          message="Invite friends and grow the tribe - get your referral link."
           cta="View my referrals"
           to="/referrals"
         />
@@ -279,7 +279,7 @@ export default function Home() {
           <div className="text-center fade-up">
             <div className="section-tag"><i className="fa-solid fa-star" /> Why Choose Us</div>
             <h2 className="section-title">Why <span className="highlight">SastiTripsWale?</span></h2>
-            <p className="section-sub">We solve real problems of solo travelers — finding partners, managing budgets, staying safe on the road.</p>
+            <p className="section-sub">We solve real problems of solo travelers - finding partners, managing budgets, staying safe on the road.</p>
           </div>
           <div className="why-grid">
             {WHY.map((w) => (
@@ -327,7 +327,7 @@ export default function Home() {
             <Link to="/trips" className="btn btn-outline fade-right">View All <i className="fa-solid fa-arrow-right" /></Link>
           </div>
           {trips.length === 0 ? (
-            <div className="empty-state"><i className="fa-solid fa-compass" /><p>No trips yet — be the first to plan one!</p></div>
+            <div className="empty-state"><i className="fa-solid fa-compass" /><p>No trips yet - be the first to plan one!</p></div>
           ) : (
             <div className="deal-carousel">
               {trips.map((t) => (

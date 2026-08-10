@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Custom numeric input — replaces native <input type="number"> so the
+// Custom numeric input - replaces native <input type="number"> so the
 // browser's own spinner arrows never appear; styled to match .form-input.
 export default function CustomNumberStepper({ value, onChange, min = 0, max = Infinity, step = 1, prefix, className = '' }) {
   const [text, setText] = useState(String(value ?? ''));
   const inputRef = useRef(null);
 
   // Sync visible text when the value changes from outside (e.g. couples-mode
-  // auto-adjust) — but not while the user is actively typing in this field.
+  // auto-adjust) - but not while the user is actively typing in this field.
   useEffect(() => {
     if (document.activeElement !== inputRef.current) setText(String(value ?? ''));
   }, [value]);

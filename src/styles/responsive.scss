@@ -1,5 +1,5 @@
 /* ============================================================
-   SastiTripsWale v2.0 — Responsive CSS
+   SastiTripsWale v2.0 - Responsive CSS
    ============================================================ */
 
 /* ── Tablet (≤ 1024px) ── */
@@ -20,6 +20,18 @@
 
 /* ── Mobile (≤ 768px) ── */
 @media (max-width: 768px) {
+  /* Touch scrolling doesn't need a visible scrollbar track/thumb the way a
+     mouse-driven desktop does - hide them everywhere on mobile (page body,
+     modals, chat, tables, admin views, etc.) rather than chasing down each
+     scrollable container's own scrollbar rule one at a time. */
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Everything below is sized in rem, so scaling the root down here
      shrinks all type (and anything else keyed off it) proportionally
      instead of needing a per-component override. */
@@ -28,10 +40,10 @@
   }
 
   section {
-    padding: 64px 0;
+    padding: 48px 0;
   }
 
-  /* Footer is a lot of scroll for a phone — keep it only on the homepage,
+  /* Footer is a lot of scroll for a phone - keep it only on the homepage,
      right above the fixed bottom-nav's Join/Login entry. */
   .footer-wrap {
     display: none;
@@ -42,11 +54,40 @@
   }
 
   .container {
-    padding: 0 18px;
+    padding: 0 14px;
+  }
+
+  .trip-card-body,
+  .member-card,
+  .modal {
+    padding: 20px;
+  }
+
+  .modal-overlay {
+    padding: 14px;
+  }
+
+  // The 200px fixed image height + desktop-scale headings make each card
+  // eat most of a phone screen - trim both so more of the list is visible
+  // without scrolling past a single card.
+  .trip-card-img-wrap {
+    height: 150px;
+  }
+
+  .trip-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .trip-price {
+    font-size: 1.2rem;
   }
 
   .nav-links {
     display: none;
+  }
+
+  .nav-mobile-actions {
+    display: flex;
   }
 
   .nav-bell-btn {
@@ -58,7 +99,7 @@
   }
 
   body {
-    padding-bottom: 72px;
+    padding-bottom: 60px;
   }
 
   .bottom-nav {
@@ -66,7 +107,7 @@
   }
 
   // .auth-wrap fills a full 100vh on top of body's own 72px reserved for
-  // the fixed bottom-nav — that combination is taller than the viewport,
+  // the fixed bottom-nav - that combination is taller than the viewport,
   // forcing a scroll to reveal nothing but blank space. Reclaim it here.
   .auth-wrap {
     min-height: calc(100vh - 72px);
@@ -96,8 +137,19 @@
   }
 
   .page-hero {
-    padding: 108px 0 52px;
-    min-height: 250px;
+    padding: 88px 0 36px;
+    min-height: 220px;
+  }
+
+  // .page-hero already adds bottom padding - this section immediately
+  // follows it on the Trips page, so its own top padding just doubles up
+  // the gap on a short mobile screen.
+  .trips-section {
+    padding-top: 0px;
+  }
+
+  .promo-banner {
+    margin: 12px 0;
   }
 
   .page-hero-title {
@@ -106,6 +158,19 @@
 
   .section-title {
     font-size: clamp(1.7rem, 5vw, 2.5rem);
+  }
+
+  // Buttons sized for a mouse-driven desktop layout read as oversized once
+  // most of the screen is a thumb-width column - scale the whole family
+  // down a notch for every mobile width, not just the smallest phones.
+  .btn {
+    padding: 11px 22px;
+    font-size: 0.85rem;
+  }
+
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.76rem;
   }
 
   .btn-lg {
@@ -125,7 +190,11 @@
   }
 
   .container {
-    padding: 0 14px;
+    padding: 0 12px;
+  }
+
+  section {
+    padding: 40px 0;
   }
 
   .filter-chips {
@@ -138,12 +207,31 @@
   }
 
   .btn {
-    padding: 11px 22px;
-    font-size: 0.85rem;
+    padding: 10px 18px;
+    font-size: 0.82rem;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
+
+  .btn-lg {
+    padding: 13px 26px;
+    font-size: 0.9rem;
+  }
+
+  .trip-card-body,
+  .member-card {
+    padding: 16px;
+  }
+
+  .trip-card-img-wrap {
+    height: 130px;
   }
 
   .modal {
-    padding: 24px;
+    padding: 18px;
     border-radius: var(--r-lg);
   }
 }

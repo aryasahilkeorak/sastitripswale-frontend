@@ -140,7 +140,7 @@ export default function AdminGallery() {
                 <div style={{ minWidth: 0 }}>
                   {p.caption && <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{p.caption}</div>}
                   <div className="text-muted" style={{ fontSize: '0.72rem' }}>
-                    Uploaded by {p.user?.fullName || '—'} · {timeAgo(p.createdAt)}
+                    Uploaded by {p.user?.fullName || '-'} · {timeAgo(p.createdAt)}
                   </div>
                   <span className="badge badge-cyan" style={{ marginTop: 4 }}>{p.category}</span>
                 </div>

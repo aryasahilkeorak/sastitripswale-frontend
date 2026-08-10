@@ -13,7 +13,7 @@ function dmPartner(members, meId) {
   return members.find((m) => String(m._id) !== String(meId)) || null;
 }
 
-// Admins/superadmins chat as official support, not as themselves — a member
+// Admins/superadmins chat as official support, not as themselves - a member
 // talking to "support" shouldn't see an individual admin's name or personal
 // photo.
 const SUPPORT_NAME = 'SastiTripsWale Support';

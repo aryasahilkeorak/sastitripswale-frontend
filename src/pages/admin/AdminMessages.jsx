@@ -33,7 +33,7 @@ function ContactQueries() {
 
   // Opens (or starts) a direct chat with the sender, so support can reply
   // in-app instead of by email. Only possible if they submitted the form
-  // while logged in — otherwise there's no account to message.
+  // while logged in - otherwise there's no account to message.
   const replyInChat = async (m) => {
     setReplyBusy(m._id);
     try {
@@ -84,7 +84,7 @@ function ContactQueries() {
                 <span className="text-muted" style={{ fontSize: '0.72rem' }}>{timeAgo(m.createdAt)}</span>
               </div>
               <p className="text-muted" style={{ fontSize: '0.8rem', margin: '4px 0' }}>
-                {m.email || '—'}{m.mobile ? ` · ${m.mobile}` : ''}
+                {m.email || '-'}{m.mobile ? ` · ${m.mobile}` : ''}
               </p>
               <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{m.message}</p>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -96,7 +96,7 @@ function ContactQueries() {
                     {replyBusy === m._id ? <span className="spinner" /> : <i className="fa-solid fa-comment-dots" />} Reply in chat
                   </button>
                 ) : (
-                  <span className="btn btn-sm btn-outline" style={{ opacity: 0.5, cursor: 'not-allowed' }} title="No member account matches this sender's email/mobile — nothing to chat with">
+                  <span className="btn btn-sm btn-outline" style={{ opacity: 0.5, cursor: 'not-allowed' }} title="No member account matches this sender's email/mobile - nothing to chat with">
                     <i className="fa-solid fa-comment-slash" /> No linked account
                   </span>
                 )}
@@ -158,7 +158,7 @@ function UserReports() {
                 <span className="text-muted" style={{ fontSize: '0.72rem' }}>{timeAgo(r.createdAt)}</span>
               </div>
               <p className="text-muted" style={{ fontSize: '0.8rem', margin: '4px 0' }}>
-                Reported by {r.reporter?.fullName || 'a member'} ({r.reporter?.email || '—'})
+                Reported by {r.reporter?.fullName || 'a member'} ({r.reporter?.email || '-'})
               </p>
               <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{r.reason}</p>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>

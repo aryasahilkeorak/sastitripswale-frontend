@@ -1,5 +1,5 @@
 // Imported into the Workbox-generated service worker (see vite.config.js
-// `workbox.importScripts`) purely to add push notification support —
+// `workbox.importScripts`) purely to add push notification support -
 // left as plain JS so it works regardless of the PWA build strategy.
 self.addEventListener('push', (event) => {
   let data = {};

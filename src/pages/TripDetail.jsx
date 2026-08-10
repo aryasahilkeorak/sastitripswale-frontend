@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, rupee, dateRange, tripDays, routeLabel, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK } from '../lib/helpers.js';
+import { imageUrl, rupee, dateRange, tripDays, routeLabel, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK, BUDGET_INCLUDES_LABEL } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
+import Stars from '../components/Stars.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
 
 export default function TripDetail() {
@@ -24,6 +25,11 @@ export default function TripDetail() {
   const photoInputRef = useRef(null);
   const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
 
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHover, setReviewHover] = useState(0);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [reviewBusy, setReviewBusy] = useState(false);
+
   const load = () => {
     setLoading(true);
     api
@@ -33,6 +39,15 @@ export default function TripDetail() {
       .finally(() => setLoading(false));
   };
   useEffect(load, [id]);
+
+  // Seed the review form from the member's existing review (if any) once
+  // the trip loads, so re-submitting edits it instead of starting blank.
+  useEffect(() => {
+    if (trip?.myReview) {
+      setReviewRating(trip.myReview.rating);
+      setReviewMessage(trip.myReview.message);
+    }
+  }, [trip?.myReview]);
 
   const isFreshRequest = !trip?.requestStatus || trip.requestStatus === 'rejected';
 
@@ -93,6 +108,20 @@ export default function TripDetail() {
     }
   };
 
+  const submitReview = async (e) => {
+    e.preventDefault();
+    setReviewBusy(true);
+    try {
+      await api.post(`/trips/${id}/reviews`, { rating: reviewRating, message: reviewMessage });
+      toast('fa-solid fa-star', trip?.myReview ? 'Review updated!' : 'Review posted - thanks for sharing!');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
   const changeStatus = async (status) => {
     try {
       await api.put(`/trips/${id}`, { status });
@@ -122,7 +151,7 @@ export default function TripDetail() {
   const photos = (trip.photos || []).map((p) => imageUrl(p.photoUrl));
   const isOrganizer = user && trip.organizer && String(trip.organizer._id) === String(user.id);
   const isAdminViewer = user?.role === 'admin' || user?.role === 'superadmin';
-  // Strictly trip members only (not admins) — matches the backend check.
+  // Strictly trip members only (not admins) - matches the backend check.
   const canAddPhoto = Boolean(isOrganizer || trip.requestStatus === 'accepted');
   const coupleSafetyEntries = isAdminViewer
     ? [
@@ -152,6 +181,11 @@ export default function TripDetail() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
                 {trip.vehicleType && <span className="badge badge-magenta">{trip.vehicleType}</span>}
                 {trip.isCouplesMode && <span className="badge badge-magenta"><i className="fa-solid fa-heart" /> Couples Mode</span>}
+                {trip.genderPreference && trip.genderPreference !== 'Any' && (
+                  <span className="badge badge-magenta">
+                    <i className={trip.genderPreference === 'Male' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'} /> {trip.genderPreference} only
+                  </span>
+                )}
                 {days && <span className="badge badge-gold">{days} Days</span>}
                 <span className={`badge ${trip.status === 'completed' ? 'badge-green' : 'badge-fire'}`}>{trip.status}</span>
               </div>
@@ -181,7 +215,7 @@ export default function TripDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted">No one has joined yet — be the first!</p>
+                <p className="text-muted">No one has joined yet - be the first!</p>
               )}
 
               {/* Expenses (completed) */}
@@ -194,7 +228,7 @@ export default function TripDetail() {
                     <tbody>
                       {trip.expenses.map((ex, i) => (
                         <tr key={i}>
-                          <td style={{ textTransform: 'capitalize' }}>{ex.category}{ex.description ? ` — ${ex.description}` : ''}</td>
+                          <td style={{ textTransform: 'capitalize' }}>{ex.category}{ex.description ? ` - ${ex.description}` : ''}</td>
                           <td>{rupee(ex.amount)}</td>
                         </tr>
                       ))}
@@ -203,7 +237,7 @@ export default function TripDetail() {
                 </>
               )}
 
-              {/* Photos — only the organizer, an accepted co-traveler, or an
+              {/* Photos - only the organizer, an accepted co-traveler, or an
                   admin can add to a trip's gallery. */}
               {(photos.length > 0 || canAddPhoto) && (
                 <>
@@ -233,19 +267,96 @@ export default function TripDetail() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted">No photos yet — be the first to add one!</p>
+                    <p className="text-muted">No photos yet - be the first to add one!</p>
+                  )}
+                </>
+              )}
+
+              {/* Reviews - same eligibility as photos, but only once the
+                  trip is actually over. */}
+              {(trip.reviews?.length > 0 || trip.canReview) && (
+                <>
+                  <h3 className="section-title" style={{ fontSize: '1.3rem', margin: '28px 0 14px' }}>
+                    Traveler <span className="highlight">reviews</span>
+                  </h3>
+
+                  {trip.canReview && (
+                    <form className="card mb-3" style={{ padding: 16 }} onSubmit={submitReview}>
+                      <div className="form-group">
+                        <label>{trip.myReview ? 'Update your rating' : 'Your rating'}</label>
+                        <div className="star-rating" onMouseLeave={() => setReviewHover(0)}>
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              type="button"
+                              key={n}
+                              className={`star-btn${n <= (reviewHover || reviewRating) ? ' selected' : ''}`}
+                              onMouseEnter={() => setReviewHover(n)}
+                              onClick={() => setReviewRating(n)}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Your review *</label>
+                        <textarea
+                          className="form-input"
+                          required
+                          minLength={3}
+                          maxLength={2000}
+                          value={reviewMessage}
+                          onChange={(e) => setReviewMessage(e.target.value)}
+                          placeholder="How was the trip? Would you travel with this group again?"
+                        />
+                      </div>
+                      <button className="btn btn-primary btn-sm" disabled={reviewBusy}>
+                        {reviewBusy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />}
+                        {trip.myReview ? 'Update review' : 'Post review'}
+                      </button>
+                    </form>
+                  )}
+
+                  {trip.reviews?.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {trip.reviews.map((r) => (
+                        <div className="card" style={{ padding: 16 }} key={r._id}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                            <img
+                              src={imageUrl(r.user?.avatarUrl, AVATAR_FALLBACK)}
+                              alt=""
+                              style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }}
+                              onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{r.user?.fullName || 'Traveler'}</div>
+                              <div className="text-muted" style={{ fontSize: '0.72rem' }}>{timeAgo(r.createdAt)}</div>
+                            </div>
+                            <Stars value={r.rating} />
+                          </div>
+                          <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', lineHeight: 1.7, margin: 0 }}>{r.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No reviews yet - be the first to share how it went!</p>
                   )}
                 </>
               )}
             </div>
 
-            {/* RIGHT — sticky action card (static on mobile) */}
+            {/* RIGHT - sticky action card (static on mobile) */}
             <div className="card trip-side-card" style={{ padding: 16 }}>
               <div className="text-muted" style={{ fontSize: '0.75rem' }}>{trip.isCouplesMode ? 'Per couple' : 'Per head'}</div>
               <div className="trip-price" style={{ fontSize: '2rem' }}>{rupee(trip.isCouplesMode ? trip.budgetPerHead * 2 : trip.budgetPerHead)}</div>
+              {trip.budgetIncludes && BUDGET_INCLUDES_LABEL[trip.budgetIncludes] && (
+                <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                  <i className="fa-solid fa-circle-info" /> Includes: {BUDGET_INCLUDES_LABEL[trip.budgetIncludes]}
+                </p>
+              )}
               {trip.isCouplesMode && (
                 <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
-                  Fuel &amp; toll split with the host couple — cheaper &amp; comfier than public transport.
+                  Fuel &amp; toll split with the host couple - cheaper &amp; comfier than public transport.
                 </p>
               )}
 
@@ -296,7 +407,7 @@ export default function TripDetail() {
                 >
                   {busy ? <span className="spinner" /> : <i className={trip.requestStatus === 'accepted' ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} />}
                   {trip.requestStatus === 'accepted'
-                    ? ' Joined — leave'
+                    ? ' Joined - leave'
                     : trip.requestStatus === 'pending'
                     ? ' Request pending'
                     : trip.requestStatus === 'rejected'

@@ -1,7 +1,7 @@
 /* ============================================================
-   SastiTripsWale — Base styles
+   SastiTripsWale - Base styles
    Brand: Navy × Orange. Color/font/shape tokens live in
-   abstracts/ and are compiled into :root by base/_root.scss —
+   abstracts/ and are compiled into :root by base/_root.scss -
    see that file for the full token table.
    ============================================================ */
 
@@ -285,9 +285,9 @@ select {
   right: 0;
   z-index: 99999;
   padding-top: max(18px, var(--safe-t));
-  padding-right: max(28px, var(--safe-r));
+  padding-right: max(16px, var(--safe-r));
   padding-bottom: 18px;
-  padding-left: max(28px, var(--safe-l));
+  padding-left: max(16px, var(--safe-l));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -313,9 +313,9 @@ select {
 
 .navbar.scrolled {
   padding-top: max(14px, var(--safe-t));
-  padding-right: max(28px, var(--safe-r));
+  padding-right: max(16px, var(--safe-r));
   padding-bottom: 14px;
-  padding-left: max(28px, var(--safe-l));
+  padding-left: max(16px, var(--safe-l));
 }
 
 .nav-brand {
@@ -351,7 +351,7 @@ select {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   position: relative;
   z-index: 1;
 }
@@ -435,15 +435,15 @@ select {
 }
 
 // Keeps the bell and hamburger a fixed 8px apart regardless of how much
-// space .navbar's own space-between leaves on the right — both are
+// space .navbar's own space-between leaves on the right - both are
 // display:none on desktop, so this wrapper is invisible there too.
 .nav-mobile-actions {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 8px;
 }
 
-// Mobile-only bell — desktop already shows the unread count on the avatar
+// Mobile-only bell - desktop already shows the unread count on the avatar
 // menu (.nav-avatar-btn), which .nav-links hides below the same breakpoint.
 .nav-bell-btn {
   display: none;
@@ -506,17 +506,27 @@ select {
   transform: translateY(0);
 }
 
-.mobile-menu a {
+.mobile-menu a,
+.mobile-menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
   padding: 13px 16px;
   border-radius: var(--r);
   font-size: 1rem;
   font-weight: 500;
+  font-family: inherit;
   color: var(--text-2);
+  background: none;
   transition: all var(--t);
   border: 1px solid transparent;
+  cursor: pointer;
 }
 
-.mobile-menu a {
+.mobile-menu a,
+.mobile-menu button {
   @include hover-only {
     color: var(--text);
     background: var(--glass-2);
@@ -525,7 +535,8 @@ select {
 }
 
 .mobile-menu a:active,
-.mobile-menu a.active {
+.mobile-menu a.active,
+.mobile-menu button:active {
   color: var(--text);
   background: var(--glass-2);
   border-color: var(--glass-bdr-2);
@@ -538,7 +549,8 @@ select {
   justify-content: center;
   width: 38px;
   height: 38px;
-  margin-right: 12px;
+  margin-left: 8px;
+  margin-right: 16px;
   border: 0;
   background: transparent;
   color: var(--text-2);
@@ -834,6 +846,13 @@ section {
   border-radius: var(--r-pill);
   font-weight: 700;
   font-size: 0.9rem;
+  // Buttons render as <a>/<span> as often as <button> in this codebase -
+  // anchors/spans inherit body's line-height: 1.65 (meant for paragraph
+  // text), while <button>s don't inherit font metrics at all by default.
+  // Without pinning this, a .btn Link ends up visibly taller than a
+  // same-size .chip <button> sitting right next to it. line-height: 1 lets
+  // align-items: center do the vertical centering instead.
+  line-height: 1;
   border: none;
   transition: all var(--t) var(--ease-spring);
   white-space: nowrap;
@@ -1063,7 +1082,7 @@ section {
   color: var(--text-3);
 }
 
-/* ── Custom select (CustomSelect.jsx) — fully custom dropdown, no
+/* ── Custom select (CustomSelect.jsx) - fully custom dropdown, no
    native <select> involved, so the arrow stays put while open and the
    option panel can be themed completely. ── */
 .custom-select {
@@ -1121,7 +1140,7 @@ section {
   transition: transform var(--t), color var(--t);
 }
 
-/* The whole point — the chevron stays visible (and flips) while open,
+/* The whole point - the chevron stays visible (and flips) while open,
    unlike a native <select> which hides/replaces its own arrow. */
 .custom-select-trigger.open .custom-select-arrow {
   transform: rotate(180deg);
@@ -1129,7 +1148,9 @@ section {
 }
 
 .custom-select-panel {
-  z-index: 9500;
+  // Above .modal-overlay - a select inside an open modal (e.g. "Add a
+  // vehicle") must drop down over it, not behind it.
+  z-index: 100500;
   overflow-y: auto;
   background: var(--surface-2);
   border: 1px solid var(--glass-bdr-2);
@@ -1179,7 +1200,7 @@ section {
   font-size: 0.75rem;
 }
 
-/* Compact variant — table-row selects (admin panel) */
+/* Compact variant - table-row selects (admin panel) */
 .custom-select.sm .custom-select-trigger {
   padding: 6px 26px 6px 10px;
   font-size: 0.78rem;
@@ -1219,7 +1240,26 @@ section {
   box-shadow: 0 0 16px rgba(236, 72, 153, 0.25);
 }
 
-/* Compact variant — inline warnings/notes in tighter spaces (trip cards, sidebars) */
+/* ── Trip cost estimator (PlanTrip.jsx/EditTrip.jsx) - same recipe as
+   .couples-safety-box, fire-themed instead of pink. ── */
+.cost-estimator-box {
+  margin: 24px 0;
+  padding: 20px 22px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg, rgba($orange-500, 0.1), rgba($orange-500, 0.03));
+  border: 1px solid rgba($orange-500, 0.25);
+}
+
+.cost-estimator-result {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--glass-bdr);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Compact variant - inline warnings/notes in tighter spaces (trip cards, sidebars) */
 .couples-safety-alert {
   margin: 10px 0;
   padding: 12px 14px;
@@ -1242,7 +1282,7 @@ section {
   flex-shrink: 0;
 }
 
-/* ── Custom date picker (CustomDatePicker.jsx) — same trigger/panel
+/* ── Custom date picker (CustomDatePicker.jsx) - same trigger/panel
    recipe as .custom-select-*, so it reads as part of the same system. ── */
 .date-picker {
   position: relative;
@@ -1289,7 +1329,8 @@ section {
 }
 
 .date-picker-panel {
-  z-index: 9500;
+  // Same reasoning as .custom-select-panel - must sit above an open modal.
+  z-index: 100500;
   background: var(--surface-2);
   border: 1px solid var(--glass-bdr-2);
   border-radius: var(--r);
@@ -1454,7 +1495,7 @@ section {
   font-family: var(--font-body);
 }
 
-/* ── Chip list input (ChipListInput.jsx) — via-stops editor ── */
+/* ── Chip list input (ChipListInput.jsx) - via-stops editor ── */
 .chip-input-list {
   display: flex;
   gap: 8px;
@@ -1644,6 +1685,10 @@ textarea.form-input {
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
   padding: 8px 18px;
   border-radius: var(--r-pill);
   font-size: 0.8rem;
@@ -1845,7 +1890,9 @@ textarea.form-input {
   position: fixed;
   top: 80px;
   right: 20px;
-  z-index: 9100;
+  // Above .modal-overlay so a toast can still confirm an action taken
+  // inside an open modal.
+  z-index: 100100;
   background: var(--surface-2);
   border: 1px solid var(--glass-bdr-2);
   border-radius: var(--r);
@@ -1877,7 +1924,9 @@ textarea.form-input {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  // Above .navbar's 99999 - otherwise the fixed header renders on top of
+  // any open modal instead of the modal covering the whole page.
+  z-index: 100000;
   background: rgba($navy-950, 0.85);
   backdrop-filter: blur(12px);
   display: flex;
@@ -2037,6 +2086,15 @@ textarea.form-input {
   transition: transform 0.6s var(--ease-out);
 }
 
+// Badges here sit directly on top of the trip photo instead of the usual
+// dark card surface - their normal translucent tint reads fine on navy but
+// washes out against a bright sky, so give them a solid dark backing.
+.trip-card-img-wrap .badge {
+  background: rgba(6, 7, 13, 0.72);
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+
 .trip-card {
   @include hover-only {
     .trip-card-img {
@@ -2065,6 +2123,43 @@ textarea.form-input {
   font-size: 1.4rem;
   color: var(--fire-2);
   letter-spacing: -0.03em;
+}
+
+.trip-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-bdr);
+}
+
+.trip-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+// Narrow trip cards (e.g. the 260px mobile deal-carousel item) don't have
+// room for price + two pill buttons on one line - stack the actions under
+// the price instead of letting them crowd the right edge.
+@include below($bp-md) {
+  .trip-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trip-card-actions {
+    justify-content: stretch;
+
+    .btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
 }
 
 /* ── Seats progress bar ── */

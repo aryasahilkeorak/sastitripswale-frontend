@@ -64,7 +64,7 @@ export default function AdminOverview() {
           <div className="table-wrap">
             <table className="data-table">
               <thead><tr><th>Name</th><th>City</th><th>Joined</th></tr></thead>
-              <tbody>{data.recentSignups.map((u) => <tr key={u.id}><td data-label="Name">{u.fullName}</td><td data-label="City">{u.city || '—'}</td><td data-label="Joined">{formatDate(u.createdAt)}</td></tr>)}</tbody>
+              <tbody>{data.recentSignups.map((u) => <tr key={u.id}><td data-label="Name">{u.fullName}</td><td data-label="City">{u.city || '-'}</td><td data-label="Joined">{formatDate(u.createdAt)}</td></tr>)}</tbody>
             </table>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function AdminOverview() {
             <div className="table-wrap">
               <table className="data-table">
                 <thead><tr><th>User</th><th>Amount</th><th>Coupon</th><th>When</th></tr></thead>
-                <tbody>{data.recentPayments.map((p) => <tr key={p._id}><td data-label="User">{p.user?.fullName || '—'}</td><td data-label="Amount">{paiseToRupee(p.amount)}</td><td data-label="Coupon">{p.couponUsed ? <span className="badge badge-cyan">{p.couponUsed}</span> : '—'}</td><td data-label="When">{timeAgo(p.createdAt)}</td></tr>)}</tbody>
+                <tbody>{data.recentPayments.map((p) => <tr key={p._id}><td data-label="User">{p.user?.fullName || '-'}</td><td data-label="Amount">{paiseToRupee(p.amount)}</td><td data-label="Coupon">{p.couponUsed ? <span className="badge badge-cyan">{p.couponUsed}</span> : '-'}</td><td data-label="When">{timeAgo(p.createdAt)}</td></tr>)}</tbody>
               </table>
             </div>
           </div>

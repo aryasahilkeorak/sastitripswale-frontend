@@ -3,6 +3,7 @@ import { api } from '../lib/api.js';
 import PageHero from '../components/PageHero.jsx';
 import MemberCard from '../components/MemberCard.jsx';
 import Loader from '../components/Loader.jsx';
+import PromoBanner from '../components/PromoBanner.jsx';
 
 const FILTERS = [
   { key: 'all', label: 'All', params: {} },
@@ -19,7 +20,7 @@ export default function Members() {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
-  // Live search — debounced so every keystroke doesn't fire a request.
+  // Live search - debounced so every keystroke doesn't fire a request.
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
@@ -45,7 +46,7 @@ export default function Members() {
         sub="Connect with verified bikers, car travelers and backpackers across India."
       />
 
-      <section style={{ paddingTop: 40 }}>
+      <section style={{ paddingTop: 40, paddingBottom: 40 }}>
         <div className="container">
           <form
             className="search-bar"
@@ -80,6 +81,13 @@ export default function Members() {
               ))}
             </div>
           )}
+
+          <PromoBanner
+            icon="fa-solid fa-user-plus"
+            message="Know a traveler who'd love this community? Invite them and earn referral rewards."
+            cta="Invite friends"
+            to="/referrals"
+          />
         </div>
       </section>
     </>

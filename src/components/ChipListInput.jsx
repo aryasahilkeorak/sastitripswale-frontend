@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import PlaceAutocomplete from './PlaceAutocomplete.jsx';
 
-// Ordered, removable chip list — used for a trip's via-stops.
+// Ordered, removable chip list - used for a trip's via-stops.
 export default function ChipListInput({ values = [], onChange, placeholder = 'Add a stop…', max = 6 }) {
   const [draft, setDraft] = useState('');
 
-  const add = () => {
-    const v = draft.trim();
+  const add = (raw) => {
+    const v = (raw ?? draft).trim();
     if (!v || values.length >= max) return;
     onChange?.([...values, v]);
     setDraft('');
@@ -29,11 +30,12 @@ export default function ChipListInput({ values = [], onChange, placeholder = 'Ad
       )}
       {values.length < max && (
         <div className="chip-input-row">
-          <input
+          <PlaceAutocomplete
             className="form-input"
             value={draft}
             placeholder={placeholder}
             onChange={(e) => setDraft(e.target.value)}
+            onSelect={(s) => add(s.label)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -41,7 +43,7 @@ export default function ChipListInput({ values = [], onChange, placeholder = 'Ad
               }
             }}
           />
-          <button type="button" className="btn btn-outline btn-sm chip-input-add" onClick={add} disabled={!draft.trim()}>
+          <button type="button" className="btn btn-outline btn-sm chip-input-add" onClick={() => add()} disabled={!draft.trim()}>
             <i className="fa-solid fa-plus" /> Add stop
           </button>
         </div>

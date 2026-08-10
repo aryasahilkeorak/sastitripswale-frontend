@@ -17,7 +17,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [detailId, setDetailId] = useState(null);
 
-  // Live search — debounced so every keystroke doesn't fire a request.
+  // Live search - debounced so every keystroke doesn't fire a request.
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
@@ -73,14 +73,14 @@ export default function AdminUsers() {
                   </td>
                   <td data-label="Email">{u.email}</td>
                   <td data-label="Mobile">{u.mobile}</td>
-                  <td data-label="Paid">{u.membershipPaid ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '—'}</td>
-                  <td data-label="Coupon">{u.couponUsed ? <span className="badge badge-cyan">{u.couponUsed}</span> : '—'}</td>
+                  <td data-label="Paid">{u.membershipPaid ? <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> : '-'}</td>
+                  <td data-label="Coupon">{u.couponUsed ? <span className="badge badge-cyan">{u.couponUsed}</span> : '-'}</td>
                   <td data-label="Verified">
                     {u.verificationLevel && u.verificationLevel !== 'none' ? (
                       <span className={`badge ${u.verificationLevel === 'vehicle_verified' ? 'badge-fire' : 'badge-green'}`} style={{ fontSize: '0.62rem' }}>
                         <i className={TIER_ICON[u.verificationLevel]} /> {TIER_LABEL[u.verificationLevel]}
                       </span>
-                    ) : '—'}
+                    ) : '-'}
                   </td>
                   <td data-label="Status"><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'active' : 'banned'}</span></td>
                   <td data-label="Actions">
@@ -153,7 +153,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
         documents: x.documents.map((doc) => (doc._id === docId ? data.document : doc)),
         user: data.verificationLevel ? { ...x.user, verificationLevel: data.verificationLevel, isVerified: data.verificationLevel !== 'none' } : x.user,
       }));
-      toast(action === 'verify' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark', action === 'verify' ? 'Document verified' : 'Document rejected — member can re-upload it');
+      toast(action === 'verify' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark', action === 'verify' ? 'Document verified' : 'Document rejected - member can re-upload it');
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
     }
@@ -162,7 +162,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
   const vehicleLabel = (doc) => {
     if (doc.docType !== 'rc' || !doc.vehicle) return '';
     const v = d?.vehicles?.find((x) => String(x.id) === String(doc.vehicle));
-    return v ? ` — ${v.regNumber}` : '';
+    return v ? ` - ${v.regNumber}` : '';
   };
 
   return (
@@ -212,7 +212,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <div className="member-tags mt-2" style={{ justifyContent: 'flex-start' }}>
                 {d.vehicles.map((v) => (
                   <span key={v.id} className={`badge ${DOC_STATUS_BADGE[v.status] || 'badge-gold'}`}>
-                    <i className="fa-solid fa-car" /> {v.vehicleType}{v.vehicleModel ? ` · ${v.vehicleModel}` : ''} — {v.regNumber} ({v.status})
+                    <i className="fa-solid fa-car" /> {v.vehicleType}{v.vehicleModel ? ` · ${v.vehicleModel}` : ''} - {v.regNumber} ({v.status})
                   </span>
                 ))}
               </div>
@@ -257,11 +257,11 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
             </div>
           )}
 
-          {/* Couples Mode partner safety info — mobile + gov ID, collected once in the member's own profile */}
+          {/* Couples Mode partner safety info - mobile + gov ID, collected once in the member's own profile */}
           {(u.partnerMobile || u.partnerDocUrl) && (
             <>
               <h4 className="mt-3 mb-2" style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>
-                <i className="fa-solid fa-heart" style={{ color: '#ec4899' }} /> Couples Mode — Partner Safety Info
+                <i className="fa-solid fa-heart" style={{ color: '#ec4899' }} /> Couples Mode - Partner Safety Info
               </h4>
               <Row label="Partner's mobile" value={u.partnerMobile} />
               {u.partnerDocUrl && (
@@ -280,7 +280,7 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <div className="table-wrap">
                 <table className="data-table">
                   <thead><tr><th>Amount</th><th>Status</th><th>Coupon</th><th>When</th></tr></thead>
-                  <tbody>{d.payments.map((p) => <tr key={p._id}><td>{paiseToRupee(p.amount)}</td><td>{p.status}</td><td>{p.couponUsed || '—'}</td><td>{timeAgo(p.createdAt)}</td></tr>)}</tbody>
+                  <tbody>{d.payments.map((p) => <tr key={p._id}><td>{paiseToRupee(p.amount)}</td><td>{p.status}</td><td>{p.couponUsed || '-'}</td><td>{timeAgo(p.createdAt)}</td></tr>)}</tbody>
                 </table>
               </div>
             </>

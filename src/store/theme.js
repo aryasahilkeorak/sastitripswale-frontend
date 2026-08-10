@@ -1,4 +1,4 @@
-// Zustand theme store, persisted to localStorage. Dark is the default —
+// Zustand theme store, persisted to localStorage. Dark is the default -
 // light is opt-in. index.html has a small inline script that reads the
 // same persisted value before first paint, so there's no flash of the
 // wrong theme on reload.

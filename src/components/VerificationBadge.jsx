@@ -1,6 +1,6 @@
 // Renders the right combination of Founder / verified-tier badge for a
 // member. The Founder (superadmin) always gets the gold crown badge PLUS a
-// gold verified badge by default — no documents required.
+// gold verified badge by default - no documents required.
 export default function VerificationBadge({ role, verificationLevel, isVerified, block = false }) {
   const isFounder = role === 'superadmin';
   const El = block ? 'div' : 'span';

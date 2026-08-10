@@ -3,7 +3,7 @@ import { useAuth } from '../store/auth.js';
 import ProfileEditForm from '../components/ProfileEditForm.jsx';
 
 // A dedicated full-page editor (Instagram-style) instead of an inline
-// dashboard tab or modal — reached from the "Edit profile" button on the
+// dashboard tab or modal - reached from the "Edit profile" button on the
 // Dashboard and a member's own profile page.
 export default function EditProfile() {
   const navigate = useNavigate();

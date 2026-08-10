@@ -108,7 +108,7 @@ export default function AdminAdmins() {
 
         {form.role === 'admin' ? (
           <div className="form-group">
-            <label>Permissions — what this admin can manage</label>
+            <label>Permissions - what this admin can manage</label>
             <PermissionGrid
               value={form.permissions}
               onChange={(permissions) => setForm((f) => ({ ...f, permissions }))}
@@ -149,7 +149,7 @@ export default function AdminAdmins() {
                     </td>
                     <td data-label="Since">{formatDate(a.createdAt)}</td>
                     <td data-label="Manage">
-                      {self ? <span className="text-muted" style={{ fontSize: '0.72rem' }}>—</span> : (
+                      {self ? <span className="text-muted" style={{ fontSize: '0.72rem' }}>-</span> : (
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                           {a.role === 'admin' && (
                             <button className="btn btn-sm btn-outline" onClick={() => openPermEditor(a)} title="Edit permissions">
@@ -175,7 +175,7 @@ export default function AdminAdmins() {
         </div>
       </div>
 
-      <Modal open={Boolean(permEditing)} onClose={() => setPermEditing(null)} title={permEditing ? `Permissions — ${permEditing.fullName}` : ''}>
+      <Modal open={Boolean(permEditing)} onClose={() => setPermEditing(null)} title={permEditing ? `Permissions - ${permEditing.fullName}` : ''}>
         {permEditing && (
           <>
             <PermissionGrid value={permDraft} onChange={setPermDraft} />

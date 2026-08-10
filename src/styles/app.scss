@@ -1,5 +1,5 @@
 /* ============================================================
-   SastiTripsWale — React app styles.
+   SastiTripsWale - React app styles.
    Home-page sections (ported from the original inline <style>)
    + styles for the new React pages. Reuses the design tokens
    from style.scss (abstracts/ + base/_root.scss).
@@ -55,7 +55,10 @@
   position: fixed;
   top: max(80px, var(--safe-t));
   right: max(20px, var(--safe-r));
-  z-index: 9100;
+  // This is the actual fixed positioned container - its own z-index gates
+  // everything inside it regardless of any z-index set on the individual
+  // .toast elements. Must clear .navbar's 99999.
+  z-index: 100100;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -85,7 +88,7 @@
   }
 }
 
-/* Pull-to-refresh indicator — see lib/usePullToRefresh.js. Height is driven
+/* Pull-to-refresh indicator - see lib/usePullToRefresh.js. Height is driven
    inline (pullDistance/refreshing), this just styles what sits inside it. */
 .ptr-indicator {
   display: flex;
@@ -427,11 +430,11 @@
   font-family: var(--font-display);
 }
 
-/* ── Home search widget — OTA-style "search box over the banner" ── */
+/* ── Home search widget - OTA-style "search box over the banner" ── */
 .hsw-wrap {
   position: relative;
   z-index: 5;
-  // Was -64px — deep enough to fully cover .hero-stat-strip (~60px tall),
+  // Was -64px - deep enough to fully cover .hero-stat-strip (~60px tall),
   // leaving no visible gap/content between the hero and the search card.
   // A smaller overlap keeps the "floating card" effect while leaving the
   // stat strip visible and some breathing room above the card.
@@ -547,7 +550,7 @@
     padding: 16px;
   }
 
-  /* One field per row on phones — two cramped ~140px columns are hard to
+  /* One field per row on phones - two cramped ~140px columns are hard to
      read/tap, so stack them full-width instead. */
   .hsw-fields {
     gap: 12px;
@@ -560,7 +563,8 @@
   }
 }
 
-/* ── Promo banner — slim OTA-style offer strip, always real content ── */
+
+/* ── Promo banner - slim OTA-style offer strip, always real content ── */
 .promo-banner {
   display: flex;
   align-items: center;
@@ -615,7 +619,7 @@
   }
 }
 
-/* ── Deal carousel — horizontal scroll-snap row of TripCards, the OTA
+/* ── Deal carousel - horizontal scroll-snap row of TripCards, the OTA
    "deals for you" pattern (mobile already scrolls this way; desktop mouse
    users can still drag/scroll it, unlike a plain overflow grid). ── */
 .deal-carousel {
@@ -638,7 +642,7 @@
   }
 }
 
-/* ── Ride search — "prominent card" variant used on Trips.jsx, matching
+/* ── Ride search - "prominent card" variant used on Trips.jsx, matching
    the Home search widget's elevation ── */
 .ride-search-prominent {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
@@ -1312,10 +1316,10 @@
 }
 
 /* ── Shared "plain content page" section (no decorative PageHero above it,
-   so it clears the fixed navbar itself) — Dashboard, TripDetail,
+   so it clears the fixed navbar itself) - Dashboard, TripDetail,
    MemberDetail, Referrals, and the loading/empty states of the detail
    pages all reuse these instead of repeating inline paddingTop.
-   NOTE: named .detail-section (not .app-section) on purpose — .app-section
+   NOTE: named .detail-section (not .app-section) on purpose - .app-section
    is already used inside AppHome.jsx for its inner content blocks, with a
    totally different meaning (30px vertical rhythm, not navbar clearance). ── */
 .detail-section {
@@ -1333,7 +1337,7 @@
 
 @media (max-width: 640px) {
   /* The fixed navbar's own top padding already grows with the notch/Dynamic
-     Island via var(--safe-t) (see .navbar) — add that same inset here too,
+     Island via var(--safe-t) (see .navbar) - add that same inset here too,
      or a tall safe-area pushes the navbar down further than this fixed
      value accounts for, and page content overlaps it underneath. */
   .detail-section {
@@ -1388,7 +1392,7 @@
 }
 
 /* Generous inline card padding (24-36px) reads fine on desktop but eats a lot
-   of vertical space on a phone — opt individual cards into this on top of
+   of vertical space on a phone - opt individual cards into this on top of
    their existing "card" class instead of a blanket .card override (some
    cards intentionally use padding:0/8 for edge-to-edge images/thumbnails). */
 @media (max-width: 640px) {
@@ -1686,7 +1690,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Founder showcase (About page — MNC-style leadership bio) ── */
+/* ── Founder showcase (About page - MNC-style leadership bio) ── */
 .founder-showcase {
   position: relative;
   display: flex;
@@ -1819,7 +1823,7 @@
 
 /* ── Instagram-style member profile ── */
 /* Real-Instagram-style header: a top row of avatar + stats, then the
-   name/bio/links stacked full-width below — not everything crammed
+   name/bio/links stacked full-width below - not everything crammed
    beside a tall avatar. Same shape on mobile and desktop. */
 .ig-header {
   display: flex;
@@ -2026,7 +2030,7 @@
 }
 
 // The "+N more / Show less" toggle sits inline in the same wrapping row as
-// the pills themselves — an accordion control that reads as a horizontal
+// the pills themselves - an accordion control that reads as a horizontal
 // extension of the list rather than a separate stacked button.
 .interest-pill-toggle {
   background: rgba($orange-500, 0.12);
@@ -2110,7 +2114,7 @@
   font-size: 1rem;
 }
 
-/* Unread dot on the notifications tab — the label (and any text badge)
+/* Unread dot on the notifications tab - the label (and any text badge)
    is hidden below 641px, so this is the only unread cue on mobile. */
 .ig-tab-dot {
   position: absolute;
@@ -2151,7 +2155,7 @@
   }
 }
 
-// Member dashboard shell — below $bp-lg this whole block is transparent
+// Member dashboard shell - below $bp-lg this whole block is transparent
 // (the pill row above is the only tab UI, content stacks in normal flow,
 // identical to the old markup). At $bp-lg+ the pill row hides and a
 // persistent left sidebar (mirroring AdminLayout's) takes over.
@@ -2228,7 +2232,7 @@
   align-items: center;
 }
 
-/* "Edit profile" / "Share profile" — flat equal-width pill buttons,
+/* "Edit profile" / "Share profile" - flat equal-width pill buttons,
    the two-button row real Instagram shows under its own profile. */
 .ig-action-row {
   display: flex;
@@ -2333,7 +2337,7 @@
   max-width: 100%;
 }
 
-/* Second card: actions on the left, travel interests on the right —
+/* Second card: actions on the left, travel interests on the right -
    wraps to a stack on narrow screens since it's a flex row. */
 .ig-secondary-card {
   display: flex;
@@ -2366,7 +2370,7 @@
 }
 
 // A horizontal rule replaces the (hidden) vertical divider once the card
-// stacks — without it the button row and the interests section below just
+// stacks - without it the button row and the interests section below just
 // float with no visual separation.
 .ig-h-divider {
   display: none;
@@ -2517,7 +2521,7 @@
 }
 
 /* Delete button on the dashboard's own "My Trips" grid (not shown on the
-   read-only MemberDetail grid) — always visible since touch has no hover. */
+   read-only MemberDetail grid) - always visible since touch has no hover. */
 .ig-tile-delete {
   position: absolute;
   top: 8px;
@@ -2847,7 +2851,7 @@ table.data-table {
 .notif-badge {
   position: absolute;
   // Anchored to .nav-avatar-btn, which has 5px padding around the 34px
-  // avatar for a larger tap target — offset compensates so the badge still
+  // avatar for a larger tap target - offset compensates so the badge still
   // sits at the avatar's visual corner, not the (larger) button's corner.
   top: 2px;
   right: 2px;
@@ -2881,8 +2885,8 @@ table.data-table {
 
 /* Grid items default to min-width: auto, so a non-wrapping horizontal-
    scroll row nested anywhere inside a column (e.g. .filter-chips on
-   PlanTrip's "Popular destinations" card) can force the whole track —
-   and the page — wider than the viewport. Let columns shrink below
+   PlanTrip's "Popular destinations" card) can force the whole track -
+   and the page - wider than the viewport. Let columns shrink below
    their content's intrinsic width so nested overflow-x scrollers stay
    contained instead of blowing out .detail-grid itself. */
 .detail-grid > * {
@@ -3100,7 +3104,7 @@ table.data-table {
   align-self: flex-end;
 }
 
-/* Admins chat as official support — a badge icon instead of their own
+/* Admins chat as official support - a badge icon instead of their own
    photo, wherever their avatar would otherwise show. */
 .chat-support-ava {
   background: rgba($orange-500, 0.15);
@@ -3184,7 +3188,7 @@ table.data-table {
 }
 
 /* ============================================================
-   ADMIN DASHBOARD — distinct sidebar layout (separate from the
+   ADMIN DASHBOARD - distinct sidebar layout (separate from the
    public cyberpunk site chrome).
    ============================================================ */
 .admin-shell {
@@ -3438,7 +3442,7 @@ table.data-table {
   }
 }
 
-/* ── Hover effects disabled throughout the admin panel — shared classes
+/* ── Hover effects disabled throughout the admin panel - shared classes
    (.btn, .card, .chip, .data-table, .custom-select) keep their hover
    polish on the public site, just not inside .admin-shell. ── */
 .admin-shell .btn:hover::after {
@@ -3523,7 +3527,7 @@ table.data-table {
   height: 96px;
 }
 
-/* ── Mobile app shell (drawer + bottom tabs) — elements below are
+/* ── Mobile app shell (drawer + bottom tabs) - elements below are
    inert/hidden on desktop and only activate under the 860px breakpoint. ── */
 .admin-drawer-backdrop {
   display: none;
@@ -3561,7 +3565,9 @@ table.data-table {
     align-items: stretch;
     overflow-x: hidden;
     overflow-y: auto;
-    z-index: 10001;
+    // Above .navbar's 99999 - this off-canvas drawer should cover the
+    // header, not slide out from behind it.
+    z-index: 100200;
     padding: max(16px, var(--safe-t)) 14px 16px max(14px, var(--safe-l));
     transform: translateX(-100%);
     transition: transform 0.3s var(--ease-out);
@@ -3578,7 +3584,8 @@ table.data-table {
     inset: 0;
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(2px);
-    z-index: 10000;
+    // Below .admin-sidebar (100200) but still above .navbar's 99999.
+    z-index: 100150;
   }
 
   .admin-brand,
@@ -3648,7 +3655,7 @@ table.data-table {
     grid-template-columns: 1fr 1fr;
   }
 
-  /* Bottom tab bar — mirrors the public site's .bottom-nav look */
+  /* Bottom tab bar - mirrors the public site's .bottom-nav look */
   .admin-bottom-nav {
     display: flex;
     justify-content: space-around;
@@ -3695,7 +3702,7 @@ table.data-table {
     filter: drop-shadow(0 0 6px var(--fire));
   }
 
-  /* Tables become stacked cards — see data-label on each <td> */
+  /* Tables become stacked cards - see data-label on each <td> */
   .admin-shell .table-wrap {
     overflow: visible;
     border: none;
@@ -3859,7 +3866,7 @@ table.data-table {
     padding: 52px 0;
   }
 
-  /* Page hero — compact */
+  /* Page hero - compact */
   .page-hero {
     padding: 92px 0 40px;
     min-height: auto;
@@ -3869,7 +3876,7 @@ table.data-table {
     font-size: clamp(1.9rem, 8vw, 2.6rem);
   }
 
-  /* Landing hero — don't force a full empty screen */
+  /* Landing hero - don't force a full empty screen */
   .hero {
     min-height: auto;
   }
@@ -3975,7 +3982,7 @@ table.data-table {
     overflow-y: auto;
   }
 
-  /* Trip detail — full-width, non-sticky side card */
+  /* Trip detail - full-width, non-sticky side card */
   .trip-side-card,
   .suggested-card {
     position: static !important;
@@ -4001,7 +4008,7 @@ table.data-table {
     font-size: 0.95rem;
   }
 
-  /* Chat — fit above the mobile bottom nav; dvh handles the URL bar */
+  /* Chat - fit above the mobile bottom nav; dvh handles the URL bar */
   .chat-page {
     padding-top: 78px !important;
   }
@@ -4019,7 +4026,7 @@ table.data-table {
     max-width: 86%;
   }
 
-  /* Complete-profile — compact on phones */
+  /* Complete-profile - compact on phones */
   .cp-section {
     padding-top: 84px;
   }
@@ -4050,7 +4057,7 @@ table.data-table {
     height: 72px;
   }
 
-  /* Plan-trip — compact cards, single column, tidy side panels */
+  /* Plan-trip - compact cards, single column, tidy side panels */
   .plan-page .card {
     padding: 18px !important;
   }
@@ -4146,6 +4153,13 @@ table.data-table {
     scroll-snap-type: x proximity;
     gap: 12px;
     padding-bottom: 8px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  }
+
+  .member-grid::-webkit-scrollbar {
+    display: none;
   }
 
   .member-card {
@@ -4156,7 +4170,7 @@ table.data-table {
   }
 
   // .member-card's hover lift is guarded by @include hover-only (hover:hover
-  // + pointer:fine), which correctly excludes real touchscreens — but a
+  // + pointer:fine), which correctly excludes real touchscreens - but a
   // desktop browser resized down to this width still has a real mouse, so
   // the lift/glow can still fire there. Kill it outright at mobile widths.
   .member-card:hover {
@@ -4214,7 +4228,7 @@ table.data-table {
 }
 
 /* ============================================================
-   App home — the logged-in "/" screen (replaces the marketing
+   App home - the logged-in "/" screen (replaces the marketing
    landing page for members). Mobile-app styled: greeting header,
    icon tile grid, horizontal-scroll rows.
    ============================================================ */
@@ -4230,7 +4244,7 @@ table.data-table {
 }
 
 /* Soft brand-color wash behind the greeting, same recipe as .hero-canvas
-   but much subtler — this is a dashboard, not a landing page. */
+   but much subtler - this is a dashboard, not a landing page. */
 .app-home-greeting::before {
   content: '';
   position: absolute;
@@ -4485,10 +4499,6 @@ table.data-table {
   white-space: nowrap;
 }
 
-.app-next-trip {
-  max-width: 420px;
-}
-
 .app-empty-card {
   display: flex;
   flex-direction: column;
@@ -4525,10 +4535,64 @@ table.data-table {
   overflow-x: auto;
   padding-bottom: 8px;
   scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .app-scroll-row::-webkit-scrollbar {
-  height: 6px;
+  display: none;
+}
+
+// ScrollRow.jsx - arrow-button chrome around an .app-scroll-row. Arrows
+// only show for mouse/trackpad input; touch devices already swipe the row
+// directly, so the buttons would just sit uselessly on top of the content.
+.scroll-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scroll-row-wrap .app-scroll-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.scroll-row-arrow {
+  display: none;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--glass-bdr);
+  color: var(--text-2);
+  font-size: 0.95rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--t) var(--ease-spring);
+}
+
+// Fine pointer alone isn't enough - a desktop browser resized down to a
+// mobile width still reports pointer:fine, but the row is narrow enough
+// there that swiping (like the rest of the mobile layout) is the better
+// interaction, so also require a non-mobile viewport width.
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  .scroll-row-arrow {
+    display: flex;
+  }
+
+  .scroll-row-arrow:hover {
+    background: var(--fire);
+    color: var(--text-inv);
+    border-color: var(--fire);
+    box-shadow: 0 0 16px var(--fire-glow);
+  }
+}
+
+.scroll-row-arrow:active {
+  transform: scale(0.92);
 }
 
 .app-scroll-item {
@@ -4646,7 +4710,7 @@ table.data-table {
   }
 }
 
-// Desktop dashboard layout for the logged-in home — below $bp-lg, this
+// Desktop dashboard layout for the logged-in home - below $bp-lg, this
 // container is invisible (sections just stack in normal document flow,
 // identical to the mobile markup); at $bp-lg+ it becomes a real 2-column
 // grid instead of the horizontal-scroll-row mobile pattern, since a mouse
@@ -4659,6 +4723,15 @@ table.data-table {
       'next   cats'
       'trips  activity';
     column-gap: 32px;
+  }
+
+  // min-width: 0 stops the horizontally-scrolling .app-scroll-row inside
+  // (which naturally wants to be as wide as all its cards combined) from
+  // blowing out the 1fr grid track - without it the whole page gains a
+  // horizontal scrollbar instead of just the row.
+  .app-home-next,
+  .app-home-trips {
+    min-width: 0;
   }
 
   .app-home-next {
@@ -4675,21 +4748,6 @@ table.data-table {
 
   .app-home-activity {
     grid-area: activity;
-  }
-
-  .app-next-trip {
-    max-width: none;
-  }
-
-  .app-home-trips .app-scroll-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    overflow: visible;
-    padding-bottom: 0;
-  }
-
-  .app-home-trips .app-scroll-item {
-    flex: initial;
   }
 
   .app-home-cats .app-scroll-row {
@@ -4720,7 +4778,7 @@ table.data-table {
 }
 
 /* ============================================================
-   Ride search bar (Trips page) — BlaBlaCar-style "leaving from /
+   Ride search bar (Trips page) - BlaBlaCar-style "leaving from /
    going to / date / seats" search.
    ============================================================ */
 
@@ -4824,7 +4882,6 @@ table.data-table {
 
 .ride-search-btn {
   flex: 0 0 auto;
-  height: 48px;
   align-self: flex-end;
   white-space: nowrap;
 }
@@ -4860,7 +4917,7 @@ table.data-table {
 }
 
 /* ============================================================
-   Mini-stat rows (Dashboard overview, Completed Trips) — keep a
+   Mini-stat rows (Dashboard overview, Completed Trips) - keep a
    2-column grid on small phones instead of .grid-4's default
    1-column stack, which turns 4 short numbers into a long scroll.
    ============================================================ */

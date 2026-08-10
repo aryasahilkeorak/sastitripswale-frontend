@@ -16,7 +16,7 @@ const TYPES = [
   { key: 'budget', label: 'Under ₹3K', icon: 'fa-solid fa-wallet' },
 ];
 
-// The Home hero's "search box on the banner" widget — same OTA landing
+// The Home hero's "search box on the banner" widget - same OTA landing
 // pattern as MakeMyTrip/EaseMyTrip, but it's just a new entry point into the
 // existing /trips search (which already reads all of these from the URL).
 export default function HomeSearchWidget() {

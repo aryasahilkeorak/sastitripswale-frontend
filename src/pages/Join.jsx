@@ -85,7 +85,7 @@ export default function Join() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   // A male can only travel with "male" or "both" groups, never a
-  // female-only group — and symmetrically for female users.
+  // female-only group - and symmetrically for female users.
   const setGender = (e) => {
     const gender = e.target.value;
     setForm((f) => {
@@ -149,7 +149,7 @@ export default function Join() {
     try {
       const { data } = await api.post('/payments/validate-coupon', { code, duration });
       setApplied({ code: data.coupon, finalRupees: data.finalAmountRupees, isFree: data.isFree });
-      toast('fa-solid fa-ticket', data.isFree ? 'Coupon applied — FREE!' : `Coupon applied — pay ${rupee(data.finalAmountRupees)}`);
+      toast('fa-solid fa-ticket', data.isFree ? 'Coupon applied - FREE!' : `Coupon applied - pay ${rupee(data.finalAmountRupees)}`);
     } catch (e) {
       toast('fa-solid fa-circle-xmark', apiError(e, 'Invalid coupon'));
     }
@@ -229,7 +229,7 @@ export default function Join() {
         </div>
 
         <div className="card join-card">
-          {/* STEP 1 — minimal signup */}
+          {/* STEP 1 - minimal signup */}
           {step === 1 && (
             <div className="form-step active">
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Create your account</h3>
@@ -273,7 +273,7 @@ export default function Join() {
             </div>
           )}
 
-          {/* STEP 2 — plan + payment */}
+          {/* STEP 2 - plan + payment */}
           {step === 2 && (
             <div className="form-step active">
               <h3 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Choose your plan</h3>
@@ -333,7 +333,7 @@ export default function Join() {
 
       <Modal open={success} onClose={() => navigate('/complete-profile')} title="Membership active!">
         <p style={{ color: 'var(--text-2)', lineHeight: 1.8 }}>
-          One last step — complete your profile (name, city, interests, vehicle &amp; ID). You need a
+          One last step - complete your profile (name, city, interests, vehicle &amp; ID). You need a
           complete profile to plan or join trips.
         </p>
         <button className="btn btn-primary btn-lg mt-3" style={{ width: '100%', justifyContent: 'center' }} onClick={() => navigate('/complete-profile')}>

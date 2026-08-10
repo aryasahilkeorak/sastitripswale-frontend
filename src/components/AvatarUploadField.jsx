@@ -3,7 +3,7 @@ import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import ImageCropModal from './ImageCropModal.jsx';
 
 // Avatar upload box that always routes through a 1:1 crop step before
-// handing the final file back — so every profile photo in the app ends up
+// handing the final file back - so every profile photo in the app ends up
 // framed the same way it's displayed everywhere else (a circle).
 export default function AvatarUploadField({ value, currentUrl, onChange, label = 'Change photo' }) {
   const inputRef = useRef(null);

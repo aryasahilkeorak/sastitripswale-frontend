@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-// A live, camera-only capture — deliberately offers no "choose from
+// A live, camera-only capture - deliberately offers no "choose from
 // gallery" fallback, since the whole point is that the photo is taken
 // right now, of the person completing verification.
 export default function SelfieCapture({ onChange }) {
@@ -95,7 +95,7 @@ export default function SelfieCapture({ onChange }) {
       )}
       {error && <p style={{ color: '#fca5a5', fontSize: '0.75rem', marginTop: 6 }}>{error}</p>}
       <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
-        <i className="fa-solid fa-shield-halved" /> Used only for identity verification — gallery uploads aren't accepted, this must be a live photo of your face.
+        <i className="fa-solid fa-shield-halved" /> Used only for identity verification - gallery uploads aren't accepted, this must be a live photo of your face.
       </p>
     </div>
   );

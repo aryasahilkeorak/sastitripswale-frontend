@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// Slim promotional strip — OTA-style "offer banner" placement, but the
+// Slim promotional strip - OTA-style "offer banner" placement, but the
 // content is always a real, already-built feature (never invented copy).
 export default function PromoBanner({ icon = 'fa-solid fa-gift', message, cta, to }) {
   return (

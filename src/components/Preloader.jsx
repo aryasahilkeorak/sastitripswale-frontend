@@ -4,7 +4,7 @@ import BrandLogo from './BrandLogo.jsx';
 const MIN_MS = 5000;
 const FADE_MS = 650; // matches the #preloader opacity transition duration in style.scss
 
-// Route arc shared with the `.pre-car` offset-path in style.scss —
+// Route arc shared with the `.pre-car` offset-path in style.scss -
 // keep both in sync if this changes.
 const ROUTE_PATH = 'M14 44 C 50 44 46 12 110 12 C 174 12 170 44 206 44';
 

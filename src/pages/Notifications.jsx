@@ -46,7 +46,7 @@ function notificationHref(n) {
 }
 
 // A dedicated full-page "Activity" screen (Instagram-style) instead of a
-// dashboard tab — reached from the bell icon in the header.
+// dashboard tab - reached from the bell icon in the header.
 export default function Notifications() {
   const navigate = useNavigate();
   const user = useAuth((s) => s.user);

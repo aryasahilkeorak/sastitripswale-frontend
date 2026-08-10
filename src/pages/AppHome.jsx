@@ -6,6 +6,7 @@ import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
 import usePullToRefresh from '../lib/usePullToRefresh.js';
 import TripCard from '../components/TripCard.jsx';
 import Loader from '../components/Loader.jsx';
+import ScrollRow from '../components/ScrollRow.jsx';
 
 const CATEGORIES = [
   { type: 'bike', label: 'Bike', icon: 'fa-solid fa-motorcycle' },
@@ -27,9 +28,9 @@ const NOTIF_ICON = {
   message: 'fa-solid fa-comment-dots',
 };
 
-// The logged-in "app home" — replaces the marketing landing page at "/" for
+// The logged-in "app home" - replaces the marketing landing page at "/" for
 // members. Every fetch below reuses an endpoint already called elsewhere
-// (Dashboard.jsx / Home.jsx) — no new backend routes.
+// (Dashboard.jsx / Home.jsx) - no new backend routes.
 export default function AppHome() {
   const user = useAuth((s) => s.user);
 
@@ -52,14 +53,15 @@ export default function AppHome() {
     loadData().finally(() => setLoading(false));
   }, [loadData]);
 
-  // Mobile/tablet only in practice — desktop pointers don't fire touch events.
+  // Mobile/tablet only in practice - desktop pointers don't fire touch events.
   const { containerRef, pullDistance, refreshing } = usePullToRefresh(loadData);
 
   if (loading) return <Loader label="Getting things ready…" />;
 
   const unread = notifs.filter((n) => !n.isRead).length;
   const firstName = (user?.fullName || '').split(' ')[0] || 'Traveler';
-  const nextTrip = myTrips[0];
+  // "Trips for you" is discovery - trips other hosts are running, not your own.
+  const othersTrips = upcoming.filter((t) => String(t.organizer?._id) !== String(user?.id));
   const daysLeft = user?.membershipActive && user?.membershipExpiresAt
     ? Math.ceil((new Date(user.membershipExpiresAt) - Date.now()) / 86400000)
     : null;
@@ -158,7 +160,7 @@ export default function AppHome() {
       </section>
 
       {/* Below $bp-lg this is normal stacked document flow (identical to the
-          old markup); at $bp-lg+ it becomes a 2-column dashboard grid — see
+          old markup); at $bp-lg+ it becomes a 2-column dashboard grid - see
           .app-home-grid in app.scss. Source order intentionally matches the
           mobile visual order so nothing changes for touch users. */}
       <div className="app-home-grid container">
@@ -166,10 +168,14 @@ export default function AppHome() {
           <div className="app-section-head">
             <h2>Your next trip</h2>
           </div>
-          {nextTrip ? (
-            <div className="app-next-trip">
-              <TripCard trip={nextTrip} />
-            </div>
+          {myTrips.length > 0 ? (
+            <ScrollRow>
+              {myTrips.map((t) => (
+                <div className="app-scroll-item" key={t._id}>
+                  <TripCard trip={t} />
+                </div>
+              ))}
+            </ScrollRow>
           ) : (
             <div className="app-empty-card">
               <i className="fa-solid fa-compass" />
@@ -200,16 +206,16 @@ export default function AppHome() {
             <h2>Trips for you</h2>
             <Link to="/trips">View all <i className="fa-solid fa-arrow-right" /></Link>
           </div>
-          {upcoming.length === 0 ? (
+          {othersTrips.length === 0 ? (
             <div className="empty-state"><i className="fa-solid fa-compass" /><p>No upcoming trips right now.</p></div>
           ) : (
-            <div className="app-scroll-row">
-              {upcoming.map((t) => (
+            <ScrollRow>
+              {othersTrips.map((t) => (
                 <div className="app-scroll-item" key={t._id}>
                   <TripCard trip={t} />
                 </div>
               ))}
-            </div>
+            </ScrollRow>
           )}
         </section>
 

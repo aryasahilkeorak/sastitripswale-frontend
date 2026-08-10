@@ -1,9 +1,9 @@
 // ============================================================
-// SastiTripsWale — Brand color tokens
+// SastiTripsWale - Brand color tokens
 // Two brand hues only: Navy (primary) + Orange (accent),
 // plus one blue support family and functional/semantic colors.
 // This file is the single source of truth for every color in
-// the app — nothing below should be hardcoded again elsewhere.
+// the app - nothing below should be hardcoded again elsewhere.
 // ============================================================
 
 // ── Navy (primary / surfaces) ──────────────────────────────
@@ -13,17 +13,17 @@ $navy-850: #0e1a2e; // tertiary panel background
 $navy-800: #122238; // card / surface
 $navy-700: #1b2f4d; // elevated surface
 
-// ── Orange (brand accent — CTAs, active states, glows) ─────
+// ── Orange (brand accent - CTAs, active states, glows) ─────
 $orange-600: #e8650a; // deep / pressed
 $orange-500: #ff7a1a; // primary accent
 $orange-400: #ff9b4d; // light / hover
 
-// ── Blue (secondary accent — same family, two tints) ────────
+// ── Blue (secondary accent - same family, two tints) ────────
 $blue-500: #2f6fe0;
 $blue-400: #3e8ef7;
 $blue-300: #7fb2ff;
 
-// ── Gold (functional — ratings/stars only, not decorative) ──
+// ── Gold (functional - ratings/stars only, not decorative) ──
 $gold: #ffc94d;
 
 // ── Semantic status (independent of brand hues) ─────────────
