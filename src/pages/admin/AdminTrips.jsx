@@ -33,7 +33,7 @@ export default function AdminTrips() {
             {trips.map((t) => (
               <tr key={t._id}>
                 <td data-label="Trip"><Link to={`/trips/${t._id}`} className="admin-clickable">{routeLabel(t)}</Link></td>
-                <td data-label="Organizer">{t.organizer?.fullName || '—'}</td>
+                <td data-label="Organizer">{t.organizer?.fullName || '-'}</td>
                 <td data-label="Dates">{formatDate(t.startDate)}</td>
                 <td data-label="Seats">{t.filledSeats}/{t.totalSeats}</td>
                 <td data-label="Status">

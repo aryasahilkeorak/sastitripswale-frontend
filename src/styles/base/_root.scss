@@ -1,10 +1,10 @@
 // ============================================================
-// SastiTripsWale — generated :root custom properties.
+// SastiTripsWale - generated :root custom properties.
 //
 // This is the ONLY place CSS custom properties are declared.
 // The names on the left are kept stable on purpose (100+ inline
 // `var(--...)` references across the React components key off
-// them) — only the values, sourced from abstracts/_colors.scss,
+// them) - only the values, sourced from abstracts/_colors.scss,
 // abstracts/_typography.scss and abstracts/_tokens.scss, changed
 // for the navy/orange rebrand.
 // ============================================================
@@ -23,18 +23,18 @@
   // and stay correct under both themes.
   --bg-rgb: 5, 7, 12;
 
-  // Brand accent — orange (legacy name: fire)
+  // Brand accent - orange (legacy name: fire)
   --fire: #{$orange-500};
   --fire-2: #{$orange-400};
   --fire-glow: #{rgba($orange-500, 0.4)};
 
-  // Secondary accent — blue (legacy names: magenta / cyan)
+  // Secondary accent - blue (legacy names: magenta / cyan)
   --magenta: #{$blue-500};
   --magenta-2: #{$blue-300};
   --cyan: #{$blue-400};
   --cyan-dim: #{rgba($blue-400, 0.15)};
 
-  // Functional — ratings only
+  // Functional - ratings only
   --gold: #{$gold};
 
   // Text
@@ -80,14 +80,14 @@
   --t: #{$t};
   --t-slow: #{$t-slow};
 
-  // Additive semantic tokens (new — not present in the legacy theme)
+  // Additive semantic tokens (new - not present in the legacy theme)
   --success: #{$success};
   --danger: #{$danger};
   --info: #{$info};
   --warning: #{$warning};
 
   // Safe-area insets (notches / home-indicator / rounded corners on phones).
-  // Falls back to 0 on devices without one — always combine with
+  // Falls back to 0 on devices without one - always combine with
   // max(existing-space, var(--safe-*)) rather than adding outright, so
   // normal (non-notch) viewports don't gain extra padding.
   --safe-t: env(safe-area-inset-top, 0px);
@@ -97,11 +97,11 @@
 }
 
 // ============================================================
-// Light theme — opt-in via <html data-theme="light">, toggled from
+// Light theme - opt-in via <html data-theme="light">, toggled from
 // the navbar/admin sidebar and persisted (see store/theme.js). Dark
 // (the :root block above) is and remains the default; only the
 // properties that actually need to flip for a light page are
-// redeclared here — everything else (shape, motion, fonts, brand
+// redeclared here - everything else (shape, motion, fonts, brand
 // gradients used as accents, status colors) is intentionally shared.
 // ============================================================
 :root[data-theme='light'] {
@@ -113,7 +113,7 @@
   --surface-2: #f1f4f9;
   --bg-rgb: 246, 247, 251;
 
-  // Brand accent — deepened slightly so it still pops on white
+  // Brand accent - deepened slightly so it still pops on white
   --fire: #{$orange-600};
   --fire-2: #{$orange-500};
   --fire-glow: #{rgba($orange-600, 0.3)};
@@ -126,12 +126,12 @@
 
   --gold: #a8790a;
 
-  // Text — dark-on-light
+  // Text - dark-on-light
   --text: #0e1a2e;
   --text-2: #3d4a63;
   --text-3: #6b7690;
 
-  // Glass / overlay — invert to dark-alpha so "glassy" panels still
+  // Glass / overlay - invert to dark-alpha so "glassy" panels still
   // read as a subtle tint instead of near-invisible white-on-white
   --glass: rgba(14, 26, 46, 0.035);
   --glass-2: rgba(14, 26, 46, 0.07);
@@ -142,6 +142,6 @@
   --grad-dark: linear-gradient(160deg, #eef1f7 0%, #ffffff 100%);
   --grad-surface: linear-gradient(135deg, #{rgba($orange-500, 0.06)} 0%, #{rgba($blue-400, 0.05)} 100%);
 
-  // Shadows — softer; a dark-theme-strength shadow reads too heavy on white
+  // Shadows - softer; a dark-theme-strength shadow reads too heavy on white
   --shadow-card: 0 8px 28px rgba(14, 26, 46, 0.12);
 }

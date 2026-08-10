@@ -74,7 +74,7 @@ export default function CompletedTrips() {
                             <table className="expense-table">
                               <tbody>
                                 {t.expenses.map((e, i) => (
-                                  <tr key={i}><td style={{ textTransform: 'capitalize' }}>{e.category}{e.description ? ` — ${e.description}` : ''}</td><td>{rupee(e.amount)}</td></tr>
+                                  <tr key={i}><td style={{ textTransform: 'capitalize' }}>{e.category}{e.description ? ` - ${e.description}` : ''}</td><td>{rupee(e.amount)}</td></tr>
                                 ))}
                                 <tr><td style={{ fontWeight: 700 }}>Total</td><td style={{ fontWeight: 700 }}>{rupee(perHead)}</td></tr>
                               </tbody>

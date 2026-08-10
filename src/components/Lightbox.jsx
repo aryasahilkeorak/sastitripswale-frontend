@@ -35,7 +35,9 @@ export default function Lightbox({ images, index, onClose, onIndex }) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9500,
+        // Above .navbar's 99999 (see style.scss) so the full-screen photo
+        // viewer actually covers the header instead of sitting behind it.
+        zIndex: 100600,
         background: 'rgba(6,7,13,0.96)',
         backdropFilter: 'blur(20px)',
         display: 'flex',

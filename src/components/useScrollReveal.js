@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 const SEL = '.fade-up, .fade-left, .fade-right, .scale-in';
 
 // Instantly neutralizes the fade/scale-in classes' hidden starting state
-// (opacity:0 + transform) instead of animating them in on scroll — used
+// (opacity:0 + transform) instead of animating them in on scroll - used
 // when the reveal-on-scroll effect should be skipped entirely.
 function revealInstantly(node) {
   if (!node || node.nodeType !== 1) return;
@@ -20,7 +20,7 @@ function revealInstantly(node) {
 // including elements rendered later (async data) via a MutationObserver.
 // Pass `disabled: true` to skip the scroll-triggered animation altogether
 // (e.g. the logged-in mobile app views, where it reads as sluggish rather
-// than polished) — content still appears, just without the fade-in.
+// than polished) - content still appears, just without the fade-in.
 export function useScrollReveal(rootRef, disabled = false) {
   useEffect(() => {
     const root = rootRef.current || document.body;

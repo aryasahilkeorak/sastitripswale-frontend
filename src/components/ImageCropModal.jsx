@@ -6,7 +6,7 @@ const OUT = 480; // exported image resolution, in px (square)
 const MAX_ZOOM = 3;
 
 // Square-crop modal for profile photos. Drag to pan, slider (or wheel) to
-// zoom, always exports a 1:1 image at a fixed resolution — matches the
+// zoom, always exports a 1:1 image at a fixed resolution - matches the
 // circular avatar treatment used everywhere in the app.
 export default function ImageCropModal({ file, onCancel, onCropped }) {
   const [src, setSrc] = useState('');

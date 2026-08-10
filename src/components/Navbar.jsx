@@ -97,7 +97,7 @@ export default function Navbar() {
     setShowEnablePush(false);
     try {
       await enablePushNotifications();
-      toast('fa-solid fa-bell', "You're all set — we'll notify you of new activity right in your browser.");
+      toast('fa-solid fa-bell', "You're all set - we'll notify you of new activity right in your browser.");
     } catch (err) {
       toast('fa-solid fa-bell-slash', err.message || 'Could not enable notifications');
     }

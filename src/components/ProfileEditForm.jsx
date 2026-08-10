@@ -5,7 +5,7 @@ import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../li
 import CustomSelect from './CustomSelect.jsx';
 import AvatarUploadField from './AvatarUploadField.jsx';
 
-// Shared "edit profile" form — used both in the Dashboard Settings tab and
+// Shared "edit profile" form - used both in the Dashboard Settings tab and
 // in the Instagram-style edit-profile modal opened from a member's own
 // profile page. Saves via PUT /members/profile either way.
 export default function ProfileEditForm({ user, onSaved }) {
@@ -82,7 +82,7 @@ export default function ProfileEditForm({ user, onSaved }) {
 
       <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>Social links</label>
       <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: -4, marginBottom: 10 }}>
-        Just your username on each platform — we add the link automatically.
+        Just your username on each platform - we add the link automatically.
       </p>
       <div className="form-row">
         <div className="form-group"><label><i className="fa-brands fa-instagram" /> Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="username" /></div>
@@ -117,7 +117,7 @@ export default function ProfileEditForm({ user, onSaved }) {
             </div>
           </div>
           <p className="text-muted" style={{ fontSize: '0.8rem', margin: '8px 0 16px' }}>
-            <i className="fa-solid fa-shield-halved" /> Needed to host or join Couples Mode trips — visible to
+            <i className="fa-solid fa-shield-halved" /> Needed to host or join Couples Mode trips - visible to
             platform admins only, never shown to other travelers.
           </p>
           <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" /></div>

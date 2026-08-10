@@ -27,7 +27,7 @@ export default function AdminReviews() {
         <div className="card" style={{ padding: 20 }} key={r._id}>
           <div className="row-between mb-2">
             <div>
-              <strong style={{ fontSize: '0.9rem' }}>{r.user?.fullName || '—'}</strong>
+              <strong style={{ fontSize: '0.9rem' }}>{r.user?.fullName || '-'}</strong>
               <div className="text-muted" style={{ fontSize: '0.72rem' }}>{r.tripDestination || r.user?.city} · {timeAgo(r.createdAt)}</div>
             </div>
             <Stars value={r.rating} />

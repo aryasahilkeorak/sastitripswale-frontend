@@ -38,7 +38,7 @@ export default function Testimonials() {
     setBusy(true);
     try {
       await api.post('/reviews', { rating, message, tripDestination: destination });
-      toast('fa-solid fa-star', 'Review submitted — thank you for sharing!');
+      toast('fa-solid fa-star', 'Review submitted - thank you for sharing!');
       setMessage('');
       setDestination('');
       setRating(5);
@@ -114,7 +114,7 @@ export default function Testimonials() {
           {loading ? (
             <Loader />
           ) : reviews.length === 0 ? (
-            <div className="empty-state"><i className="fa-solid fa-comment-dots" /><p>No reviews yet — be the first!</p></div>
+            <div className="empty-state"><i className="fa-solid fa-comment-dots" /><p>No reviews yet - be the first!</p></div>
           ) : (
             <div className="grid-3">
               {reviews.map((r) => (

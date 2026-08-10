@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 
 // Validated categorical triplet (dark + light, both pass lightness band,
-// chroma floor, CVD/normal-vision separation and contrast — see dataviz skill).
+// chroma floor, CVD/normal-vision separation and contrast - see dataviz skill).
 const DEFAULT_COLORS = ['#e8650a', '#3e8ef7', '#b8860b'];
 
 const W = 720;
@@ -19,7 +19,7 @@ function niceMax(max) {
   return step * pow;
 }
 
-// Multi-series line chart — plain SVG, no chart library. `series` is
+// Multi-series line chart - plain SVG, no chart library. `series` is
 // [{ key, label, color? }]; `data` is [{ date, [key]: number, ... }].
 export default function MultiLineChart({ data, series, formatDate }) {
   const [hoverIdx, setHoverIdx] = useState(null);
@@ -68,7 +68,7 @@ export default function MultiLineChart({ data, series, formatDate }) {
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Legend — always present for 2+ series */}
+      {/* Legend - always present for 2+ series */}
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 10 }}>
         {colored.map((s) => (
           <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-2)' }}>
@@ -85,7 +85,7 @@ export default function MultiLineChart({ data, series, formatDate }) {
         onMouseMove={onMove}
         onMouseLeave={() => setHoverIdx(null)}
       >
-        {/* Gridlines — recessive hairlines */}
+        {/* Gridlines - recessive hairlines */}
         {yTicks.map((t) => (
           <g key={t}>
             <line x1={PAD_L} x2={W - PAD_R} y1={y(t)} y2={y(t)} stroke="var(--glass-bdr)" strokeWidth="1" />

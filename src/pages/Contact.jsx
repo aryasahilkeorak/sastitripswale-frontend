@@ -5,7 +5,7 @@ import PageHero from '../components/PageHero.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 
 const INFO = [
-  // Mobile/WhatsApp/email temporarily hidden across the app — see Footer.jsx and Layout.jsx.
+  // Mobile/WhatsApp/email temporarily hidden across the app - see Footer.jsx and Layout.jsx.
   // { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
   // { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@SastiTripsWale.com', href: 'mailto:hello@SastiTripsWale.com' },
   // { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },

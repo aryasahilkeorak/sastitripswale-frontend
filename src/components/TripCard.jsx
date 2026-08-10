@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { rupee, dateRange, tripDays, routeLabel } from '../lib/helpers.js';
+import { rupee, dateRange, tripDays, routeLabel, BUDGET_INCLUDES_LABEL } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import { useCanTrip, handleGateError } from './useCanTrip.js';
 import DestinationImage from './DestinationImage.jsx';
@@ -18,6 +18,7 @@ const VEHICLE_BADGE = {
 export default function TripCard({ trip, onChange }) {
   const navigate = useNavigate();
   const canTrip = useCanTrip();
+  const user = useAuth((s) => s.user);
 
   const [status, setStatus] = useState(trip.requestStatus || null);
   const [count, setCount] = useState(trip.interestCount || 0);
@@ -30,8 +31,15 @@ export default function TripCard({ trip, onChange }) {
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   const days = tripDays(trip.startDate, trip.endDate);
   const vb = VEHICLE_BADGE[trip.vehicleType] || { cls: 'badge-fire', icon: 'fa-solid fa-location-dot' };
+  const isOwner = Boolean(user && trip.organizer && String(trip.organizer._id) === String(user.id));
 
   const isFreshRequest = !status || status === 'rejected';
+
+  const goToEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/trips/${trip._id}/edit`);
+  };
 
   const requestJoin = async (e) => {
     e.preventDefault();
@@ -39,7 +47,7 @@ export default function TripCard({ trip, onChange }) {
     if (!canTrip()) return;
 
     // Couples-mode join needs a partner mobile number + ID document upload,
-    // which can't be collected from this card — send them to the full page.
+    // which can't be collected from this card - send them to the full page.
     if (trip.isCouplesMode && isFreshRequest) {
       navigate(`/trips/${trip._id}`);
       return;
@@ -86,6 +94,11 @@ export default function TripCard({ trip, onChange }) {
               <i className="fa-solid fa-heart" /> Couples
             </span>
           )}
+          {trip.genderPreference && trip.genderPreference !== 'Any' && (
+            <span className="badge badge-magenta">
+              <i className={trip.genderPreference === 'Male' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'} /> {trip.genderPreference} only
+            </span>
+          )}
           {days && <span className="badge badge-gold">{days} Days</span>}
         </div>
         <div
@@ -123,36 +136,51 @@ export default function TripCard({ trip, onChange }) {
 
       <div className="trip-card-body">
         <h3 style={{ marginBottom: 6 }}>{routeLabel(trip)}</h3>
-        <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginBottom: 12 }}>
+        <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginBottom: 8 }}>
           <i className="fa-solid fa-location-dot" /> {trip.destination}
         </p>
+        {trip.organizer && (
+          <p style={{ color: 'var(--text-3)', fontSize: '0.76rem', marginBottom: 12 }}>
+            <i className="fa-solid fa-user" /> Hosted by{' '}
+            <strong style={{ color: 'var(--text)', fontWeight: 700 }}>{trip.organizer.username || trip.organizer.fullName}</strong>
+            {trip.organizer.vehicleModel && (
+              <>
+                <span style={{ margin: '0 8px' }}>·</span>
+                <i className="fa-solid fa-car-side" style={{ marginRight: 6 }} />
+                <strong style={{ color: 'var(--text)', fontWeight: 700 }}>{trip.organizer.vehicleModel}</strong>
+              </>
+            )}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-3)', marginBottom: 14, flexWrap: 'wrap' }}>
           <span>
             <i className="fa-solid fa-calendar" /> {dateRange(trip.startDate, trip.endDate)}
           </span>
         </div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: 'auto',
-            paddingTop: 14,
-            borderTop: '1px solid var(--glass-bdr)',
-          }}
-        >
+        <div className="trip-card-footer">
           <div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-3)' }}>{trip.isCouplesMode ? 'Per couple' : 'Per head'}</div>
             <div className="trip-price">{rupee(trip.isCouplesMode ? trip.budgetPerHead * 2 : trip.budgetPerHead)}</div>
+            {trip.budgetIncludes && BUDGET_INCLUDES_LABEL[trip.budgetIncludes] && (
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', marginTop: 2 }}>
+                <i className="fa-solid fa-circle-info" /> {BUDGET_INCLUDES_LABEL[trip.budgetIncludes]}
+              </div>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              className={`btn btn-sm ${status === 'accepted' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={requestJoin}
-              disabled={busy || status === 'pending'}
-            >
-              <i className={status === 'accepted' ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} /> {status ? BUTTON_LABEL[status] : `Request (${count})`}
-            </button>
+          <div className="trip-card-actions">
+            {isOwner ? (
+              <button className="btn btn-sm btn-outline" onClick={goToEdit}>
+                <i className="fa-solid fa-pen" /> Edit Trip
+              </button>
+            ) : (
+              <button
+                className={`btn btn-sm ${status === 'accepted' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={requestJoin}
+                disabled={busy || status === 'pending'}
+              >
+                <i className={status === 'accepted' ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} /> {status ? BUTTON_LABEL[status] : `Request (${count})`}
+              </button>
+            )}
             <span className="btn btn-sm btn-primary">View</span>
           </div>
         </div>

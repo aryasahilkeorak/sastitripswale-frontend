@@ -29,7 +29,7 @@ export default function AdminReferralSettings() {
       <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>
         When enabled, every member gets a shareable referral code and new signups can credit
         the member who referred them. Turning this off hides the referral field on signup and
-        pauses new referral credit — existing codes and history are kept.
+        pauses new referral credit - existing codes and history are kept.
       </p>
       <div className="row-between">
         <span style={{ fontWeight: 700 }}>

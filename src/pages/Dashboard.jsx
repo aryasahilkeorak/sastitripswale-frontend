@@ -17,6 +17,7 @@ import {
   isVehicleModelYearMistake,
   VEHICLE_MODEL_YEAR_MISTAKE_MSG,
 } from '../lib/helpers.js';
+import { getBrandsForType, getModelsForBrand, getVehicleYearOptions, OTHER_OPTION } from '../lib/vehicleCatalog.js';
 import { toast } from '../lib/toast.js';
 import DestinationImage from '../components/DestinationImage.jsx';
 import Modal from '../components/Modal.jsx';
@@ -65,7 +66,7 @@ export default function Dashboard() {
     api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
   }, []);
 
-  // Admins get the dedicated admin dashboard, not the member one — unless
+  // Admins get the dedicated admin dashboard, not the member one - unless
   // they chose "Continue as User" at login.
   if (viewMode !== 'user' && user && (user.role === 'admin' || user.role === 'superadmin')) {
     return <Navigate to="/admin" replace />;
@@ -86,7 +87,7 @@ export default function Dashboard() {
 
   const copyId = () => {
     navigator.clipboard?.writeText(String(user?.id || ''));
-    toast('fa-solid fa-clipboard', 'User ID copied — share it to be added to groups');
+    toast('fa-solid fa-clipboard', 'User ID copied - share it to be added to groups');
   };
 
   const shareProfile = () => {
@@ -102,7 +103,7 @@ export default function Dashboard() {
   return (
     <section className="detail-section">
       <div className="container dashboard-container">
-        {/* Profile header — matches the real Instagram profile layout: a
+        {/* Profile header - matches the real Instagram profile layout: a
             top row of avatar + stats, then name/bio/links full-width below. */}
         <div className="ig-header">
           <div className="ig-top-row">
@@ -196,7 +197,7 @@ export default function Dashboard() {
         <div className="ig-action-row mt-3">
           <Link to="/edit-profile" className="ig-flat-btn"><i className="fa-solid fa-pen" /> Edit profile</Link>
           <button className="ig-flat-btn" onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
-          <button className="ig-flat-btn" onClick={copyId} title="Copy your User ID — share it to be added to groups">
+          <button className="ig-flat-btn" onClick={copyId} title="Copy your User ID - share it to be added to groups">
             <i className="fa-solid fa-copy" /> Copy ID
           </button>
         </div>
@@ -214,7 +215,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Tabs — pill row on mobile/tablet, replaced by a persistent left
+        {/* Tabs - pill row on mobile/tablet, replaced by a persistent left
             sidebar at $bp-lg+ (same TABS/tab state, see .ig-dashboard-* in
             app.scss). Both render; CSS shows only one per breakpoint. */}
         <div className="ig-tabs mt-4">
@@ -421,7 +422,7 @@ function DocumentsCard() {
       const fd = new FormData();
       fd.append('file', file);
       await api.put(`/members/documents/${reuploadingId}`, fd);
-      toast('fa-solid fa-circle-check', 'Document re-uploaded — pending review');
+      toast('fa-solid fa-circle-check', 'Document re-uploaded - pending review');
       load();
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -436,7 +437,7 @@ function DocumentsCard() {
       const fd = new FormData();
       fd.append('file', file);
       await api.put(`/members/documents/${selfieReuploadId}`, fd);
-      toast('fa-solid fa-circle-check', 'Selfie re-uploaded — pending review');
+      toast('fa-solid fa-circle-check', 'Selfie re-uploaded - pending review');
       load();
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -502,8 +503,14 @@ function VehiclesCard() {
           {vehicles.map((v) => (
             <div key={v.id} className="row-between" style={{ alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: '0.85rem' }}>{v.vehicleType}{v.vehicleModel ? ` · ${v.vehicleModel}` : ''}</div>
-                <div className="text-muted" style={{ fontSize: '0.72rem' }}>{v.regNumber}</div>
+                <div style={{ fontSize: '0.85rem' }}>
+                  {[v.brand, v.vehicleModel, v.year].filter(Boolean).join(' ') || v.vehicleType}
+                </div>
+                <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                  {v.regNumber}
+                  {v.mileageKmpl ? ` · ${v.mileageKmpl} km/l` : ''}
+                  {v.fuelType ? ` · ${v.fuelType}` : ''}
+                </div>
               </div>
               <span className={`badge ${DOC_STATUS_BADGE[v.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem' }}>{v.status}</span>
             </div>
@@ -523,18 +530,50 @@ function VehiclesCard() {
   );
 }
 
+const VEHICLE_FUEL_TYPES = [{ value: '', label: 'Select' }, 'Petrol', 'Diesel', 'CNG', 'Electric'];
+const CURRENT_YEAR = new Date().getFullYear();
+
 function AddVehicleForm({ onDone }) {
   const [vehicleType, setVehicleType] = useState('');
+  const [brand, setBrand] = useState('');
+  const [brandOther, setBrandOther] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [modelOther, setModelOther] = useState('');
+  const [year, setYear] = useState('');
+  const [mileageKmpl, setMileageKmpl] = useState('');
+  const [fuelType, setFuelType] = useState('');
   const [regNumber, setRegNumber] = useState('');
   const [rcFront, setRcFront] = useState(null);
   const [rcBack, setRcBack] = useState(null);
   const [busy, setBusy] = useState(false);
+  const setUser = useAuth((s) => s.setUser);
+
+  // Brand list depends on vehicle type; model list depends on that brand -
+  // reset the field(s) below whichever one just changed so a stale
+  // Bike-brand model can't linger after switching to Car, etc.
+  const handleVehicleType = (e) => {
+    setVehicleType(e.target.value);
+    setBrand('');
+    setBrandOther('');
+    setVehicleModel('');
+    setModelOther('');
+  };
+  const handleBrand = (e) => {
+    setBrand(e.target.value);
+    setVehicleModel('');
+    setModelOther('');
+  };
+
+  const brandOptions = [{ value: '', label: 'Select' }, ...getBrandsForType(vehicleType)];
+  const modelOptions = [{ value: '', label: 'Select' }, ...getModelsForBrand(vehicleType, brand)];
+  const yearOptions = [{ value: '', label: 'Select' }, ...getVehicleYearOptions()];
 
   const submit = async (e) => {
     e.preventDefault();
     if (!vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select a vehicle type');
-    if (isVehicleModelYearMistake(vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
+    const finalBrand = brand === OTHER_OPTION ? brandOther.trim() : brand;
+    const finalModel = vehicleModel === OTHER_OPTION ? modelOther.trim() : vehicleModel;
+    if (isVehicleModelYearMistake(finalModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
     if (!regNumber.trim()) return toast('fa-solid fa-triangle-exclamation', 'Enter the vehicle registration number');
     if (!rcFront || !rcBack) return toast('fa-solid fa-triangle-exclamation', 'RC (front & back) is required to add a vehicle');
 
@@ -542,12 +581,20 @@ function AddVehicleForm({ onDone }) {
     try {
       const fd = new FormData();
       fd.append('vehicleType', vehicleType);
-      fd.append('vehicleModel', vehicleModel);
+      fd.append('brand', finalBrand);
+      fd.append('vehicleModel', finalModel);
+      if (year) fd.append('year', year);
+      if (mileageKmpl) fd.append('mileageKmpl', mileageKmpl);
+      if (fuelType) fd.append('fuelType', fuelType);
       fd.append('regNumber', regNumber.trim());
       fd.append('rcFront', rcFront);
       fd.append('rcBack', rcBack);
       await api.post('/members/vehicles', fd);
-      toast('fa-solid fa-circle-check', 'Vehicle added — RC pending review');
+      // Refresh the auth store's user so the new vehicle (mileage/fuel
+      // type included) is immediately available to the trip cost
+      // estimator on Plan a Trip, without needing to log out and back in.
+      api.get('/auth/me').then((r) => setUser(r.data.user)).catch(() => {});
+      toast('fa-solid fa-circle-check', 'Vehicle added - RC pending review');
       onDone();
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -562,23 +609,49 @@ function AddVehicleForm({ onDone }) {
         <label>Vehicle type *</label>
         <CustomSelect
           value={vehicleType}
-          onChange={(e) => setVehicleType(e.target.value)}
+          onChange={handleVehicleType}
           options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Other']}
         />
       </div>
-      <div className="form-group"><label>Model name</label><input className="form-input" value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} placeholder="e.g. Honda Activa" /></div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Brand</label>
+          <CustomSelect value={brand} onChange={handleBrand} options={brandOptions} disabled={!vehicleType} />
+        </div>
+        <div className="form-group">
+          <label>Model name</label>
+          <CustomSelect value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} options={modelOptions} disabled={!brand} />
+        </div>
+      </div>
+      {brand === OTHER_OPTION && (
+        <div className="form-group"><label>Brand name</label><input className="form-input" value={brandOther} onChange={(e) => setBrandOther(e.target.value)} placeholder="e.g. Force" /></div>
+      )}
+      {vehicleModel === OTHER_OPTION && (
+        <div className="form-group"><label>Model name</label><input className="form-input" value={modelOther} onChange={(e) => setModelOther(e.target.value)} placeholder="e.g. Gurkha" /></div>
+      )}
+      <div className="form-row">
+        <div className="form-group">
+          <label>Model year</label>
+          <CustomSelect value={year} onChange={(e) => setYear(e.target.value)} options={yearOptions} />
+        </div>
+        <div className="form-group"><label>Mileage (km/l)</label><input className="form-input" type="number" min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" /></div>
+      </div>
+      <div className="form-group">
+        <label>Fuel type</label>
+        <CustomSelect value={fuelType} onChange={(e) => setFuelType(e.target.value)} options={VEHICLE_FUEL_TYPES} />
+      </div>
       <div className="form-group"><label>Registration number *</label><input className="form-input" value={regNumber} onChange={(e) => setRegNumber(e.target.value)} placeholder="e.g. DL01AB1234" /></div>
 
       <div className="form-row">
         <div className="form-group">
-          <label>RC — front *</label>
+          <label>RC - front *</label>
           <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-front')?.click()}>
             <div className="upload-label">{rcFront ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcFront.name}</> : 'Upload photo'}</div>
             <input id="vehicle-rc-front" type="file" accept="image/*,application/pdf" onChange={(e) => setRcFront(e.target.files?.[0] || null)} />
           </div>
         </div>
         <div className="form-group">
-          <label>RC — back *</label>
+          <label>RC - back *</label>
           <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-back')?.click()}>
             <div className="upload-label">{rcBack ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcBack.name}</> : 'Upload photo'}</div>
             <input id="vehicle-rc-back" type="file" accept="image/*,application/pdf" onChange={(e) => setRcBack(e.target.files?.[0] || null)} />

@@ -1,15 +1,15 @@
 // ============================================================
-// SastiTripsWale — Breakpoint tokens + responsive/interaction mixins.
+// SastiTripsWale - Breakpoint tokens + responsive/interaction mixins.
 //
 // New rules should use these instead of hardcoding another one-off
 // `@media (max-width: ...)` value. Existing hardcoded breakpoints in
-// app.scss/style.scss/responsive.scss are left as-is (not migrated) —
+// app.scss/style.scss/responsive.scss are left as-is (not migrated) -
 // only new/touched rules adopt this system.
 // ============================================================
 
 $bp-sm: 480px; // small phones
 $bp-md: 768px; // large phones / small tablets
-$bp-lg: 1024px; // tablets landscape / small laptops — our "desktop" cutoff
+$bp-lg: 1024px; // tablets landscape / small laptops - our "desktop" cutoff
 $bp-xl: 1400px; // large desktop
 
 @mixin below($bp) {
@@ -25,7 +25,7 @@ $bp-xl: 1400px; // large desktop
 }
 
 // Guards :hover so it only applies on devices that can actually hover
-// with precision (mouse/trackpad) — prevents "sticky hover" on tap.
+// with precision (mouse/trackpad) - prevents "sticky hover" on tap.
 // Usage: .btn { @include hover-only { background: ...; } }
 @mixin hover-only {
   @media (hover: hover) and (pointer: fine) {

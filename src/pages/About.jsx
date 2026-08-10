@@ -13,10 +13,10 @@ const STAT_META = [
 ];
 
 const STEPS = [
-  { n: '01', icon: 'fa-solid fa-user-plus', h: 'Sign Up', p: 'Create your account with just an email, mobile number & travel preference — under a minute.' },
+  { n: '01', icon: 'fa-solid fa-user-plus', h: 'Sign Up', p: 'Create your account with just an email, mobile number & travel preference - under a minute.' },
   { n: '02', icon: 'fa-solid fa-id-card', h: 'Get Verified', p: 'Pick a plan, complete your profile and upload an ID. Every member is verified before joining a group.' },
   { n: '03', icon: 'fa-solid fa-map-location-dot', h: 'Plan or Join a Trip', p: 'Host your own trip, or browse verified trips by destination, vehicle type and budget.' },
-  { n: '04', icon: 'fa-solid fa-people-carry-box', h: 'Travel & Split Costs', p: 'Chat with your group, coordinate logistics, and split the budget fairly — for a fraction of the solo cost.' },
+  { n: '04', icon: 'fa-solid fa-people-carry-box', h: 'Travel & Split Costs', p: 'Chat with your group, coordinate logistics, and split the budget fairly - for a fraction of the solo cost.' },
 ];
 
 const VALUES = [
@@ -34,7 +34,7 @@ const VALUE_STYLE = {
   gold: { background: 'rgba(255,201,77,0.14)', color: 'var(--gold)' },
 };
 
-// Small decorative "journey" divider used to separate major sections —
+// Small decorative "journey" divider used to separate major sections -
 // a dashed route with a waypoint dot, echoing the brand's road/pin motif.
 function RouteDivider() {
   return (
@@ -55,7 +55,7 @@ const TEAM = [
     name: 'Arya Sahil Keorak',
     title: 'Founder & CEO',
     photo: 'https://i.pravatar.cc/400?img=12',
-    quote: 'I built SastiTripsWale after too many solo trips got cancelled. Travel should never wait — here, you always find your tribe.',
+    quote: 'I built SastiTripsWale after too many solo trips got cancelled. Travel should never wait - here, you always find your tribe.',
     socials: [
       { icon: 'fa-brands fa-instagram', url: 'https://instagram.com/aryasahilkeorak' },
       { icon: 'fa-brands fa-linkedin', url: 'https://linkedin.com/aryasahilkeorak' },
@@ -85,7 +85,7 @@ export default function About() {
 
   return (
     <>
-      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripsWale" sub="India's #1 verified travel community — travel together, split expenses, make friends." />
+      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripsWale" sub="India's #1 verified travel community - travel together, split expenses, make friends." />
 
       {/* Story */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
@@ -100,13 +100,13 @@ export default function About() {
               </h2>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.9, marginBottom: 16 }}>
                 It started with a solo Spiti Valley ride that never happened. Every riding buddy dropped out
-                one by one, leaving a choice between an expensive solo trip or no trip at all — a frustration
+                one by one, leaving a choice between an expensive solo trip or no trip at all - a frustration
                 shared by thousands of travelers across India who skip adventures every year simply because
                 they can't find the right people to go with, or can't justify the cost alone.
               </p>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.9 }}>
                 <strong style={{ color: 'var(--text)' }}>SastiTripsWale</strong> ("budget traveler" in Hindi) was
-                built to fix exactly that — a verified community where bikers, car travelers and backpackers
+                built to fix exactly that - a verified community where bikers, car travelers and backpackers
                 find each other, split costs fairly, and turn strangers into travel companions. Every member is
                 ID-verified, every group is safety-checked, and every trip is built around one idea: nobody
                 should skip an adventure for lack of company or budget.
@@ -160,7 +160,7 @@ export default function About() {
               <div className="why-icon" style={{ background: 'rgba(255,122,26,0.12)', color: 'var(--fire)' }}><i className="fa-solid fa-bullseye" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Mission</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
-                To make travel affordable, safe and social for every young Indian — by connecting solo
+                To make travel affordable, safe and social for every young Indian - by connecting solo
                 travelers into verified groups that split costs and explore together.
               </p>
             </div>
@@ -168,7 +168,7 @@ export default function About() {
               <div className="why-icon" style={{ background: 'rgba(62,142,247,0.12)', color: 'var(--cyan)' }}><i className="fa-solid fa-binoculars" /></div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Vision</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
-                An India where no one skips a trip for lack of company or budget — where every road,
+                An India where no one skips a trip for lack of company or budget - where every road,
                 mountain and beach is explored with a trusted tribe.
               </p>
             </div>
@@ -196,7 +196,7 @@ export default function About() {
 
           <RouteDivider />
 
-          {/* Team — Founder */}
+          {/* Team - Founder */}
           <div className="text-center fade-up" style={{ marginBottom: 44 }}>
             <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-people-group" /> Leadership</div>
             <h2 className="section-title" style={{ fontSize: '2rem' }}>Meet the <span className="highlight">Founder</span></h2>

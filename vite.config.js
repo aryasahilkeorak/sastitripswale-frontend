@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['pwa/apple-touch-icon.png'],
         manifest: {
-          name: 'SastiTripsWale — Travel Together',
+          name: 'SastiTripsWale - Travel Together',
           short_name: 'SastiTripsWale',
           description: "India's #1 travel community. Find travel mates, split expenses, explore India together.",
           theme_color: '#0a1220',
@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
             { src: '/pwa/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
-        // App data is highly dynamic (trips, chat, payments) — precache only
+        // App data is highly dynamic (trips, chat, payments) - precache only
         // the app shell/static assets, never API responses, so users always
         // see live data. No offline page for API routes.
         workbox: {

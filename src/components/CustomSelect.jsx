@@ -6,7 +6,7 @@ function normalizeOptions(options) {
   return options.map((o) => (typeof o === 'object' && o !== null ? o : { value: o, label: o }));
 }
 
-// Fully custom dropdown — no native <select> involved, so the trigger's
+// Fully custom dropdown - no native <select> involved, so the trigger's
 // chevron icon never disappears while the panel is open (a native <select>
 // hides/flips it, browser-controlled). Renders its panel through a portal
 // so it always escapes `overflow: auto` ancestors (tables, modals).
@@ -44,7 +44,7 @@ export default function CustomSelect({
 
   // Two-pass positioning: mount the panel invisibly, measure its real
   // height, then place it (flipped above the trigger if there's no room
-  // below) — all inside a layout effect so it never visibly flickers.
+  // below) - all inside a layout effect so it never visibly flickers.
   useLayoutEffect(() => {
     if (!open) {
       setPos(null);

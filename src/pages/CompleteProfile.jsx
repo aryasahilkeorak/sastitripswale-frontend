@@ -189,16 +189,16 @@ export default function CompleteProfile() {
           </div>
 
           <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 8px' }}>
-            <i className="fa-solid fa-camera-retro" /> A live selfie is mandatory — required to verify it's really you
+            <i className="fa-solid fa-camera-retro" /> A live selfie is mandatory - required to verify it's really you
           </p>
           <SelfieCapture onChange={setSelfieFile} />
 
           <p className="text-muted" style={{ fontSize: '0.78rem', margin: '16px 0 8px' }}>
-            <i className="fa-solid fa-id-card" /> Aadhaar (required) — both sides
+            <i className="fa-solid fa-id-card" /> Aadhaar (required) - both sides
           </p>
           <div className="form-row">
-            <DocBox id="cp-aadhaar-front" label="Aadhaar — front *" file={aadhaarFront} onChange={setAadhaarFront} />
-            <DocBox id="cp-aadhaar-back" label="Aadhaar — back *" file={aadhaarBack} onChange={setAadhaarBack} />
+            <DocBox id="cp-aadhaar-front" label="Aadhaar - front *" file={aadhaarFront} onChange={setAadhaarFront} />
+            <DocBox id="cp-aadhaar-back" label="Aadhaar - back *" file={aadhaarBack} onChange={setAadhaarBack} />
           </div>
           <div className="form-group">
             <DocBox id="cp-pan" label="PAN (optional)" file={panFile} onChange={setPanFile} />
@@ -210,12 +210,12 @@ export default function CompleteProfile() {
                 <i className="fa-solid fa-car" /> Vehicle owners must also upload their Driving Licence and RC (both sides)
               </p>
               <div className="form-row">
-                <DocBox id="cp-dl-front" label="Driving Licence — front *" file={dlFront} onChange={setDlFront} />
-                <DocBox id="cp-dl-back" label="Driving Licence — back *" file={dlBack} onChange={setDlBack} />
+                <DocBox id="cp-dl-front" label="Driving Licence - front *" file={dlFront} onChange={setDlFront} />
+                <DocBox id="cp-dl-back" label="Driving Licence - back *" file={dlBack} onChange={setDlBack} />
               </div>
               <div className="form-row">
-                <DocBox id="cp-rc-front" label="RC — front *" file={rcFront} onChange={setRcFront} />
-                <DocBox id="cp-rc-back" label="RC — back *" file={rcBack} onChange={setRcBack} />
+                <DocBox id="cp-rc-front" label="RC - front *" file={rcFront} onChange={setRcFront} />
+                <DocBox id="cp-rc-back" label="RC - back *" file={rcBack} onChange={setRcBack} />
               </div>
             </>
           )}
@@ -231,7 +231,7 @@ export default function CompleteProfile() {
               </div>
               <p className="text-muted" style={{ fontSize: '0.8rem', margin: '8px 0 16px' }}>
                 <i className="fa-solid fa-shield-halved" /> Only needed if you plan to host or join Couples Mode trips.
-                We ask for your partner's mobile number and a government ID once, purely for safety verification —
+                We ask for your partner's mobile number and a government ID once, purely for safety verification -
                 it's visible to platform admins only and never shown to other travelers.
               </p>
               <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" /></div>

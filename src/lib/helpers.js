@@ -19,6 +19,10 @@ export function paiseToRupee(p) {
   return rupee((Number(p) || 0) / 100);
 }
 
+export function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function formatDate(d) {
   if (!d) return '';
   const date = new Date(d);
@@ -80,7 +84,7 @@ const DEFAULT_AVATAR_SVG = `
 
 export const AVATAR_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DEFAULT_AVATAR_SVG)}`;
 
-// Neutral "no photo yet" placeholder for a trip cover image — shown while a
+// Neutral "no photo yet" placeholder for a trip cover image - shown while a
 // real destination photo is being resolved (see lib/wikiPhoto.js) or if none
 // could be found. Deliberately generic (map pin over hills) so it never reads
 // as an unrelated stock photo.
@@ -105,7 +109,7 @@ const DOC_ICON_SVG =
   "<rect x='37' y='54' width='18' height='4' rx='2' fill='#0e1a2e'/></svg>";
 export const DOC_FALLBACK = `data:image/svg+xml,${encodeURIComponent(DOC_ICON_SVG)}`;
 
-// Shown wherever the real (member-uploaded) gallery has nothing yet — Home's
+// Shown wherever the real (member-uploaded) gallery has nothing yet - Home's
 // gallery preview and the full Gallery page both fall back to this so the
 // site never shows an empty grid. North India, since that's where most of
 // this community's bike/road-trip groups actually go.
@@ -133,7 +137,7 @@ export function planPrice(preference, duration) {
 }
 export const PREF_LABEL = { male: 'Only Male', female: 'Only Female', both: 'Male + Female' };
 
-// Social handles are stored bare (no URL) — the base URL is prefixed here so
+// Social handles are stored bare (no URL) - the base URL is prefixed here so
 // members only ever type their username, never a full link.
 export const SOCIAL_PLATFORMS = [
   { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram', base: 'https://instagram.com/' },
@@ -149,8 +153,27 @@ export function socialUrl(platformKey, handle) {
   return `${platform.base}${String(handle).trim().replace(/^@/, '')}`;
 }
 
+// What the per-head budget actually covers - shown as a select when
+// planning/editing a trip, and as a label on the trip detail page so
+// joiners know what they're paying for.
+export const BUDGET_INCLUDES = [
+  { value: 'fuel_toll', label: 'Only fuel & toll' },
+  { value: 'fuel_toll_stay', label: 'Fuel + toll + stay' },
+  { value: 'fuel_toll_stay_food', label: 'Fuel + toll + stay + food' },
+  { value: 'all_inclusive', label: 'All inclusive (fuel, stay, food & activities)' },
+];
+export const BUDGET_INCLUDES_LABEL = Object.fromEntries(BUDGET_INCLUDES.map((o) => [o.value, o.label]));
+
+// Who a trip is open to - 'Any' (default) or restricted to one gender.
+// Enforced server-side too (hidden from listings, blocked from joining).
+export const GENDER_PREFERENCE = [
+  { value: 'Any', label: 'Anyone' },
+  { value: 'Male', label: 'Male only' },
+  { value: 'Female', label: 'Female only' },
+];
+
 // Shared between MemberDetail.jsx (viewing someone else) and Dashboard.jsx
-// (viewing yourself) — both render a traveler's interests as icon pills.
+// (viewing yourself) - both render a traveler's interests as icon pills.
 export const TRAVEL_INTEREST_ICONS = {
   Mountains: 'fa-solid fa-mountain',
   Beaches: 'fa-solid fa-umbrella-beach',

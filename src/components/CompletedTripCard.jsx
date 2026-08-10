@@ -12,7 +12,7 @@ const VEHICLE_BADGE = {
 
 // A finished trip, shown wherever completed journeys are browsed (home page
 // teaser, the Trips page "Completed" tab). Unlike TripCard there's no join
-// button — the trip is already over — just the real per-head cost and a
+// button - the trip is already over - just the real per-head cost and a
 // link through to the full expense breakdown.
 export default function CompletedTripCard({ trip }) {
   const perHead = trip.expenses?.length ? trip.expenses.reduce((a, e) => a + e.amount, 0) : trip.budgetPerHead;

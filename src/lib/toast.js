@@ -1,4 +1,4 @@
-// Global toast system — callable from anywhere (components or plain functions).
+// Global toast system - callable from anywhere (components or plain functions).
 import { create } from 'zustand';
 
 let counter = 0;
