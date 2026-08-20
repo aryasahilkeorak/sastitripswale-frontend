@@ -82,7 +82,7 @@ export default function Influencers() {
           ) : (
             <div className="member-grid">
               {influencers.map((inf) => (
-                <Link key={inf.id} to={`/members/${inf.id}`} className="member-card" style={{ color: 'inherit' }}>
+                <Link key={inf.id} to={`/members/${inf.username || inf.id}`} className="member-card" style={{ color: 'inherit' }}>
                   <div className="member-avatar">
                     <img src={imageUrl(inf.avatarUrl, AVATAR_FALLBACK)} alt={inf.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                   </div>

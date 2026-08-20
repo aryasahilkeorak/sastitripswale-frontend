@@ -335,7 +335,7 @@ export default function TripDetail() {
               {trip.members?.length ? (
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {trip.members.map((m) => (
-                    <Link key={m._id} to={`/members/${m._id}`} className="member-pill">
+                    <Link key={m._id} to={`/members/${m.username || m._id}`} className="member-pill">
                       <img src={imageUrl(m.avatarUrl, AVATAR_FALLBACK)} alt={m.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                       {m.fullName}{m.isCouple ? ' + partner' : ''}
                       {m.isVerified && <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} />}
@@ -528,7 +528,7 @@ export default function TripDetail() {
 
               {/* Organizer */}
               {trip.organizer && (
-                <Link to={`/members/${trip.organizer._id}`} className="member-pill" style={{ width: '100%', marginBottom: 14 }}>
+                <Link to={`/members/${trip.organizer.username || trip.organizer._id}`} className="member-pill" style={{ width: '100%', marginBottom: 14 }}>
                   <img src={imageUrl(trip.organizer.avatarUrl, AVATAR_FALLBACK)} alt={trip.organizer.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                   <span>
                     Organized by <strong>{trip.organizer.fullName}{trip.isCouplesMode ? ' + partner' : ''}</strong>

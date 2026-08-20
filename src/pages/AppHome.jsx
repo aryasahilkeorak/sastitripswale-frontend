@@ -134,7 +134,7 @@ export default function AppHome() {
           </div>
 
           <div className="ahg-stats">
-            <Link to={`/members/${user?.id}`} className="ahg-stat" style={{ color: 'inherit' }}>
+            <Link to={`/members/${user?.username || user?.id}`} className="ahg-stat" style={{ color: 'inherit' }}>
               <strong>{myTrips.length}</strong>
               <span>My trips</span>
             </Link>
@@ -290,7 +290,7 @@ export default function AppHome() {
         <section className="app-section fade-up container">
           <div className="app-section-head">
             <h2>Your completed trips</h2>
-            <Link to={`/members/${user?.id}`}>View all <i className="fa-solid fa-arrow-right" /></Link>
+            <Link to={`/members/${user?.username || user?.id}`}>View all <i className="fa-solid fa-arrow-right" /></Link>
           </div>
           <ScrollRow>
             {completedTrips.map((t) => (

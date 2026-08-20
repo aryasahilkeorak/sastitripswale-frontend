@@ -128,7 +128,7 @@ export default function MemberFollowList({ mode }) {
                         />
                       </label>
                     ) : (
-                      <Link to={`/members/${m.id}`} className="ig-follow-avatar">
+                      <Link to={`/members/${m.username || m.id}`} className="ig-follow-avatar">
                         <img
                           src={imageUrl(m.avatarUrl, AVATAR_FALLBACK)}
                           alt={m.fullName}
@@ -136,7 +136,7 @@ export default function MemberFollowList({ mode }) {
                         />
                       </Link>
                     )}
-                    <Link to={`/members/${m.id}`} className="ig-follow-info" onClick={(e) => selecting && e.preventDefault()}>
+                    <Link to={`/members/${m.username || m.id}`} className="ig-follow-info" onClick={(e) => selecting && e.preventDefault()}>
                       <strong>
                         {m.fullName}
                         <VerificationBadge role={m.role} verificationLevel={m.verificationLevel} isVerified={m.isVerified} icon />
