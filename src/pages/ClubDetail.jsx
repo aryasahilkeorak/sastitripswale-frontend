@@ -437,7 +437,7 @@ export default function ClubDetail() {
                   <i className="fa-solid fa-users" /> Members ({club.memberCount})
                 </h4>
                 {club.previewMembers?.map((m) => (
-                  <Link key={m._id} to={`/members/${m._id}`} className="notif-item club-member-row" style={{ alignItems: 'center', marginBottom: 8, color: 'inherit' }}>
+                  <Link key={m._id} to={`/members/${m.username || m._id}`} className="notif-item club-member-row" style={{ alignItems: 'center', marginBottom: 8, color: 'inherit' }}>
                     <img src={imageUrl(m.avatarUrl, AVATAR_FALLBACK)} alt="" style={{ width: 36, height: 36, borderRadius: '50%' }} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <strong style={{ fontSize: '0.85rem' }}>

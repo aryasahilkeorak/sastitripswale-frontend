@@ -59,7 +59,7 @@ export default function Dashboard() {
   }
 
   if (tab !== 'settings') {
-    return <Navigate to={`/members/${user?.id}`} replace />;
+    return <Navigate to={`/members/${user?.username || user?.id}`} replace />;
   }
 
   const settingsTitle =
@@ -74,7 +74,7 @@ export default function Dashboard() {
               <i className="fa-solid fa-arrow-left" />
             </button>
           ) : (
-            <Link to={`/members/${user?.id}`} className="ig-id-btn" aria-label="Back to profile">
+            <Link to={`/members/${user?.username || user?.id}`} className="ig-id-btn" aria-label="Back to profile">
               <i className="fa-solid fa-arrow-left" />
             </Link>
           )}

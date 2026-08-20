@@ -65,7 +65,7 @@ export default function Join() {
 
   const [step, setStep] = useState(accessToken ? 2 : 1);
   const [form, setForm] = useState({
-    email: '', mobile: '', password: '', gender: '', coTravelerPreference: '',
+    email: '', username: '', mobile: '', password: '', gender: '', coTravelerPreference: '',
     referralCode: searchParams.get('ref') || '',
   });
 
@@ -113,6 +113,7 @@ export default function Join() {
 
   const validateStep1 = () => {
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Enter a valid email';
+    if (!/^[a-z0-9_.]{3,30}$/.test(form.username)) return 'Username must be 3-30 characters: lowercase letters, numbers, "_" or "." only';
     if (!/^[0-9]{10,15}$/.test(form.mobile)) return 'Enter a valid mobile number';
     if (form.password.length < 6) return 'Password must be at least 6 characters';
     if (!form.gender) return 'Select your gender';
@@ -127,6 +128,7 @@ export default function Join() {
     try {
       const { data } = await api.post('/auth/register', {
         email: form.email,
+        username: form.username,
         mobile: form.mobile,
         password: form.password,
         gender: form.gender,
@@ -240,6 +242,16 @@ export default function Join() {
             <div className="form-step active">
               <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Create your account</h3>
               <div className="form-group"><label>Email *</label><input className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" /></div>
+              <div className="form-group">
+                <label>Username *</label>
+                <input
+                  className="form-input"
+                  value={form.username}
+                  onChange={(e) => setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '') }))}
+                  placeholder="e.g. sahilkashyap"
+                  maxLength={30}
+                />
+              </div>
               <div className="form-group"><label>Mobile number *</label><input className="form-input" value={form.mobile} onChange={set('mobile')} placeholder="10-digit mobile" /></div>
               <div className="form-group"><label>Password *</label><PasswordInput value={form.password} onChange={set('password')} placeholder="min 6 characters" /></div>
               <div className="form-group">

@@ -53,7 +53,15 @@ export default function MemberDetail() {
     setLoading(true);
     api
       .get(`/members/${id}`)
-      .then((r) => setMember(r.data.member))
+      .then((r) => {
+        setMember(r.data.member);
+        // Canonicalize the URL to the member's @username once we know it,
+        // so a link that pointed at the raw Mongo id (e.g. from an old
+        // notification) settles into the pretty /members/username form.
+        if (r.data.member.username && r.data.member.username !== id) {
+          navigate(`/members/${r.data.member.username}`, { replace: true });
+        }
+      })
       .catch(() => setMember(null))
       .finally(() => setLoading(false));
   };

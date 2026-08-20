@@ -148,7 +148,7 @@ function UserReports() {
               <div className="row-between">
                 <strong>
                   {r.reportedUser ? (
-                    <Link to={`/members/${r.reportedUser._id}`}>{r.reportedUser.fullName}</Link>
+                    <Link to={`/members/${r.reportedUser.username || r.reportedUser._id}`}>{r.reportedUser.fullName}</Link>
                   ) : (
                     <span className="text-muted">Deleted user</span>
                   )}
@@ -166,7 +166,7 @@ function UserReports() {
                   <i className="fa-solid fa-circle-check" /> {r.status === 'resolved' ? 'Reopen' : 'Mark resolved'}
                 </button>
                 {r.reportedUser && (
-                  <Link to={`/members/${r.reportedUser._id}`} className="btn btn-sm btn-outline">
+                  <Link to={`/members/${r.reportedUser.username || r.reportedUser._id}`} className="btn btn-sm btn-outline">
                     <i className="fa-solid fa-user" /> View profile
                   </Link>
                 )}
