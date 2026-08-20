@@ -82,7 +82,7 @@ export default function ProfileHeader({ member, id, actions }) {
               {member.mutualFollowers.slice(0, 2).map((f, i) => (
                 <span key={f.id}>
                   {i > 0 && ', '}
-                  <Link to={`/members/${f.id}`} style={{ color: 'var(--text)', fontWeight: 600 }}>{f.username || f.fullName}</Link>
+                  <Link to={`/members/${f.username || f.id}`} style={{ color: 'var(--text)', fontWeight: 600 }}>{f.username || f.fullName}</Link>
                 </span>
               ))}
               {member.mutualFollowersTotal > 2 && ` and ${member.mutualFollowersTotal - 2} other${member.mutualFollowersTotal - 2 === 1 ? '' : 's'}`}
