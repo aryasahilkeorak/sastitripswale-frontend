@@ -60,7 +60,7 @@ export default function MemberCard({ member }) {
 
   return (
     <div className="member-card">
-      <Link to={`/members/${member.id}`} style={{ color: 'inherit' }}>
+      <Link to={`/members/${member.username || member.id}`} style={{ color: 'inherit' }}>
         <div className="member-avatar">
           <img
             src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}

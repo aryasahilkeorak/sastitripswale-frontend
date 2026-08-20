@@ -17,7 +17,9 @@ export default function Layout() {
   // "My Profile" is just /members/:yourId (same page as anyone else's
   // profile) - without this, the bottom nav's route-prefix match lights up
   // "Members" instead of "Me" while viewing your own profile.
-  const onOwnProfile = Boolean(user?.id) && location.pathname === `/members/${user.id}`;
+  const onOwnProfile =
+    Boolean(user?.id) &&
+    (location.pathname === `/members/${user.id}` || (user?.username && location.pathname === `/members/${user.username}`));
 
   // Scroll-triggered fade-ins read as sluggish rather than polished in the
   // logged-in mobile app views (Dashboard, Members slider, etc.) - skip
