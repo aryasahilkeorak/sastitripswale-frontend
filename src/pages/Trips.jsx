@@ -13,6 +13,7 @@ import CustomDatePicker from '../components/CustomDatePicker.jsx';
 import CustomNumberStepper from '../components/CustomNumberStepper.jsx';
 import PlaceAutocomplete from '../components/PlaceAutocomplete.jsx';
 import Modal from '../components/Modal.jsx';
+import Seo from '../components/Seo.jsx';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -61,8 +62,8 @@ function pushRecentPlace(list, place) {
 }
 
 export default function Trips() {
-  // Seeded once from the URL (e.g. ?type=&from=&to=&date=&seats=) so a
-  // shared/bookmarked filtered link works too.
+  // Seeded once from the URL (e.g. ?status=&type=&from=&to=&date=&seats=)
+  // so a shared/bookmarked filtered link works too.
   const [searchParams] = useSearchParams();
 
   const [trips, setTrips] = useState([]);
@@ -134,6 +135,11 @@ export default function Trips() {
 
   return (
     <>
+      <Seo
+        title="Bike, Car & Backpacking Trips Across India"
+        description="Browse verified travel groups across India - bike trips, road trips, treks and beach getaways. Join a trip and split the budget, or plan your own and find co-travelers."
+        path="/trips"
+      />
       <PageHero
         tag="Upcoming Adventures"
         tagIcon="fa-solid fa-compass"
@@ -168,9 +174,14 @@ export default function Trips() {
                 <i className="fa-solid fa-trophy" /> Completed
               </button>
             </div>
-            <Link to="/plan-trip" className="btn btn-sm btn-primary">
-              <i className="fa-solid fa-plus" /> Plan a Trip
-            </Link>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Link to="/plan-trip" className="btn btn-sm btn-primary">
+                <i className="fa-solid fa-plus" /> Plan a Trip
+              </Link>
+              <Link to="/plan-group-trip" className="btn btn-sm btn-outline">
+                <i className="fa-solid fa-people-group" /> Plan a Group Trip
+              </Link>
+            </div>
           </div>
 
           {status === 'upcoming' && (

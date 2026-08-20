@@ -10,6 +10,98 @@ import CustomSelect from '../components/CustomSelect.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
 import Stars from '../components/Stars.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
+import Seo from '../components/Seo.jsx';
+import { buildBreadcrumbLd } from '../lib/seo.js';
+
+// Same mapping used by TripCard/CompletedTripCard, so a trip's vehicle
+// badge looks identical whether seen on a listing card or this detail page.
+const VEHICLE_BADGE = {
+  Bike: { cls: 'badge-magenta', icon: 'fa-solid fa-motorcycle' },
+  Car: { cls: 'badge-green', icon: 'fa-solid fa-car' },
+  Bus: { cls: 'badge-cyan', icon: 'fa-solid fa-bus' },
+  Train: { cls: 'badge-cyan', icon: 'fa-solid fa-train' },
+  Mixed: { cls: 'badge-gold', icon: 'fa-solid fa-route' },
+};
+
+// One "how was it travelling with this person" card per co-traveler on a
+// completed trip - distinct from the trip-level review below. Defined at
+// module scope (not nested in TripDetail) so it isn't torn down and
+// rebuilt on every parent re-render.
+function MemberRatingCard({ person, existing, onSubmit }) {
+  const [rating, setRating] = useState(existing?.rating || 0);
+  const [hover, setHover] = useState(0);
+  const [message, setMessage] = useState(existing?.message || '');
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(!existing);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!rating) return;
+    setBusy(true);
+    try {
+      await onSubmit(rating, message);
+      setEditing(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!editing && existing) {
+    return (
+      <div className="card" style={{ padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img
+          src={imageUrl(person.avatarUrl, AVATAR_FALLBACK)}
+          alt=""
+          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{person.fullName}</div>
+          <Stars value={rating} />
+          {message && <p className="text-muted" style={{ fontSize: '0.78rem', margin: '4px 0 0' }}>{message}</p>}
+        </div>
+        <button type="button" className="btn btn-sm btn-outline" onClick={() => setEditing(true)}>Edit</button>
+      </div>
+    );
+  }
+
+  return (
+    <form className="card" style={{ padding: 14 }} onSubmit={submit}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <img
+          src={imageUrl(person.avatarUrl, AVATAR_FALLBACK)}
+          alt=""
+          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+        />
+        <strong style={{ fontSize: '0.88rem' }}>{person.fullName}</strong>
+      </div>
+      <div className="star-rating" onMouseLeave={() => setHover(0)}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            type="button"
+            key={n}
+            className={`star-btn${n <= (hover || rating) ? ' selected' : ''}`}
+            onMouseEnter={() => setHover(n)}
+            onClick={() => setRating(n)}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      <textarea
+        className="form-input mt-2"
+        maxLength={500}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder={`Optional note about travelling with ${person.fullName}`}
+      />
+      <button className="btn btn-sm btn-primary mt-2" disabled={busy || !rating}>
+        {busy ? <span className="spinner" /> : <i className="fa-solid fa-star" />} {existing ? 'Update rating' : 'Submit rating'}
+      </button>
+    </form>
+  );
+}
 
 export default function TripDetail() {
   const { id } = useParams();
@@ -122,6 +214,16 @@ export default function TripDetail() {
     }
   };
 
+  const rateMember = async (rateeId, rating, message) => {
+    try {
+      await api.post(`/trips/${id}/member-reviews`, { rateeId, rating, message });
+      toast('fa-solid fa-star', 'Rating saved!');
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
   const changeStatus = async (status) => {
     try {
       await api.put(`/trips/${id}`, { status });
@@ -148,11 +250,18 @@ export default function TripDetail() {
   const seatsLeft = Math.max(0, total - reserved - filled);
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   const days = tripDays(trip.startDate, trip.endDate);
+  const vb = VEHICLE_BADGE[trip.vehicleType] || { cls: 'badge-fire', icon: 'fa-solid fa-location-dot' };
   const photos = (trip.photos || []).map((p) => imageUrl(p.photoUrl));
   const isOrganizer = user && trip.organizer && String(trip.organizer._id) === String(user.id);
   const isAdminViewer = user?.role === 'admin' || user?.role === 'superadmin';
   // Strictly trip members only (not admins) - matches the backend check.
   const canAddPhoto = Boolean(isOrganizer || trip.requestStatus === 'accepted');
+  // Everyone else who was actually on the trip - organizer plus accepted
+  // co-travelers, minus the viewer themself - available to rate.
+  const otherParticipants = [
+    ...(trip.organizer && !isOrganizer ? [trip.organizer] : []),
+    ...(trip.members || []).filter((m) => String(m._id) !== String(user?.id)),
+  ];
   const coupleSafetyEntries = isAdminViewer
     ? [
         ...(trip.isCouplesMode ? [{ key: 'host', label: `${trip.organizer?.fullName} (host)`, mobile: trip.organizer?.partnerMobile, doc: trip.organizer?.partnerDocUrl }] : []),
@@ -167,10 +276,21 @@ export default function TripDetail() {
 
   return (
     <>
+      <Seo
+        title={`${trip.destination} Trip - Join or Split Costs`}
+        description={`Join this ${trip.destination} trip on SastiTripsWale for ${rupee(trip.budgetPerHead)}/person. ${Math.max(0, (trip.totalSeats || 0) - (trip.filledSeats || 0))} seats left - verified co-travelers, split expenses, travel safely together.`}
+        path={`/trips/${trip._id}`}
+        image={trip.coverImageUrl ? imageUrl(trip.coverImageUrl) : undefined}
+        jsonLd={buildBreadcrumbLd([
+          { name: 'Home', path: '/' },
+          { name: 'Trips', path: '/trips' },
+          { name: trip.destination },
+        ])}
+      />
       <section className="detail-section">
         <div className="container">
-          <Link to="/trips" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
-            <i className="fa-solid fa-arrow-left" /> All trips
+          <Link to="/trips" className="ig-id-btn" aria-label="All trips" title="All trips">
+            <i className="fa-solid fa-arrow-left" />
           </Link>
 
           <div className="detail-grid mt-3">
@@ -179,7 +299,11 @@ export default function TripDetail() {
               <DestinationImage trip={trip} className="trip-hero-img" />
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
-                {trip.vehicleType && <span className="badge badge-magenta">{trip.vehicleType}</span>}
+                {trip.vehicleType && (
+                  <span className={`badge ${vb.cls}`}>
+                    <i className={vb.icon} /> {trip.vehicleType}
+                  </span>
+                )}
                 {trip.isCouplesMode && <span className="badge badge-magenta"><i className="fa-solid fa-heart" /> Couples Mode</span>}
                 {trip.genderPreference && trip.genderPreference !== 'Any' && (
                   <span className="badge badge-magenta">
@@ -187,7 +311,11 @@ export default function TripDetail() {
                   </span>
                 )}
                 {days && <span className="badge badge-gold">{days} Days</span>}
-                <span className={`badge ${trip.status === 'completed' ? 'badge-green' : 'badge-fire'}`}>{trip.status}</span>
+                {trip.status === 'completed' ? (
+                  <span className="badge badge-green"><i className="fa-solid fa-trophy" /> Completed</span>
+                ) : (
+                  <span className={`badge ${trip.status === 'cancelled' ? 'badge-red' : 'badge-fire'}`}>{trip.status}</span>
+                )}
               </div>
 
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 800, letterSpacing: '-0.03em', margin: '14px 0 6px' }}>
@@ -216,6 +344,26 @@ export default function TripDetail() {
                 </div>
               ) : (
                 <p className="text-muted">No one has joined yet - be the first!</p>
+              )}
+
+              {/* Rate co-travelers - only once the trip is over, only for
+                  people who were actually on it. */}
+              {trip.canRateMembers && otherParticipants.length > 0 && (
+                <>
+                  <h3 className="section-title" style={{ fontSize: '1.3rem', margin: '28px 0 14px' }}>
+                    Rate your <span className="highlight">co-travelers</span>
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {otherParticipants.map((p) => (
+                      <MemberRatingCard
+                        key={p._id}
+                        person={p}
+                        existing={trip.myMemberReviews?.find((r) => String(r.ratee) === String(p._id)) || null}
+                        onSubmit={(rating, message) => rateMember(p._id, rating, message)}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
 
               {/* Expenses (completed) */}
@@ -454,12 +602,16 @@ export default function TripDetail() {
                       { value: 'cancelled', label: 'Cancelled' },
                     ]}
                   />
-                  <Link to={`/trips/${id}/edit`} className="btn btn-sm btn-outline mb-2" style={{ width: '100%', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-pen-to-square" /> Edit Trip
-                  </Link>
-                  <button className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={removeTrip}>
-                    <i className="fa-solid fa-trash" /> Delete Trip
-                  </button>
+                  {trip.status !== 'completed' && (
+                    <>
+                      <Link to={`/trips/${id}/edit`} className="btn btn-sm btn-outline mb-2" style={{ width: '100%', justifyContent: 'center' }}>
+                        <i className="fa-solid fa-pen-to-square" /> Edit Trip
+                      </Link>
+                      <button className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={removeTrip}>
+                        <i className="fa-solid fa-trash" /> Delete Trip
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 
