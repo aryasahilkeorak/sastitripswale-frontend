@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
 import PasswordInput from '../components/PasswordInput.jsx';
+import Seo from '../components/Seo.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,23 +17,53 @@ export default function Login() {
   const [err, setErr] = useState('');
   const [roleChoice, setRoleChoice] = useState(null); // logged-in user, awaiting admin/user pick
 
+  // 2FA (admin PIN) step - set once /auth/login reports twoFactorRequired.
+  const [twoFactorToken, setTwoFactorToken] = useState(null);
+  const [pin, setPin] = useState('');
+  const [pinBusy, setPinBusy] = useState(false);
+  const [pinErr, setPinErr] = useState('');
+
+  const onLoggedIn = (user) => {
+    toast('fa-solid fa-hand', `Welcome back, ${user.fullName.split(' ')[0]}!`);
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      setRoleChoice(user);
+    } else {
+      navigate(location.state?.from || '/dashboard', { replace: true });
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setErr('');
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
-      toast('fa-solid fa-hand', `Welcome back, ${data.user.fullName.split(' ')[0]}!`);
-      if (data.user.role === 'admin' || data.user.role === 'superadmin') {
-        setRoleChoice(data.user);
-      } else {
-        navigate(location.state?.from || '/dashboard', { replace: true });
+      if (data.twoFactorRequired) {
+        setTwoFactorToken(data.twoFactorToken);
+        return;
       }
+      setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
+      onLoggedIn(data.user);
     } catch (e2) {
       setErr(apiError(e2, 'Login failed'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const submitPin = async (e) => {
+    e.preventDefault();
+    setPinBusy(true);
+    setPinErr('');
+    try {
+      const { data } = await api.post('/auth/verify-2fa', { twoFactorToken, pin });
+      setSession({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken });
+      setTwoFactorToken(null);
+      onLoggedIn(data.user);
+    } catch (e2) {
+      setPinErr(apiError(e2, 'Incorrect PIN'));
+    } finally {
+      setPinBusy(false);
     }
   };
 
@@ -41,9 +72,57 @@ export default function Login() {
     navigate(mode === 'admin' ? '/admin' : (location.state?.from || '/dashboard'), { replace: true });
   };
 
+  if (twoFactorToken) {
+    return (
+      <div className="auth-wrap">
+        <Seo noindex path="/login" title="Log In" />
+        <div className="page-hero-bg" />
+        <div className="auth-card text-center">
+          <h1><i className="fa-solid fa-shield-halved" /> Enter your PIN</h1>
+          <p className="muted">This account has two-factor authentication enabled. Enter your 6-digit admin PIN to continue.</p>
+
+          {pinErr && (
+            <div className="badge badge-red" style={{ display: 'block', padding: '10px 14px', margin: '16px 0' }}>
+              {pinErr}
+            </div>
+          )}
+
+          <form onSubmit={submitPin} style={{ marginTop: 16 }}>
+            <div className="form-group">
+              <input
+                className="form-input"
+                style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em' }}
+                inputMode="numeric"
+                autoFocus
+                maxLength={6}
+                required
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="••••••"
+              />
+            </div>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={pinBusy || pin.length !== 6}>
+              {pinBusy ? <span className="spinner" /> : <i className="fa-solid fa-unlock" />} Verify PIN
+            </button>
+          </form>
+
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ marginTop: 16, background: 'transparent', color: 'var(--text-3)' }}
+            onClick={() => { setTwoFactorToken(null); setPin(''); setPinErr(''); }}
+          >
+            <i className="fa-solid fa-arrow-left" /> Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (roleChoice) {
     return (
       <div className="auth-wrap">
+        <Seo noindex path="/login" title="Log In" />
         <div className="page-hero-bg" />
         <div className="auth-card text-center">
           <h1>Welcome back, {roleChoice.fullName.split(' ')[0]} <i className="fa-solid fa-hand" /></h1>
@@ -64,6 +143,7 @@ export default function Login() {
 
   return (
     <div className="auth-wrap">
+      <Seo noindex path="/login" title="Log In" />
       <div className="page-hero-bg" />
       <div className="auth-card">
         <h1>Welcome back <i className="fa-solid fa-hand" /></h1>

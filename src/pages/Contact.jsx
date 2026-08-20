@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
+import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
+import Seo from '../components/Seo.jsx';
 
 const INFO = [
   // Mobile/WhatsApp/email temporarily hidden across the app - see Footer.jsx and Layout.jsx.
@@ -20,9 +23,36 @@ const QA = [
 ];
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', mobile: '', email: '', subject: '', message: '' });
+  const navigate = useNavigate();
+  const accessToken = useAuth((s) => s.accessToken);
+  const [searchParams] = useSearchParams();
+  const [form, setForm] = useState({
+    name: '',
+    mobile: '',
+    email: '',
+    subject: searchParams.get('subject') || '',
+    message: searchParams.get('message') || '',
+  });
   const [busy, setBusy] = useState(false);
+  const [chatBusy, setChatBusy] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const openSupportChat = async () => {
+    if (!accessToken) {
+      toast('fa-solid fa-lock', 'Log in to chat with support');
+      navigate('/login');
+      return;
+    }
+    setChatBusy(true);
+    try {
+      const { data } = await api.get('/chat/support');
+      navigate(`/chat/${data.groupId}`);
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setChatBusy(false);
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -46,14 +76,19 @@ export default function Contact() {
 
   return (
     <>
+      <Seo
+        title="Contact Us"
+        description="Get in touch with SastiTripsWale - questions about joining, planning a trip, expense splitting or safety verification. We respond within 24 hours."
+        path="/contact"
+      />
       <PageHero tag="Get in Touch" tagIcon="fa-solid fa-headset" title="Contact" highlight="Us" sub="Questions about joining, trips or safety? We're here to help." />
 
       <section style={{ paddingTop: 40 }}>
         <div className="container">
           <div className="contact-grid">
             {/* Left: info */}
-            <div>
-              <div className="grid-2 mb-3">
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="grid-3 mb-3">
                 {INFO.map((i) => (
                   <div key={i.label} className="card contact-info-tile">
                     <div className="notif-icon"><i className={i.icon} /></div>
@@ -63,9 +98,26 @@ export default function Contact() {
                     </div>
                   </div>
                 ))}
+
+                <button
+                  type="button"
+                  className="card contact-info-tile contact-support-tile"
+                  style={{ width: '100%', textAlign: 'left', font: 'inherit', color: 'inherit', cursor: 'pointer' }}
+                  onClick={openSupportChat}
+                  disabled={chatBusy}
+                >
+                  <div className="notif-icon"><i className="fa-solid fa-headset" /></div>
+                  <div style={{ flex: 1 }}>
+                    <div className="text-muted" style={{ fontSize: '0.72rem' }}>Support</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      {chatBusy ? 'Opening chat…' : 'Chat with us'}
+                    </div>
+                  </div>
+                  {chatBusy ? <span className="spinner" /> : <i className="fa-solid fa-arrow-right" style={{ color: 'var(--text-3)' }} />}
+                </button>
               </div>
 
-              <div className="card contact-faq-card">
+              <div className="card contact-faq-card" style={{ flex: 1 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>
                   <i className="fa-regular fa-circle-question" style={{ color: 'var(--fire)', marginRight: 8 }} /> Quick answers
                 </h4>
@@ -99,6 +151,7 @@ export default function Contact() {
                       { value: '', label: 'Select' },
                       'Joining / Membership',
                       'Trip question',
+                      'Withdrawal / Wallet',
                       'Safety',
                       'Feedback',
                       'Other',

@@ -2,17 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, rupee, formatDate, AVATAR_FALLBACK, SOCIAL_PLATFORMS, socialUrl, TRAVEL_INTEREST_ICONS } from '../lib/helpers.js';
+import { imageUrl, rupee, formatDate, timeAgo, AVATAR_FALLBACK, TRAVEL_INTEREST_ICONS } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import Modal from '../components/Modal.jsx';
-import VerificationBadge from '../components/VerificationBadge.jsx';
+import ProfileHeader from '../components/ProfileHeader.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
+import Stars from '../components/Stars.jsx';
+import Seo from '../components/Seo.jsx';
+import FollowButton from '../components/FollowButton.jsx';
 
 const TABS = [
-  { key: 'trips', label: 'Trips', icon: 'fa-solid fa-map-location-dot' },
+  { key: 'trips', label: 'Trips', icon: 'fa-solid fa-table-cells' },
+  { key: 'joined', label: 'Joined', icon: 'fa-solid fa-route' },
   { key: 'photos', label: 'Photos', icon: 'fa-regular fa-image' },
+  { key: 'reviews', label: 'Reviews', icon: 'fa-solid fa-star' },
 ];
 
 // How many interest pills show before the row collapses behind a toggle.
@@ -53,6 +58,18 @@ export default function MemberDetail() {
       .finally(() => setLoading(false));
   };
   useEffect(load, [id]);
+
+  // Silent poll (no loading spinner) so follower/following counts and other
+  // members' activity feel real-time without a manual refresh.
+  useEffect(() => {
+    const poll = setInterval(() => {
+      api
+        .get(`/members/${id}`)
+        .then((r) => setMember((prev) => (prev ? { ...prev, ...r.data.member } : r.data.member)))
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(poll);
+  }, [id]);
 
   const connect = async () => {
     if (!accessToken) {
@@ -113,7 +130,23 @@ export default function MemberDetail() {
     }
   };
 
+  const removeTrip = async (tripId) => {
+    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
+    try {
+      await api.delete(`/trips/${tripId}`);
+      setMember((m) => ({ ...m, recentTrips: (m.recentTrips || []).filter((t) => t._id !== tripId) }));
+      toast('fa-solid fa-trash', 'Trip deleted');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
   const message = async () => {
+    if (!accessToken) {
+      toast('fa-solid fa-lock', 'Log in to send a message');
+      navigate('/login');
+      return;
+    }
     setBusy(true);
     try {
       const { data } = await api.get(`/chat/dm/${id}`);
@@ -194,156 +227,130 @@ export default function MemberDetail() {
 
   return (
     <section className="detail-section">
-      <div className="container" style={{ maxWidth: 1120 }}>
-        <div className="row-between" style={{ alignItems: 'center' }}>
-          <Link to="/members" style={{ color: 'var(--text-3)', fontSize: '0.85rem' }}>
-            <i className="fa-solid fa-arrow-left" /> All members
+      <Seo noindex title={member?.fullName ? `${member.fullName}'s Profile` : 'Member Profile'} path={`/members/${id}`} />
+      <div className="container" style={{ maxWidth: 1120, position: 'relative' }}>
+        <div className={`row-between member-detail-topbar${member.isSelf ? ' is-self' : ''}`} style={{ alignItems: 'center' }}>
+          <Link to="/members" className="ig-id-btn member-back-btn" aria-label="All members" title="All members">
+            <i className="fa-solid fa-arrow-left" />
           </Link>
 
-          <div className="ig-menu" ref={menuRef} style={{ position: 'relative' }}>
-            <button className="ig-id-btn" onClick={() => setMenuOpen((v) => !v)} title="More options">
-              <i className="fa-solid fa-ellipsis-vertical" />
-            </button>
-            {menuOpen && (
-              <div className="ig-menu-dropdown">
-                <button onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
-                <button onClick={copyProfileUrl}><i className="fa-solid fa-link" /> Copy profile URL</button>
-                <button onClick={copyUserId}><i className="fa-solid fa-copy" /> Copy user ID</button>
-                {!member.isSelf && accessToken && (
-                  <>
-                    <button onClick={openReport}><i className="fa-solid fa-flag" /> Report user</button>
-                    <button className="danger" onClick={toggleBlockUser}>
-                      <i className="fa-solid fa-ban" /> {member.isBlockedByMe ? 'Unblock user' : 'Block user'}
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="detail-grid mt-3">
-          <div>
-        <div className="ig-header">
-          <div className="ig-top-row">
-            <img
-              className="ig-avatar"
-              src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
-              alt={member.fullName}
-              onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-            />
-            <div className="ig-stats">
-              <div className="ig-stat"><strong>{member.stats?.tripsOrganized ?? 0}</strong><span>Trips</span></div>
-              <div className="ig-stat"><strong>{member.stats?.connections ?? 0}</strong><span>Connections</span></div>
-              <div className="ig-stat"><strong>{member.stats?.photos ?? 0}</strong><span>Photos</span></div>
-            </div>
-          </div>
-
-          <div className="ig-header-body">
-            <div className="ig-name-row">
-              <h1>{member.fullName}</h1>
-              <VerificationBadge role={member.role} verificationLevel={member.verificationLevel} isVerified={member.isVerified} />
-            </div>
-
-            {member.username && <p className="ig-username">@{member.username}</p>}
-            <p className="ig-joined">Member since {formatDate(member.createdAt)}</p>
-
-            <p className="ig-meta">
-              {member.profession && <span><i className="fa-solid fa-briefcase" /> {member.profession}</span>}
-              <span><i className="fa-solid fa-location-dot" /> {member.city || 'India'}{member.age ? ` · ${member.age}` : ''}</span>
-            </p>
-
-            {member.bio && <p className="ig-bio">{member.bio}</p>}
-
-            {member.vehicleType && (
-              <div className="mt-2">
-                <span className="badge badge-fire">
-                  <i className="fa-solid fa-car" /> {member.vehicleType}{member.vehicleModel ? ` · ${member.vehicleModel}` : ''}
-                </span>
-              </div>
-            )}
-
-            {SOCIAL_PLATFORMS.some((p) => member[p.key]) && (
-              <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
-                {SOCIAL_PLATFORMS.filter((p) => member[p.key]).map((p) => (
-                  <a key={p.key} href={socialUrl(p.key, member[p.key])} target="_blank" rel="noreferrer" title={p.label} style={{ fontSize: '1.2rem', color: 'var(--text-2)' }}>
-                    <i className={p.icon} />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card ig-secondary-card mt-3">
-          <div className="ig-actions">
-            {member.isSelf ? (
-              <Link to="/edit-profile" className="btn btn-outline">
-                <i className="fa-solid fa-pen" /> Edit Profile
-              </Link>
-            ) : member.connection?.status === 'accepted' ? (
-              <>
-                <button className="btn btn-primary" onClick={message} disabled={busy}>
-                  <i className="fa-solid fa-comment-dots" /> Message
-                </button>
-                <button className="btn btn-outline" style={{ color: '#fca5a5', borderColor: 'rgba(239,68,68,0.35)' }} onClick={disconnect} disabled={busy}>
-                  <i className="fa-solid fa-user-minus" /> Disconnect
-                </button>
-              </>
-            ) : member.connection?.status === 'pending' && member.connection.direction === 'received' ? (
-              <>
-                <button className="btn btn-primary" onClick={() => respond('accept')} disabled={busy}>
-                  <i className="fa-solid fa-check" /> Accept
-                </button>
-                <button className="btn btn-outline" onClick={() => respond('reject')} disabled={busy}>
-                  <i className="fa-solid fa-xmark" /> Decline
-                </button>
-              </>
-            ) : member.connection?.status === 'pending' ? (
-              <button className="btn btn-outline" onClick={disconnect} disabled={busy}>
-                <i className="fa-regular fa-clock" /> Request pending - Withdraw
+          {!member.isSelf && (
+            <div className="ig-menu" ref={menuRef} style={{ position: 'relative' }}>
+              <button className="ig-id-btn" onClick={() => setMenuOpen((v) => !v)} title="More options">
+                <i className="fa-solid fa-ellipsis-vertical" />
               </button>
-            ) : (
-              <button className="btn btn-primary" onClick={connect} disabled={busy}>
-                {busy ? <span className="spinner" /> : <i className="fa-solid fa-user-plus" />} Connect
-              </button>
-            )}
-            {(member.isSelf || member.connection?.status === 'accepted') && (
-              <button className="btn btn-outline" onClick={viewSelfie}>
-                <i className="fa-solid fa-id-badge" /> Verification photo
-              </button>
-            )}
-          </div>
-
-          {member.travelInterests?.length > 0 && (
-            <>
-              <div className="ig-v-divider" />
-              <div className="ig-h-divider" />
-              <div className="profile-interests">
-                <div className="profile-interests-label"><i className="fa-solid fa-compass" /> Travel Interests</div>
-                <div className="interest-pill-row">
-                  {(interestsExpanded ? member.travelInterests : member.travelInterests.slice(0, INTERESTS_COLLAPSED_LIMIT)).map((t) => (
-                    <span key={t} className="interest-pill">
-                      <i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /> {t}
-                    </span>
-                  ))}
-                  {member.travelInterests.length > INTERESTS_COLLAPSED_LIMIT && (
-                    <button
-                      className="interest-pill interest-pill-toggle"
-                      onClick={() => setInterestsExpanded((v) => !v)}
-                    >
-                      {interestsExpanded ? (
-                        <>Show less <i className="fa-solid fa-chevron-up" /></>
-                      ) : (
-                        <>+{member.travelInterests.length - INTERESTS_COLLAPSED_LIMIT} more <i className="fa-solid fa-chevron-down" /></>
-                      )}
-                    </button>
+              {menuOpen && (
+                <div className="ig-menu-dropdown">
+                  <button onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
+                  <button onClick={copyProfileUrl}><i className="fa-solid fa-link" /> Copy profile URL</button>
+                  <button onClick={copyUserId}><i className="fa-solid fa-copy" /> Copy user ID</button>
+                  {accessToken && (
+                    <>
+                      <button onClick={openReport}><i className="fa-solid fa-flag" /> Report user</button>
+                      <button className="danger" onClick={toggleBlockUser}>
+                        <i className="fa-solid fa-ban" /> {member.isBlockedByMe ? 'Unblock user' : 'Block user'}
+                      </button>
+                    </>
                   )}
                 </div>
-              </div>
-            </>
+              )}
+            </div>
           )}
         </div>
+
+        <div className="detail-grid member-detail-grid" style={{ marginTop: 8 }}>
+          <div>
+        <ProfileHeader
+          member={member}
+          id={id}
+          actions={
+            <div className="ig-action-row mt-3">
+              {member.isSelf ? (
+                <>
+                  <Link to="/edit-profile" className="ig-flat-btn">
+                    <i className="fa-solid fa-pen" /> Edit Profile
+                  </Link>
+                  <button type="button" className="ig-flat-btn" onClick={shareProfile}>
+                    <i className="fa-solid fa-share-nodes" /> Share Profile
+                  </button>
+                </>
+              ) : (
+                <>
+                  <FollowButton
+                    userId={id}
+                    isFollowed={member.isFollowedByMe}
+                    followsMe={member.followsMe}
+                    className="ig-flat-btn"
+                    onChange={(nowFollowing) =>
+                      setMember((m) => ({
+                        ...m,
+                        isFollowedByMe: nowFollowing,
+                        followersCount: Math.max(0, (m.followersCount || 0) + (nowFollowing ? 1 : -1)),
+                      }))
+                    }
+                  />
+                  <button className="ig-flat-btn" onClick={message} disabled={busy}>
+                    <i className="fa-solid fa-comment-dots" /> Message
+                  </button>
+                  {member.connection?.status === 'accepted' ? (
+                    <button className="ig-flat-btn" style={{ color: '#fca5a5' }} onClick={disconnect} disabled={busy}>
+                      <i className="fa-solid fa-user-minus" /> Disconnect
+                    </button>
+                  ) : member.connection?.status === 'pending' && member.connection.direction === 'received' ? (
+                    <>
+                      <button className="ig-flat-btn" onClick={() => respond('accept')} disabled={busy}>
+                        <i className="fa-solid fa-check" /> Accept
+                      </button>
+                      <button className="ig-flat-btn" onClick={() => respond('reject')} disabled={busy}>
+                        <i className="fa-solid fa-xmark" /> Decline
+                      </button>
+                    </>
+                  ) : member.connection?.status === 'pending' ? (
+                    <button className="ig-flat-btn" onClick={disconnect} disabled={busy}>
+                      <i className="fa-regular fa-clock" /> Pending
+                    </button>
+                  ) : (
+                    <button className="ig-flat-btn" onClick={connect} disabled={busy}>
+                      {busy ? <span className="spinner" /> : <i className="fa-solid fa-handshake" />} Connect
+                    </button>
+                  )}
+                </>
+              )}
+              {(member.isSelf || member.connection?.status === 'accepted') && (
+                <button className="ig-flat-btn" onClick={viewSelfie} title="Verification photo">
+                  <i className="fa-solid fa-id-badge" />
+                </button>
+              )}
+            </div>
+          }
+        />
+
+        {member.travelInterests?.length > 0 && (
+          <div className="card ig-secondary-card mt-3">
+            <div className="profile-interests">
+              <div className="profile-interests-label"><i className="fa-solid fa-compass" /> Travel Interests</div>
+              <div className="interest-pill-row">
+                {(interestsExpanded ? member.travelInterests : member.travelInterests.slice(0, INTERESTS_COLLAPSED_LIMIT)).map((t) => (
+                  <span key={t} className="interest-pill">
+                    <i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /> {t}
+                  </span>
+                ))}
+                {member.travelInterests.length > INTERESTS_COLLAPSED_LIMIT && (
+                  <button
+                    className="interest-pill interest-pill-toggle"
+                    onClick={() => setInterestsExpanded((v) => !v)}
+                  >
+                    {interestsExpanded ? (
+                      <>Show less <i className="fa-solid fa-chevron-up" /></>
+                    ) : (
+                      <>+{member.travelInterests.length - INTERESTS_COLLAPSED_LIMIT} more <i className="fa-solid fa-chevron-down" /></>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="ig-tabs mt-4">
           {TABS.map((t) => (
@@ -354,13 +361,63 @@ export default function MemberDetail() {
         </div>
 
         {tab === 'trips' ? (
-          (member.recentTrips || []).length === 0 ? (
-            <div className="empty-state mt-4"><i className="fa-solid fa-map-location-dot" /><p>No trips organized yet.</p></div>
+          <>
+            {member.isSelf && (
+              <div className="row-between mt-3">
+                <h4 style={{ fontFamily: 'var(--font-display)', margin: 0 }}>Trips you host</h4>
+                <Link to="/plan-trip" className="btn btn-sm btn-primary"><i className="fa-solid fa-plus" /> Host a Trip</Link>
+              </div>
+            )}
+            {(member.recentTrips || []).length === 0 ? (
+              <div className="empty-state mt-4">
+                <i className="fa-solid fa-map-location-dot" /><p>No trips organized yet.</p>
+                {member.isSelf && <Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link>}
+              </div>
+            ) : (
+              <div className="ig-grid mt-3">
+                {member.recentTrips.map((t) => (
+                  <Link to={`/trips/${t._id}`} key={t._id} className="ig-tile">
+                    <DestinationImage trip={t} loading="lazy" />
+                    {t.status === 'completed' && (
+                      <span className="badge badge-green" style={{ position: 'absolute', top: 8, left: 8 }}>
+                        <i className="fa-solid fa-trophy" /> Completed
+                      </span>
+                    )}
+                    <div className="ig-tile-overlay">
+                      <div className="ig-tile-dest">{t.destination}</div>
+                      <div className="ig-tile-meta">{rupee(t.budgetPerHead)}</div>
+                    </div>
+                    {member.isSelf && t.status !== 'completed' && (
+                      <button
+                        className="ig-tile-delete"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTrip(t._id); }}
+                        title="Delete trip"
+                      >
+                        <i className="fa-solid fa-trash" />
+                      </button>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        ) : tab === 'joined' ? (
+          (member.joinedTrips || []).length === 0 ? (
+            <div className="empty-state mt-4">
+              <i className="fa-solid fa-route" />
+              <p>{member.isSelf ? "You haven't joined any trips yet." : "Hasn't joined any trips yet."}</p>
+              {member.isSelf && <Link to="/trips" className="btn btn-primary mt-3">Browse Trips</Link>}
+            </div>
           ) : (
             <div className="ig-grid mt-3">
-              {member.recentTrips.map((t) => (
+              {member.joinedTrips.map((t) => (
                 <Link to={`/trips/${t._id}`} key={t._id} className="ig-tile">
                   <DestinationImage trip={t} loading="lazy" />
+                  {t.status === 'completed' && (
+                    <span className="badge badge-green" style={{ position: 'absolute', top: 8, left: 8 }}>
+                      <i className="fa-solid fa-trophy" /> Completed
+                    </span>
+                  )}
                   <div className="ig-tile-overlay">
                     <div className="ig-tile-dest">{t.destination}</div>
                     <div className="ig-tile-meta">{rupee(t.budgetPerHead)}</div>
@@ -369,8 +426,38 @@ export default function MemberDetail() {
               ))}
             </div>
           )
+        ) : tab === 'reviews' ? (
+          (member.memberReviews || []).length === 0 ? (
+            <div className="empty-state mt-4"><i className="fa-solid fa-star" /><p>No ratings from co-travelers yet.</p></div>
+          ) : (
+            <div className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {member.memberReviews.map((r) => (
+                <div className="card" style={{ padding: 16 }} key={r._id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                    <img
+                      src={imageUrl(r.rater?.avatarUrl, AVATAR_FALLBACK)}
+                      alt=""
+                      style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }}
+                      onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{r.rater?.fullName || 'Traveler'}</div>
+                      <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                        {r.trip?.destination ? `${r.trip.destination} · ` : ''}{timeAgo(r.createdAt)}
+                      </div>
+                    </div>
+                    <Stars value={r.rating} />
+                  </div>
+                  {r.message && <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', lineHeight: 1.7, margin: 0 }}>{r.message}</p>}
+                </div>
+              ))}
+            </div>
+          )
         ) : (member.recentPhotos || []).length === 0 ? (
-          <div className="empty-state mt-4"><i className="fa-regular fa-image" /><p>No photos yet.</p></div>
+          <div className="empty-state mt-4">
+            <i className="fa-regular fa-image" /><p>No photos yet.</p>
+            {member.isSelf && <Link to="/gallery" className="btn btn-primary mt-3">Upload Photos</Link>}
+          </div>
         ) : (
           <div className="ig-grid mt-3">
             {member.recentPhotos.map((p, i) => (
@@ -425,8 +512,9 @@ export default function MemberDetail() {
 function SuggestedTravelers({ members }) {
   const [requested, setRequested] = useState(() => new Set());
   const [busyId, setBusyId] = useState(null);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (!members?.length) return null;
+  if (!members?.length || dismissed) return null;
 
   const quickConnect = async (e, otherId) => {
     e.preventDefault();
@@ -445,7 +533,20 @@ function SuggestedTravelers({ members }) {
 
   return (
     <div className="card suggested-card" style={{ padding: 14 }}>
-      <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem' }}>
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        aria-label="Hide suggestions"
+        title="Hide suggestions"
+        style={{
+          position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: '0.8rem',
+        }}
+      >
+        <i className="fa-solid fa-xmark" />
+      </button>
+      <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', paddingRight: 24 }}>
         <i className="fa-solid fa-user-group" style={{ color: 'var(--fire)' }} /> Suggested for you
       </h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

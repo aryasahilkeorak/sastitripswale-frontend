@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { imageUrl } from '../lib/helpers.js';
 import PageHero from '../components/PageHero.jsx';
 import AnimatedCounter from '../components/AnimatedCounter.jsx';
+import Seo from '../components/Seo.jsx';
 
 const STAT_META = [
   { icon: 'fa-solid fa-users', label: 'Verified Members', key: 'members' },
@@ -85,6 +86,11 @@ export default function About() {
 
   return (
     <>
+      <Seo
+        title="About Us - India's #1 Verified Travel Community"
+        description="SastiTripsWale is a community-driven budget travel platform - host or join trips with bikers, car owners and backpackers, split expenses fairly, and travel safely in verified groups across India."
+        path="/about"
+      />
       <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripsWale" sub="India's #1 verified travel community - travel together, split expenses, make friends." />
 
       {/* Story */}

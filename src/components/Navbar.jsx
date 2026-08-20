@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../store/auth.js';
 import { useTheme } from '../store/theme.js';
+import { useNotifStore } from '../store/notifications.js';
 import { api } from '../lib/api.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
@@ -11,8 +12,10 @@ import BrandLogo from './BrandLogo.jsx';
 const LINKS = [
   { to: '/', label: 'Home', end: true },
   { to: '/trips', label: 'Trips' },
+  { to: '/clubs', label: 'Clubs', matchExtra: ['/plan-club'] },
   { to: '/members', label: 'Members' },
   { to: '/gallery', label: 'Gallery' },
+  { to: '/how-it-works', label: 'How It Works' },
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
 ];
@@ -20,9 +23,11 @@ const LINKS = [
 const MOBILE_LINKS = [
   { to: '/', label: 'Home', icon: 'fa-solid fa-house' },
   { to: '/trips', label: 'Trips', icon: 'fa-solid fa-compass' },
+  { to: '/clubs', label: 'Clubs', icon: 'fa-solid fa-people-group', matchExtra: ['/plan-club'] },
   { to: '/members', label: 'Members', icon: 'fa-solid fa-users' },
   { to: '/gallery', label: 'Gallery', icon: 'fa-regular fa-image' },
   { to: '/completed-trips', label: 'Completed', icon: 'fa-solid fa-trophy' },
+  { to: '/how-it-works', label: 'How It Works', icon: 'fa-solid fa-book-open' },
   { to: '/plan-trip', label: 'Plan Trip', icon: 'fa-solid fa-map-location-dot' },
   { to: '/testimonials', label: 'Reviews', icon: 'fa-regular fa-star' },
   { to: '/about', label: 'About', icon: 'fa-solid fa-circle-info' },
@@ -33,10 +38,18 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const unread = useNotifStore((s) => s.unread);
+  const setUnread = useNotifStore((s) => s.setUnread);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [showEnablePush, setShowEnablePush] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // A link can also light up on extra routes beyond its own `to` (e.g. Clubs
+  // should stay active on /plan-club, which isn't a sub-path of /clubs).
+  const linkClassName = (l) => ({ isActive }) =>
+    isActive || (l.matchExtra || []).some((p) => location.pathname.startsWith(p)) ? 'active' : '';
 
   const user = useAuth((s) => s.user);
   const accessToken = useAuth((s) => s.accessToken);
@@ -86,6 +99,34 @@ export default function Navbar() {
     };
   }, [accessToken]);
 
+  // The "Messages" badge should reflect actual unaccepted DM requests, not
+  // the generic notifications-unread count (which includes unrelated types
+  // like follows/connections and never clears just from reading a chat).
+  useEffect(() => {
+    if (!accessToken) {
+      setPendingRequestCount(0);
+      return undefined;
+    }
+    let active = true;
+    const load = () =>
+      api
+        .get('/chat/groups')
+        .then((r) => {
+          if (!active) return;
+          const count = (r.data.groups || []).filter(
+            (g) => g.type === 'dm' && g.dmStatus === 'pending' && String(g.requestedBy) !== String(user?.id)
+          ).length;
+          setPendingRequestCount(count);
+        })
+        .catch(() => {});
+    load();
+    const id = setInterval(load, 60000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [accessToken, user?.id]);
+
   // Offer to enable browser push once per session, only if the browser
   // supports it and the user hasn't already granted/denied permission.
   useEffect(() => {
@@ -124,7 +165,7 @@ export default function Navbar() {
 
         <div className="nav-links">
           {LINKS.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end}>
+            <NavLink key={l.to} to={l.to} end={l.end} className={linkClassName(l)}>
               {l.label}
             </NavLink>
           ))}
@@ -165,7 +206,14 @@ export default function Navbar() {
                     <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>{user?.email}</div>
                   </div>
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-gauge-high" /> Dashboard
+                    <i className="fa-solid fa-user" /> My Profile
+                  </Link>
+                  <Link to="/notifications" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-regular fa-bell" /> Notifications
+                    {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+                  </Link>
+                  <Link to="/dashboard?tab=settings" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-gear" /> Settings
                   </Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-comment-dots" /> Messages
@@ -175,6 +223,12 @@ export default function Navbar() {
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-map-location-dot" /> Plan a Trip
+                  </Link>
+                  <Link to="/plan-group-trip" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-people-group" /> Plan a Group Trip
+                  </Link>
+                  <Link to="/plan-club" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-people-roof" /> Create a Club
                   </Link>
                   {showEnablePush && (
                     <button onClick={handleEnablePush}>
@@ -221,18 +275,25 @@ export default function Navbar() {
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
         {MOBILE_LINKS.map((l) => (
-          <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)}>
+          <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)} className={linkClassName(l)}>
             <i className={l.icon} /> {l.label}
           </NavLink>
         ))}
         {accessToken ? (
           <>
             <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-gauge-high" /> Dashboard
+              <i className="fa-solid fa-user" /> My Profile
+            </NavLink>
+            <NavLink to="/notifications" onClick={() => setMobileOpen(false)}>
+              <i className="fa-regular fa-bell" /> Notifications
+              {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+            </NavLink>
+            <NavLink to="/dashboard?tab=settings" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-gear" /> Settings
             </NavLink>
             <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
               <i className="fa-solid fa-comment-dots" /> Messages
-              {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+              {pendingRequestCount > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{pendingRequestCount}</span>}
             </NavLink>
             <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
               <i className="fa-solid fa-gift" /> Referrals

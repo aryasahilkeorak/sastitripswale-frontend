@@ -7,6 +7,7 @@ import { toast } from '../lib/toast.js';
 import Modal from '../components/Modal.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
+import Seo from '../components/Seo.jsx';
 
 const PREFS = [
   { key: 'male', label: 'Only Male', icon: 'fa-solid fa-mars', note: 'Travel with male co-travelers' },
@@ -210,6 +211,11 @@ export default function Join() {
 
   return (
     <section className="join-section">
+      <Seo
+        title="Join Free - Become a Verified Member"
+        description="Sign up for SastiTripsWale in under a minute - pick Only Male, Only Female or Couples Mode, get ID-verified, then host or join trips. Use coupon FREEJOIN for free membership."
+        path="/join"
+      />
       <div className="container" style={{ maxWidth: 560 }}>
         <div className="text-center mb-4">
           <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-rocket" /> Join the Tribe</div>

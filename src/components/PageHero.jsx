@@ -1,11 +1,24 @@
-export default function PageHero({ tag, tagIcon = 'fa-solid fa-wand-magic-sparkles', title, highlight, sub }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function PageHero({ tag, tagIcon = 'fa-solid fa-wand-magic-sparkles', title, highlight, sub, showBack = false }) {
+  const navigate = useNavigate();
+
   return (
-    <section className="page-hero">
+    <section className={`page-hero${showBack ? ' has-back' : ''}`}>
       <div className="page-hero-bg" />
       <div className="container page-hero-content">
-        {tag && (
-          <div className="section-tag">
-            <i className={tagIcon} /> {tag}
+        {(showBack || tag) && (
+          <div className="page-hero-top-row">
+            {showBack && (
+              <button type="button" className="ig-id-btn page-hero-back" onClick={() => navigate(-1)} aria-label="Back">
+                <i className="fa-solid fa-arrow-left" />
+              </button>
+            )}
+            {tag && (
+              <div className="section-tag" style={{ marginBottom: 0 }}>
+                <i className={tagIcon} /> {tag}
+              </div>
+            )}
           </div>
         )}
         <h1 className="page-hero-title">

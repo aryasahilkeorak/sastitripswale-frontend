@@ -6,12 +6,24 @@
 // failure and keep showing their existing placeholder.
 const cache = new Map();
 
+// The summary API's own thumbnail is capped at ~320px wide - fine for an
+// avatar, blurry stretched across a full-width trip hero image. Wikimedia
+// thumb URLs encode the requested width in the path segment right before
+// the filename (".../330px-Solan_panorama.jpg"), and its thumbnail
+// renderer will happily serve any width for that same source file - so
+// swap in a much larger one instead of falling back to the (sometimes
+// huge, slow-loading) full original.
+function upscaleThumbnail(url, width = 1280) {
+  if (!url) return url;
+  return url.replace(/\/(\d+)px-/, `/${width}px-`);
+}
+
 async function fetchSummaryImage(title) {
   try {
     const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
     if (!res.ok) return null;
     const data = await res.json();
-    return data.thumbnail?.source || data.originalimage?.source || null;
+    return upscaleThumbnail(data.thumbnail?.source) || data.originalimage?.source || null;
   } catch {
     return null;
   }

@@ -5,7 +5,8 @@ import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
 import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../lib/helpers.js';
 import CustomSelect from '../components/CustomSelect.jsx';
-import AvatarUploadField from '../components/AvatarUploadField.jsx';
+import StateCitySelect from '../components/StateCitySelect.jsx';
+import ProfileHeaderPhotos from '../components/ProfileHeaderPhotos.jsx';
 import SelfieCapture from '../components/SelfieCapture.jsx';
 
 const INTERESTS = ['Mountains', 'Beaches', 'Camping', 'Trekking', 'Road Trips', 'Backpacking', 'Photography', 'Food Travel', 'Night Rides'];
@@ -14,9 +15,9 @@ function DocBox({ id, label, file, onChange }) {
   return (
     <div className="form-group">
       <label>{label}</label>
-      <div className="upload-box" onClick={() => document.getElementById(id)?.click()}>
+      <div className="upload-box upload-box-doc" onClick={() => document.getElementById(id)?.click()}>
         <div className="upload-label">
-          {file ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {file.name}</> : 'Upload photo'}
+          {file ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> <span className="upload-filename">{file.name}</span></> : 'Upload photo'}
         </div>
         <input id={id} type="file" accept="image/*,application/pdf" onChange={(e) => onChange(e.target.files?.[0] || null)} />
       </div>
@@ -40,6 +41,7 @@ export default function CompleteProfile() {
   });
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
   const [selfieFile, setSelfieFile] = useState(null);
   const [aadhaarFront, setAadhaarFront] = useState(null);
   const [aadhaarBack, setAadhaarBack] = useState(null);
@@ -73,7 +75,8 @@ export default function CompleteProfile() {
   const submit = async (e) => {
     e.preventDefault();
     if (!form.fullName.trim()) return toast('fa-solid fa-triangle-exclamation', 'Please enter your full name');
-    if (!form.city.trim()) return toast('fa-solid fa-triangle-exclamation', 'Please enter your city');
+    if (!form.state) return toast('fa-solid fa-triangle-exclamation', 'Please select your state');
+    if (!form.city) return toast('fa-solid fa-triangle-exclamation', 'Please select your city');
     if (!form.gender) return toast('fa-solid fa-triangle-exclamation', 'Please select your gender');
     if (interests.length === 0) return toast('fa-solid fa-triangle-exclamation', 'Pick at least one travel interest');
     if (form.hasVehicle && !form.vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select your vehicle type');
@@ -94,6 +97,7 @@ export default function CompleteProfile() {
       fd.append('travelInterests', JSON.stringify(interests));
       fd.append('partnerMobile', partnerMobile.trim());
       if (avatarFile) fd.append('avatar', avatarFile);
+      if (coverFile) fd.append('cover', coverFile);
       if (selfieFile) fd.append('selfie', selfieFile);
       if (aadhaarFront) fd.append('aadhaarFront', aadhaarFront);
       if (aadhaarBack) fd.append('aadhaarBack', aadhaarBack);
@@ -127,13 +131,23 @@ export default function CompleteProfile() {
         </div>
 
         <form className="card cp-form" onSubmit={submit}>
-          <AvatarUploadField value={avatarFile} currentUrl={user?.avatarUrl} onChange={setAvatarFile} label="Upload profile photo (optional)" />
+          <ProfileHeaderPhotos
+            avatarFile={avatarFile}
+            coverFile={coverFile}
+            currentAvatarUrl={user?.avatarUrl}
+            currentCoverUrl={user?.coverUrl}
+            onAvatarChange={setAvatarFile}
+            onCoverChange={setCoverFile}
+          />
 
           <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
-          <div className="form-row">
-            <div className="form-group"><label>City *</label><input className="form-input" value={form.city} onChange={set('city')} /></div>
-            <div className="form-group"><label>State</label><input className="form-input" value={form.state} onChange={set('state')} /></div>
-          </div>
+          <StateCitySelect
+            state={form.state}
+            city={form.city}
+            onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
+            onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
+            required
+          />
           <div className="form-row">
             <div className="form-group"><label>Gender *</label>
               <CustomSelect
@@ -237,9 +251,9 @@ export default function CompleteProfile() {
               <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" /></div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Partner's government ID</label>
-                <div className="upload-box" onClick={() => document.getElementById('cp-partner-doc')?.click()}>
+                <div className="upload-box upload-box-doc" onClick={() => document.getElementById('cp-partner-doc')?.click()}>
                   <div className="upload-label">
-                    {partnerDoc ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {partnerDoc.name}</> : user?.partnerDocUrl ? 'Replace uploaded ID' : 'Upload ID document'}
+                    {partnerDoc ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> <span className="upload-filename">{partnerDoc.name}</span></> : user?.partnerDocUrl ? 'Replace uploaded ID' : 'Upload ID document'}
                   </div>
                   <input id="cp-partner-doc" type="file" accept="image/*,application/pdf" onChange={(e) => setPartnerDoc(e.target.files?.[0] || null)} />
                 </div>

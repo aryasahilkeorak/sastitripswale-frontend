@@ -4,7 +4,6 @@ import { useAuth } from '../../store/auth.js';
 import { formatDate } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
 import PasswordInput from '../../components/PasswordInput.jsx';
-import CustomSelect from '../../components/CustomSelect.jsx';
 import Modal from '../../components/Modal.jsx';
 
 const PERMISSIONS = [
@@ -15,9 +14,11 @@ const PERMISSIONS = [
   { key: 'messages', label: 'Manage Feedback / Queries', icon: 'fa-solid fa-headset' },
   { key: 'gallery', label: 'Manage Gallery', icon: 'fa-solid fa-image' },
   { key: 'revenue', label: 'View Revenue', icon: 'fa-solid fa-sack-dollar' },
+  { key: 'influencers', label: 'Manage Influencers', icon: 'fa-solid fa-handshake' },
+  { key: 'wallet', label: 'Manage Wallet Payouts', icon: 'fa-solid fa-wallet' },
 ];
 
-const EMPTY = { fullName: '', email: '', mobile: '', password: '', role: 'admin', permissions: [] };
+const EMPTY = { fullName: '', email: '', mobile: '', password: '', permissions: [] };
 
 function PermissionGrid({ value, onChange }) {
   const toggle = (key) => {
@@ -44,9 +45,9 @@ export default function AdminAdmins() {
   const [admins, setAdmins] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
-  const [permEditing, setPermEditing] = useState(null); // admin being permission-edited
-  const [permDraft, setPermDraft] = useState([]);
-  const [permBusy, setPermBusy] = useState(false);
+  const [editing, setEditing] = useState(null); // admin being edited
+  const [editPermissions, setEditPermissions] = useState([]);
+  const [editBusy, setEditBusy] = useState(false);
 
   const load = () => api.get('/admin/admins').then((r) => setAdmins(r.data.admins)).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -72,53 +73,46 @@ export default function AdminAdmins() {
       else { setAdmins((as) => as.map((a) => (a.id === id ? { ...a, role } : a))); toast('fa-solid fa-user-shield', 'Role updated'); }
     } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
-  const revoke = (id) => { if (window.confirm('Revoke this admin (demote to a normal member)?')) changeRole(id, 'member'); };
+  const openEditor = (a) => { setEditing(a); setEditPermissions(a.permissions || []); };
+  const closeEditor = () => setEditing(null);
 
-  const openPermEditor = (a) => { setPermEditing(a); setPermDraft(a.permissions || []); };
-  const savePermissions = async () => {
-    setPermBusy(true);
+  const saveEdit = async () => {
+    setEditBusy(true);
     try {
-      const { data } = await api.patch(`/admin/admins/${permEditing.id}/permissions`, { permissions: permDraft });
-      setAdmins((as) => as.map((a) => (a.id === permEditing.id ? { ...a, permissions: data.permissions } : a)));
+      const { data } = await api.patch(`/admin/admins/${editing.id}/permissions`, { permissions: editPermissions });
+      setAdmins((as) => as.map((a) => (a.id === editing.id ? { ...a, permissions: data.permissions } : a)));
       toast('fa-solid fa-circle-check', 'Permissions updated');
-      setPermEditing(null);
+      closeEditor();
     } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
-    finally { setPermBusy(false); }
+    finally { setEditBusy(false); }
+  };
+
+  const revokeFromEditor = () => {
+    if (!window.confirm('Revoke this admin (demote to a normal member)?')) return;
+    changeRole(editing.id, 'member');
+    closeEditor();
   };
 
   return (
-    <div className="grid-2">
-      <form className="card" style={{ padding: 24, alignSelf: 'flex-start' }} onSubmit={create}>
+    <div>
+      <form className="card mb-4" style={{ padding: 24 }} onSubmit={create}>
         <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Add a new admin</h4>
-        <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} required /></div>
+        <div className="form-row">
+          <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} required /></div>
+          <div className="form-group"><label>Password *</label><PasswordInput value={form.password} onChange={set('password')} required /></div>
+        </div>
         <div className="form-row">
           <div className="form-group"><label>Email *</label><input className="form-input" type="email" value={form.email} onChange={set('email')} required /></div>
           <div className="form-group"><label>Mobile *</label><input className="form-input" value={form.mobile} onChange={set('mobile')} required /></div>
         </div>
-        <div className="form-row">
-          <div className="form-group"><label>Password *</label><PasswordInput value={form.password} onChange={set('password')} required /></div>
-          <div className="form-group"><label>Role</label>
-            <CustomSelect
-              value={form.role}
-              onChange={set('role')}
-              options={[{ value: 'admin', label: 'Admin' }, { value: 'superadmin', label: 'Super Admin' }]}
-            />
-          </div>
-        </div>
 
-        {form.role === 'admin' ? (
-          <div className="form-group">
-            <label>Permissions - what this admin can manage</label>
-            <PermissionGrid
-              value={form.permissions}
-              onChange={(permissions) => setForm((f) => ({ ...f, permissions }))}
-            />
-          </div>
-        ) : (
-          <p className="text-muted" style={{ fontSize: '0.78rem', marginBottom: 20 }}>
-            <i className="fa-solid fa-crown" style={{ color: 'var(--gold)' }} /> Super admins always have full access to every section.
-          </p>
-        )}
+        <div className="form-group">
+          <label>Permissions - what this admin can manage</label>
+          <PermissionGrid
+            value={form.permissions}
+            onChange={(permissions) => setForm((f) => ({ ...f, permissions }))}
+          />
+        </div>
 
         <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-user-plus" />} Create admin</button>
       </form>
@@ -138,33 +132,21 @@ export default function AdminAdmins() {
                     <td data-label="Role"><span className={`role-badge ${a.role === 'superadmin' ? 'super' : 'admin'}`}>{a.role === 'superadmin' ? 'Super' : 'Admin'}</span></td>
                     <td data-label="Permissions">
                       {a.role === 'superadmin' ? (
-                        <span className="text-muted" style={{ fontSize: '0.72rem' }}>All access</span>
+                        <span className="badge badge-gold">All access</span>
                       ) : (a.permissions || []).length === 0 ? (
                         <span className="text-muted" style={{ fontSize: '0.72rem' }}>None</span>
                       ) : (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 220, justifyContent: 'flex-end' }}>
-                          {a.permissions.map((p) => <span key={p} className="badge badge-cyan">{p}</span>)}
-                        </div>
+                        <span className="badge badge-cyan">{a.permissions.length} of {PERMISSIONS.length}</span>
                       )}
                     </td>
                     <td data-label="Since">{formatDate(a.createdAt)}</td>
                     <td data-label="Manage">
-                      {self ? <span className="text-muted" style={{ fontSize: '0.72rem' }}>-</span> : (
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                          {a.role === 'admin' && (
-                            <button className="btn btn-sm btn-outline" onClick={() => openPermEditor(a)} title="Edit permissions">
-                              <i className="fa-solid fa-sliders" />
-                            </button>
-                          )}
-                          <CustomSelect
-                            className="sm"
-                            style={{ width: 120 }}
-                            value={a.role}
-                            onChange={(e) => changeRole(a.id, e.target.value)}
-                            options={[{ value: 'admin', label: 'Admin' }, { value: 'superadmin', label: 'Super Admin' }]}
-                          />
-                          <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => revoke(a.id)} title="Revoke admin access"><i className="fa-solid fa-user-minus" /></button>
-                        </div>
+                      {!self && a.role === 'admin' ? (
+                        <button className="btn btn-sm btn-outline" onClick={() => openEditor(a)} title="Manage admin">
+                          <i className="fa-solid fa-user-gear" /> Manage
+                        </button>
+                      ) : (
+                        <span className="text-muted" style={{ fontSize: '0.72rem' }} title={a.role === 'superadmin' ? 'Super admins are protected and cannot be modified here' : undefined}>-</span>
                       )}
                     </td>
                   </tr>
@@ -175,12 +157,25 @@ export default function AdminAdmins() {
         </div>
       </div>
 
-      <Modal open={Boolean(permEditing)} onClose={() => setPermEditing(null)} title={permEditing ? `Permissions - ${permEditing.fullName}` : ''}>
-        {permEditing && (
+      <Modal open={Boolean(editing)} onClose={closeEditor} title={editing ? `Manage - ${editing.fullName}` : ''} maxWidth={560}>
+        {editing && (
           <>
-            <PermissionGrid value={permDraft} onChange={setPermDraft} />
-            <button className="btn btn-primary mt-3" style={{ width: '100%', justifyContent: 'center' }} onClick={savePermissions} disabled={permBusy}>
-              {permBusy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save permissions
+            <div className="form-group">
+              <label>Permissions - what this admin can manage</label>
+              <PermissionGrid value={editPermissions} onChange={setEditPermissions} />
+            </div>
+
+            <button className="btn btn-primary mt-3" style={{ width: '100%', justifyContent: 'center' }} onClick={saveEdit} disabled={editBusy}>
+              {editBusy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save changes
+            </button>
+
+            <button
+              className="btn btn-sm mt-3"
+              style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
+              onClick={revokeFromEditor}
+              disabled={editBusy}
+            >
+              <i className="fa-solid fa-user-minus" /> Revoke admin access
             </button>
           </>
         )}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
+import Seo from '../components/Seo.jsx';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="auth-wrap">
+      <Seo noindex path="/forgot-password" title="Forgot Password" />
       <div className="page-hero-bg" />
       <div className="auth-card">
         <h1>Reset password</h1>

@@ -4,7 +4,7 @@ import { useAuth } from '../../store/auth.js';
 import { imageUrl, formatDate, AVATAR_FALLBACK } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
 import PasswordInput from '../../components/PasswordInput.jsx';
-import AvatarUploadField from '../../components/AvatarUploadField.jsx';
+import ProfileHeaderPhotos from '../../components/ProfileHeaderPhotos.jsx';
 
 export default function AdminProfile() {
   const user = useAuth((s) => s.user);
@@ -15,36 +15,38 @@ export default function AdminProfile() {
     fullName: user?.fullName || '',
     email: user?.email || '',
     mobile: user?.mobile || '',
-    username: user?.username || '',
-    whatsapp: user?.whatsapp || '',
-    city: user?.city || '',
-    instagram: user?.instagram || '',
-    facebook: user?.facebook || '',
-    twitter: user?.twitter || '',
-    youtube: user?.youtube || '',
-    linkedin: user?.linkedin || '',
   });
   const [avatar, setAvatar] = useState(null);
+  const [cover, setCover] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwBusy, setPwBusy] = useState(false);
   const setPw = (k) => (e) => setPwForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twoFactorEnabled || false);
+  const [tfaForm, setTfaForm] = useState({ password: '', pin: '', confirmPin: '' });
+  const [tfaBusy, setTfaBusy] = useState(false);
+  const setTfa = (k) => (e) => setTfaForm((f) => ({ ...f, [k]: e.target.value }));
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableBusy, setDisableBusy] = useState(false);
+  const [showDisableForm, setShowDisableForm] = useState(false);
+
   const save = async (e) => {
     e.preventDefault();
-    if (form.username.trim() && !/^[a-z0-9_.]{3,30}$/i.test(form.username.trim())) {
-      return toast('fa-solid fa-triangle-exclamation', 'Username must be 3-30 characters: letters, numbers, dots or underscores');
-    }
     setBusy(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       if (avatar) fd.append('avatar', avatar);
+      if (cover) fd.append('cover', cover);
       const { data } = await api.put('/members/profile', fd);
       setUser(data.user);
       setAvatar(null);
+      setCover(null);
+      setEditing(false);
       toast('fa-solid fa-circle-check', 'Profile updated');
     } catch (err) { toast('fa-solid fa-circle-xmark', apiError(err)); }
     finally { setBusy(false); }
@@ -66,6 +68,35 @@ export default function AdminProfile() {
     finally { setPwBusy(false); }
   };
 
+  const setupTwoFactor = async (e) => {
+    e.preventDefault();
+    if (!/^[0-9]{6}$/.test(tfaForm.pin)) return toast('fa-solid fa-triangle-exclamation', 'PIN must be exactly 6 digits');
+    if (tfaForm.pin !== tfaForm.confirmPin) return toast('fa-solid fa-triangle-exclamation', 'PINs do not match');
+    setTfaBusy(true);
+    try {
+      const { data } = await api.post('/auth/2fa/setup', { password: tfaForm.password, pin: tfaForm.pin });
+      setUser(data.user);
+      setTwoFactorEnabled(true);
+      setTfaForm({ password: '', pin: '', confirmPin: '' });
+      toast('fa-solid fa-circle-check', twoFactorEnabled ? 'PIN updated' : 'Two-factor authentication enabled');
+    } catch (err) { toast('fa-solid fa-circle-xmark', apiError(err)); }
+    finally { setTfaBusy(false); }
+  };
+
+  const disableTwoFactor = async (e) => {
+    e.preventDefault();
+    setDisableBusy(true);
+    try {
+      const { data } = await api.post('/auth/2fa/disable', { password: disablePassword });
+      setUser(data.user);
+      setTwoFactorEnabled(false);
+      setDisablePassword('');
+      setShowDisableForm(false);
+      toast('fa-solid fa-circle-check', 'Two-factor authentication disabled');
+    } catch (err) { toast('fa-solid fa-circle-xmark', apiError(err)); }
+    finally { setDisableBusy(false); }
+  };
+
   return (
     <>
       {/* Special admin identity hero */}
@@ -83,34 +114,51 @@ export default function AdminProfile() {
         </div>
       </div>
 
-      <div className="grid-2">
+      <div className="grid-2" style={{ alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <form className="card" style={{ padding: 24 }} onSubmit={save}>
-          <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Edit admin profile</h4>
-          <AvatarUploadField value={avatar} currentUrl={user?.avatarUrl} onChange={setAvatar} />
-          <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
-          <div className="form-row">
-            <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
-            <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} /></div>
+          <div className="row-between mb-3">
+            <h4 style={{ fontFamily: 'var(--font-display)' }}>Edit admin profile</h4>
+            <button type="button" className="btn btn-sm btn-outline" onClick={() => setEditing((v) => !v)}>
+              <i className={`fa-solid ${editing ? 'fa-lock' : 'fa-pen'}`} /> {editing ? 'Lock' : 'Edit'}
+            </button>
           </div>
+          <ProfileHeaderPhotos
+            avatarFile={avatar}
+            coverFile={cover}
+            currentAvatarUrl={user?.avatarUrl}
+            currentCoverUrl={user?.coverUrl}
+            onAvatarChange={setAvatar}
+            onCoverChange={setCover}
+          />
+          <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} disabled={!editing} /></div>
           <div className="form-row">
-            <div className="form-group"><label>City</label><input className="form-input" value={form.city} onChange={set('city')} /></div>
-            <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
+            <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} disabled={!editing} /></div>
+            <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} disabled={!editing} /></div>
           </div>
-          <div className="form-group"><label>Username</label><input className="form-input" value={form.username} onChange={set('username')} placeholder="e.g. sahil.k" /></div>
 
-          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>Social links</label>
-          <div className="form-row">
-            <div className="form-group"><label><i className="fa-brands fa-instagram" /> Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="username" /></div>
-            <div className="form-group"><label><i className="fa-brands fa-facebook" /> Facebook</label><input className="form-input" value={form.facebook} onChange={set('facebook')} placeholder="username" /></div>
-          </div>
-          <div className="form-row">
-            <div className="form-group"><label><i className="fa-brands fa-x-twitter" /> X (Twitter)</label><input className="form-input" value={form.twitter} onChange={set('twitter')} placeholder="username" /></div>
-            <div className="form-group"><label><i className="fa-brands fa-youtube" /> YouTube</label><input className="form-input" value={form.youtube} onChange={set('youtube')} placeholder="channel handle" /></div>
-          </div>
-          <div className="form-group"><label><i className="fa-brands fa-linkedin" /> LinkedIn</label><input className="form-input" value={form.linkedin} onChange={set('linkedin')} placeholder="username" /></div>
-
-          <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save changes</button>
+          {editing && (
+            <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save changes</button>
+          )}
         </form>
+
+        <div className="card" style={{ padding: 24 }}>
+          <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Capabilities</h4>
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[
+              'View & manage all members and their documents',
+              'Verify or ban members',
+              'Manage trips, coupons and reviews',
+              'Handle help & complaint queries',
+              ...(isSuper ? ['Add new admins', 'Permanently delete users'] : []),
+            ].map((cap) => (
+              <li key={cap} style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>
+                <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> {cap}
+              </li>
+            ))}
+          </ul>
+        </div>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <form className="card" style={{ padding: 24 }} onSubmit={changePassword}>
@@ -124,20 +172,67 @@ export default function AdminProfile() {
           </form>
 
           <div className="card" style={{ padding: 24 }}>
-            <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Capabilities</h4>
-            <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                'View & manage all members and their documents',
-                'Verify or ban members',
-                'Manage trips, coupons and reviews',
-                'Handle help & complaint queries',
-                ...(isSuper ? ['Add new admins', 'Permanently delete users'] : []),
-              ].map((cap) => (
-                <li key={cap} style={{ color: 'var(--text-2)', fontSize: '0.85rem' }}>
-                  <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} /> {cap}
-                </li>
-              ))}
-            </ul>
+            <div className="row-between mb-2">
+              <h4 style={{ fontFamily: 'var(--font-display)' }}>Two-factor authentication</h4>
+              <span className={`badge ${twoFactorEnabled ? 'badge-green' : 'badge-red'}`}>
+                {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>
+              {twoFactorEnabled
+                ? "A 6-digit PIN is required after your password on every login. You can change it below or turn 2FA off."
+                : 'Set a 6-digit PIN to require it after your password on every future login.'}
+            </p>
+
+            <form onSubmit={setupTwoFactor}>
+              <div className="form-group"><label>Current password</label><PasswordInput value={tfaForm.password} onChange={setTfa('password')} required /></div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>{twoFactorEnabled ? 'New PIN' : '6-digit PIN'}</label>
+                  <input
+                    className="form-input" inputMode="numeric" maxLength={6}
+                    style={{ letterSpacing: '0.3em' }}
+                    value={tfaForm.pin}
+                    onChange={(e) => setTfaForm((f) => ({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                    placeholder="••••••" required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirm PIN</label>
+                  <input
+                    className="form-input" inputMode="numeric" maxLength={6}
+                    style={{ letterSpacing: '0.3em' }}
+                    value={tfaForm.confirmPin}
+                    onChange={(e) => setTfaForm((f) => ({ ...f, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                    placeholder="••••••" required
+                  />
+                </div>
+              </div>
+              <button className="btn btn-primary" disabled={tfaBusy}>
+                {tfaBusy ? <span className="spinner" /> : <i className="fa-solid fa-shield-halved" />} {twoFactorEnabled ? 'Update PIN' : 'Enable 2FA'}
+              </button>
+            </form>
+
+            {twoFactorEnabled && (
+              <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                {!showDisableForm ? (
+                  <button type="button" className="btn btn-sm btn-outline" onClick={() => setShowDisableForm(true)}>
+                    <i className="fa-solid fa-toggle-off" /> Turn off 2FA
+                  </button>
+                ) : (
+                  <form onSubmit={disableTwoFactor} style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                    <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                      <label>Confirm password to disable</label>
+                      <PasswordInput value={disablePassword} onChange={(e) => setDisablePassword(e.target.value)} required />
+                    </div>
+                    <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} disabled={disableBusy}>
+                      {disableBusy ? <span className="spinner" /> : <i className="fa-solid fa-xmark" />} Disable
+                    </button>
+                    <button type="button" className="btn btn-sm btn-outline" onClick={() => { setShowDisableForm(false); setDisablePassword(''); }}>Cancel</button>
+                  </form>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

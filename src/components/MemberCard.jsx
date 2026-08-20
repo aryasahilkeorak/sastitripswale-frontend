@@ -68,8 +68,11 @@ export default function MemberCard({ member }) {
             onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
           />
         </div>
-        <h3>{member.fullName}</h3>
-        <VerificationBadge role={member.role} verificationLevel={member.verificationLevel} isVerified={member.isVerified} block />
+        <h3>
+          {member.fullName}
+          <VerificationBadge role={member.role} verificationLevel={member.verificationLevel} isVerified={member.isVerified} icon />
+        </h3>
+        {member.username && <p className="member-meta">@{member.username}</p>}
       </Link>
       <p className="member-meta">
         {member.city || 'India'}

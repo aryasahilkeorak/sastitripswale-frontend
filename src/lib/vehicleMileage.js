@@ -91,12 +91,17 @@ export function suggestMileage(vehicleModel, vehicleType) {
 // their own registered numbers over a guess:
 //   1. A saved vehicle (Dashboard > My Vehicles) matching this trip's
 //      vehicle type with a mileage the host entered themselves - exact.
-//   2. Fuzzy match on their legacy profile vehicle model name - approximate.
-//   3. A generic per-vehicle-type default - a rough starting point.
+//   2. The real mileage/fuel type entered on their primary profile vehicle
+//      (Settings > My Vehicles > Edit) - exact.
+//   3. Fuzzy match on their profile vehicle model name - approximate.
+//   4. A generic per-vehicle-type default - a rough starting point.
 export function suggestMileageForUser(user, vehicleType) {
   const ownVehicle = (user?.vehicles || []).find((v) => v.vehicleType === vehicleType && v.mileageKmpl > 0);
   if (ownVehicle) {
     return { kmpl: ownVehicle.mileageKmpl, fuelType: ownVehicle.fuelType || 'Petrol', matched: true, source: 'vehicle' };
+  }
+  if (user?.vehicleType === vehicleType && user?.mileageKmpl > 0) {
+    return { kmpl: user.mileageKmpl, fuelType: user.fuelType || 'Petrol', matched: true, source: 'profile' };
   }
   return { ...suggestMileage(user?.vehicleModel, vehicleType), source: 'guess' };
 }
