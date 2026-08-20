@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import PasswordInput from '../components/PasswordInput.jsx';
+import Seo from '../components/Seo.jsx';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -34,6 +35,7 @@ export default function ResetPassword() {
 
   return (
     <div className="auth-wrap">
+      <Seo noindex path="/reset-password" title="Reset Password" />
       <div className="page-hero-bg" />
       <div className="auth-card">
         <h1>Set a new password</h1>

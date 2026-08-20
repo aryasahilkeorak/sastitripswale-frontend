@@ -7,6 +7,7 @@ import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import Stars from '../components/Stars.jsx';
 import Loader from '../components/Loader.jsx';
+import Seo from '../components/Seo.jsx';
 
 export default function Testimonials() {
   const accessToken = useAuth((s) => s.accessToken);
@@ -54,6 +55,11 @@ export default function Testimonials() {
 
   return (
     <>
+      <Seo
+        title="Reviews & Testimonials from Real Travelers"
+        description="Real reviews from SastiTripsWale members - bikers, car owners and backpackers who found travel partners, split expenses fairly, and traveled safely across India."
+        path="/testimonials"
+      />
       <PageHero tag="Member Stories" tagIcon="fa-solid fa-quote-left" title="What Travelers" highlight="Say" sub="Honest reviews from members who found their tribe." />
 
       <section style={{ paddingTop: 40 }}>

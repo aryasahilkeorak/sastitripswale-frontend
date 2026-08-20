@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Modal from './Modal.jsx';
 
-const VIEW = 300; // crop viewport size, in CSS px (square)
-const OUT = 480; // exported image resolution, in px (square)
 const MAX_ZOOM = 3;
 
-// Square-crop modal for profile photos. Drag to pan, slider (or wheel) to
-// zoom, always exports a 1:1 image at a fixed resolution - matches the
-// circular avatar treatment used everywhere in the app.
-export default function ImageCropModal({ file, onCancel, onCropped }) {
+// Crop modal for uploaded photos. Drag to pan, slider (or wheel) to zoom.
+// `aspect` (width/height) controls the crop shape: 1 (default) gives the
+// square/circular-guide crop used for avatars everywhere in the app; any
+// other ratio (e.g. 3 for a wide banner) gives a rectangular crop with no
+// guide overlay - the viewport itself is the frame, Facebook/LinkedIn-cover
+// style. Always exports a fixed-resolution image at that same aspect ratio.
+export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, guide = 'circle', title = 'Crop your photo' }) {
   const [src, setSrc] = useState('');
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [scale, setScale] = useState(1);
@@ -16,6 +17,12 @@ export default function ImageCropModal({ file, onCancel, onCropped }) {
   const imgRef = useRef(null);
   const viewportRef = useRef(null);
   const dragRef = useRef(null);
+
+  const isSquare = aspect === 1;
+  const viewW = isSquare ? 300 : 480;
+  const viewH = isSquare ? 300 : Math.round(viewW / aspect);
+  const outW = isSquare ? 480 : 960;
+  const outH = isSquare ? 480 : Math.round(outW / aspect);
 
   useEffect(() => {
     if (!file) return undefined;
@@ -28,21 +35,21 @@ export default function ImageCropModal({ file, onCancel, onCropped }) {
 
   if (!file) return null;
 
-  const baseScale = natural.w && natural.h ? Math.max(VIEW / natural.w, VIEW / natural.h) : 1;
+  const baseScale = natural.w && natural.h ? Math.max(viewW / natural.w, viewH / natural.h) : 1;
   const renderW = natural.w * baseScale * scale;
   const renderH = natural.h * baseScale * scale;
 
   const clamp = (x, y, w = renderW, h = renderH) => {
-    const minX = Math.min(0, VIEW - w);
-    const minY = Math.min(0, VIEW - h);
+    const minX = Math.min(0, viewW - w);
+    const minY = Math.min(0, viewH - h);
     return {
       x: Math.max(minX, Math.min(0, x)),
       y: Math.max(minY, Math.min(0, y)),
     };
   };
 
-  const left = (VIEW - renderW) / 2 + pos.x;
-  const top = (VIEW - renderH) / 2 + pos.y;
+  const left = (viewW - renderW) / 2 + pos.x;
+  const top = (viewH - renderH) / 2 + pos.y;
 
   const onLoad = () => {
     const el = imgRef.current;
@@ -84,14 +91,15 @@ export default function ImageCropModal({ file, onCancel, onCropped }) {
 
   const applyCrop = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = OUT;
-    canvas.height = OUT;
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext('2d');
     const effScale = baseScale * scale;
     const sx = -left / effScale;
     const sy = -top / effScale;
-    const sSize = VIEW / effScale;
-    ctx.drawImage(imgRef.current, sx, sy, sSize, sSize, 0, 0, OUT, OUT);
+    const sW = viewW / effScale;
+    const sH = viewH / effScale;
+    ctx.drawImage(imgRef.current, sx, sy, sW, sH, 0, 0, outW, outH);
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -104,11 +112,11 @@ export default function ImageCropModal({ file, onCancel, onCropped }) {
   };
 
   return (
-    <Modal open={Boolean(file)} onClose={onCancel} title="Crop your photo" maxWidth={380}>
+    <Modal open={Boolean(file)} onClose={onCancel} title={title} maxWidth={viewW + 40}>
       <div
         ref={viewportRef}
         className="crop-viewport"
-        style={{ width: VIEW, height: VIEW }}
+        style={{ width: viewW, height: viewH }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -123,7 +131,7 @@ export default function ImageCropModal({ file, onCancel, onCropped }) {
           onLoad={onLoad}
           style={{ position: 'absolute', left, top, width: renderW || 'auto', height: renderH || 'auto' }}
         />
-        <div className="crop-circle-guide" />
+        {guide === 'circle' && <div className="crop-circle-guide" />}
       </div>
 
       <div className="form-group mt-3">

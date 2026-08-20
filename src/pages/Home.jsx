@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { imageUrl, rupee, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, NORTH_INDIA_GALLERY } from '../lib/helpers.js';
+import { imageUrl, rupee, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, NORTH_INDIA_GALLERY, CLUB_CATEGORIES } from '../lib/helpers.js';
 import { useAuth } from '../store/auth.js';
 import TripCard from '../components/TripCard.jsx';
 import CompletedTripCard from '../components/CompletedTripCard.jsx';
@@ -12,6 +12,8 @@ import DestinationImage from '../components/DestinationImage.jsx';
 import HomeSearchWidget from '../components/HomeSearchWidget.jsx';
 import PromoBanner from '../components/PromoBanner.jsx';
 import AppHome from './AppHome.jsx';
+import Seo from '../components/Seo.jsx';
+import { buildOrganizationLd, buildWebSiteLd, buildFaqLd } from '../lib/seo.js';
 
 const HERO_BG_IMAGES = [
   'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80',
@@ -36,6 +38,17 @@ const WHY = [
   { glow: '#25D366', bg: 'rgba(37,211,102,0.1)', icon: 'fa-brands fa-whatsapp', h: 'WhatsApp Group Access', p: 'Join dedicated groups for every trip. Co-ordinate, share live locations & stay connected real-time.' },
 ];
 
+// Stock photos keyed to a category are a coin flip (the "Road Trips" one
+// above turned out to be a boat, not a car) - an icon can't be wrong about
+// what it represents, so these tiles use the same icon-card treatment as
+// the WHY section instead of a background image.
+const CLUB_ICON_BG = {
+  bikers: 'rgba(255,107,0,0.12)',
+  cars: 'rgba(0,212,255,0.1)',
+  offroading: 'rgba(16,185,129,0.14)',
+  other: 'rgba(224,64,251,0.12)',
+};
+
 const CATS = [
   { img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80', label: 'Bike Trips', sub: '125+ active riders', badge: 'badge-fire', icon: 'fa-solid fa-motorcycle' },
   { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80', label: 'Road Trips', sub: 'Car & SUV groups', badge: 'badge-cyan', icon: 'fa-solid fa-car' },
@@ -48,9 +61,23 @@ const CATS = [
 const FAQS = [
   { q: 'How do I join SastiTripsWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOIN to join free!' },
   { q: 'Is it safe to travel with strangers?', a: 'Yes! Every member is verified with Aadhaar/PAN before joining. Emergency contacts are collected, and we have dedicated women-safe groups.' },
-  { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members. A ₹25,000 Goa trip with 5 people costs just ₹5,000/person!' },
+  { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members on a simple split-contri basis. A ₹25,000 Goa trip with 5 people costs just ₹5,000/person!' },
   { q: 'I have a bike but no travel friends. Can I join?', a: "Absolutely! That's exactly why SastiTripsWale exists. Find hundreds of fellow bikers and car owners and make travel friends for life." },
   { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to waive it entirely!' },
+  { q: 'What is Couples Mode on SastiTripsWale?', a: "Couples Mode is a custom preference for travelling duos - it reserves paired seats on a trip so couples join and travel together instead of being split up." },
+  { q: 'Can I filter for girls-only or boys-only trips?', a: 'Yes - set your co-traveler preference to Only Female or Only Male when you join, and you\'ll only see and match with girls-only or boys-only verified groups.' },
+];
+
+// Mirrors the "How It Works" summary Google's own AI Overview already
+// surfaces for the brand (sourced from social bios, not this site) - stated
+// here explicitly so the primary domain is the definitive source.
+const HOW_IT_WORKS = [
+  { icon: 'fa-solid fa-route', h: 'Host or Join', p: 'Have your own vehicle? Host a trip and list available seats. No vehicle? Join an existing trip planned by other verified members.' },
+  { icon: 'fa-solid fa-motorcycle', h: 'Group Travel by Vehicle', p: 'Ride with fellow bikers, road-trip in a car or SUV group, or backpack budget-style - travel together in a verified group, never solo.' },
+  { icon: 'fa-solid fa-wallet', h: 'Split Expenses (Split-Contri)', p: 'Fuel, hotels and food are shared equally among the group on a simple split-contri basis - real trips for a fraction of the solo cost.' },
+  { icon: 'fa-solid fa-heart', h: 'Special Modes', p: 'Choose Couples Mode for travelling duos, or filter for girls-only / boys-only groups for extra comfort and safety.' },
+  { icon: 'fa-solid fa-user-plus', h: 'Free Sign-Up', p: 'Profile creation and basic community networking are free to start - use coupon FREEJOIN to waive the membership fee entirely.' },
+  { icon: 'fa-solid fa-people-group', h: 'Travel Clubs', p: 'Own a bike, car, or off-roader? Start a persistent club - a standing group chat with admins, not just a one-off trip.' },
 ];
 
 // Shown only until real trip photos exist in the gallery (see `gallery` state
@@ -152,6 +179,10 @@ export default function Home() {
 
   return (
     <>
+      <Seo
+        path="/"
+        jsonLd={[buildOrganizationLd(), buildWebSiteLd(), buildFaqLd(FAQS)]}
+      />
       {/* HERO */}
       <section className="hero">
         <div className="hero-canvas" />
@@ -273,6 +304,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section style={{ background: 'var(--bg-2)' }}>
+        <div className="container">
+          <div className="text-center fade-up">
+            <div className="section-tag"><i className="fa-solid fa-diagram-project" /> How It Works</div>
+            <h2 className="section-title">How <span className="highlight">SastiTripsWale</span> Works</h2>
+            <p className="section-sub">A community-driven budget travel platform for people who want to explore India but lack company, a vehicle, or a large budget.</p>
+          </div>
+          <div className="why-grid">
+            {HOW_IT_WORKS.map((w) => (
+              <div className="why-card fade-up" key={w.h}>
+                <div className="why-icon" style={{ background: 'rgba(255,107,0,0.12)' }}><i className={w.icon} /></div>
+                <h3>{w.h}</h3>
+                <p>{w.p}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center fade-up" style={{ marginTop: 32 }}>
+            <Link to="/how-it-works" className="btn btn-outline">
+              Read the Full Guide <i className="fa-solid fa-arrow-right" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Why Join */}
       <section>
         <div className="container">
@@ -312,6 +368,75 @@ export default function Home() {
                 <div className="cat-badge"><span className={`badge ${c.badge}`}><i className={c.icon} /></span></div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Create Your Club */}
+      <section>
+        <div className="container">
+          <div className="text-center fade-up">
+            <div className="section-tag"><i className="fa-solid fa-people-group" /> New</div>
+            <h2 className="section-title">Create Your <span className="highlight">Travel Club</span></h2>
+            <p className="section-sub">
+              Own a bike, car, or off-roader? Start a persistent crew - like a WhatsApp group, but built for
+              travel. Give it a name, a photo, add members by mobile number or username, and manage admins.
+            </p>
+          </div>
+          <div className="club-cat-grid fade-up">
+            {CLUB_CATEGORIES.map((c) => (
+              <Link to="/plan-club" className="why-card club-cat-card" key={c.key}>
+                <div className="why-icon" style={{ background: CLUB_ICON_BG[c.key] }}>
+                  <i className={c.icon} />
+                </div>
+                <h3>{c.label}</h3>
+                <p>{c.needsVehicle ? `Requires ${c.needsLabel} on your profile` : 'Open to everyone - no vehicle required'}</p>
+              </Link>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap', marginTop: 36 }}>
+            <Link to="/plan-club" className="btn btn-primary btn-lg">
+              <i className="fa-solid fa-people-group" /> Create Your Club
+            </Link>
+            <Link to="/clubs" className="btn btn-outline btn-lg">
+              <i className="fa-solid fa-magnifying-glass" /> Browse Clubs
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Become Our Influencer */}
+      <section style={{ background: 'var(--bg-2)' }}>
+        <div className="container">
+          <div className="text-center fade-up">
+            <div className="section-tag"><i className="fa-solid fa-star" /> Promoter Program</div>
+            <h2 className="section-title">Become Our <span className="highlight">Influencer</span></h2>
+            <p className="section-sub">
+              Get your own coupon code, share it with your audience, and earn a commission every time
+              someone joins SastiTripsWale with it.
+            </p>
+          </div>
+          <div className="why-grid" style={{ marginBottom: 36 }}>
+            <div className="why-card fade-up">
+              <div className="why-icon" style={{ background: 'rgba(255,201,77,0.14)', color: 'var(--gold)' }}><i className="fa-solid fa-tag" /></div>
+              <h3>Your Own Coupon</h3>
+              <p>A personal code like SAHIL10, with a real discount for whoever uses it.</p>
+            </div>
+            <div className="why-card fade-up">
+              <div className="why-icon" style={{ background: 'rgba(16,185,129,0.14)', color: '#6ee7b7' }}><i className="fa-solid fa-sack-dollar" /></div>
+              <h3>Real Commission</h3>
+              <p>Earn a percentage of every membership sold with your code - tracked on your own dashboard.</p>
+            </div>
+            <div className="why-card fade-up">
+              <div className="why-icon" style={{ background: 'rgba(224,64,251,0.12)', color: 'var(--magenta)' }}><i className="fa-solid fa-people-group" /></div>
+              <h3>Grow the Community</h3>
+              <p>Help fellow travelers save money while building your own following on the platform.</p>
+            </div>
+          </div>
+          <div className="text-center fade-up">
+            <Link to="/influencers" className="btn btn-primary btn-lg">
+              <i className="fa-solid fa-star" /> Become an Influencer
+            </Link>
           </div>
         </div>
       </section>

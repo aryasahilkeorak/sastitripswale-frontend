@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import Seo from '../components/Seo.jsx';
 
 export default function NotFound() {
   return (
     <section style={{ minHeight: '70vh', display: 'flex', alignItems: 'center' }}>
+      <Seo noindex title="Page Not Found" />
       <div className="container text-center">
         <div style={{ fontSize: '4rem', color: 'var(--fire)' }}><i className="fa-solid fa-compass" /></div>
         <h1 className="section-title" style={{ fontSize: '2.4rem' }}>Lost the <span className="highlight">trail?</span></h1>

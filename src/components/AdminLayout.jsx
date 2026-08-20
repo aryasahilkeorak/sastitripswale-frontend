@@ -17,6 +17,8 @@ const LINKS = [
   { to: '/admin/reviews', label: 'Reviews', icon: 'fa-solid fa-star', perm: 'reviews' },
   { to: '/admin/gallery', label: 'Gallery', icon: 'fa-solid fa-image', perm: 'gallery' },
   { to: '/admin/messages', label: 'Queries', icon: 'fa-solid fa-headset', perm: 'messages' },
+  { to: '/admin/influencers', label: 'Influencers', icon: 'fa-solid fa-star', perm: 'influencers' },
+  { to: '/admin/wallet', label: 'Wallet', icon: 'fa-solid fa-wallet', perm: 'wallet' },
 ];
 
 // The bottom tab bar (mobile only) surfaces the 3 most-used sections directly;

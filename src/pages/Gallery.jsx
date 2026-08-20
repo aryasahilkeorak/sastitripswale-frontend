@@ -6,6 +6,7 @@ import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
+import Seo from '../components/Seo.jsx';
 
 const CATS = [
   { key: 'all', label: 'All' },
@@ -63,6 +64,11 @@ export default function Gallery() {
 
   return (
     <>
+      <Seo
+        title="Trip Photos - Community Gallery"
+        description="Real photos from real SastiTripsWale trips - bike rides, road trips, treks, beaches and camping shared by verified members across India."
+        path="/gallery"
+      />
       <PageHero tag="Trip Memories" tagIcon="fa-solid fa-image" title="Community" highlight="Gallery" sub="Real photos from real trips shared by our members." />
 
       <section style={{ paddingTop: 40 }}>

@@ -99,6 +99,14 @@ const DESTINATION_PLACEHOLDER_SVG = `
 `;
 export const DESTINATION_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(DESTINATION_PLACEHOLDER_SVG)}`;
 
+// Single source of truth for every club/group cover photo's crop ratio
+// (width / height) - passed to ImageCropModal's `aspect` prop at upload
+// time AND used as the CSS `aspect-ratio` (never a fixed pixel height) on
+// every place a cover renders, so the same cropped image displays
+// identically on the club card, club detail banner and chat group cover
+// regardless of container width or screen size.
+export const COVER_ASPECT_RATIO = 3;
+
 // Fallback icon for non-image documents (e.g. PDFs) shown as thumbnails.
 const DOC_ICON_SVG =
   "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>" +
@@ -137,13 +145,25 @@ export function planPrice(preference, duration) {
 }
 export const PREF_LABEL = { male: 'Only Male', female: 'Only Female', both: 'Male + Female' };
 
+// Travel club categories (bikers/cars/offroading/other) - kept in sync with
+// backend clubController's CATEGORY_VEHICLE map, so the create-club form can
+// tell a member up front which vehicle type they need on their profile.
+export const CLUB_CATEGORIES = [
+  { key: 'bikers', label: 'Bikers Club', icon: 'fa-solid fa-motorcycle', needsVehicle: 'Bike', needsLabel: 'a bike' },
+  { key: 'cars', label: 'Cars Club', icon: 'fa-solid fa-car', needsVehicle: 'Car', needsLabel: 'a car' },
+  { key: 'offroading', label: 'Offroading Club', icon: 'fa-solid fa-mountain', needsVehicle: 'Car', needsLabel: 'a car' },
+  { key: 'other', label: 'Other', icon: 'fa-solid fa-people-group', needsVehicle: null, needsLabel: 'a vehicle' },
+];
+export const CLUB_CATEGORY_LABEL = Object.fromEntries(CLUB_CATEGORIES.map((c) => [c.key, c.label]));
+export const CLUB_CATEGORY_ICON = Object.fromEntries(CLUB_CATEGORIES.map((c) => [c.key, c.icon]));
+
 // Social handles are stored bare (no URL) - the base URL is prefixed here so
 // members only ever type their username, never a full link.
 export const SOCIAL_PLATFORMS = [
   { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram', base: 'https://instagram.com/' },
   { key: 'facebook', label: 'Facebook', icon: 'fa-brands fa-facebook', base: 'https://facebook.com/' },
   { key: 'twitter', label: 'X (Twitter)', icon: 'fa-brands fa-x-twitter', base: 'https://x.com/' },
-  { key: 'youtube', label: 'YouTube', icon: 'fa-brands fa-youtube', base: 'https://youtube.com/@' },
+  { key: 'youtube', label: 'YouTube', icon: 'fa-brands fa-youtube', base: 'https://youtube.com/' },
   { key: 'linkedin', label: 'LinkedIn', icon: 'fa-brands fa-linkedin', base: 'https://linkedin.com/in/' },
 ];
 export function socialUrl(platformKey, handle) {

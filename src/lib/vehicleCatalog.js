@@ -57,7 +57,7 @@ const CATALOG = {
   Other: {},
 };
 
-const OTHER = 'Other (not listed)';
+const OTHER = '+ Add Custom';
 
 export function getBrandsForType(vehicleType) {
   const brands = Object.keys(CATALOG[vehicleType] || {});

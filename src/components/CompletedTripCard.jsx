@@ -36,9 +36,15 @@ export default function CompletedTripCard({ trip }) {
 
       <div className="trip-card-body">
         <h3 style={{ marginBottom: 6 }}>{routeLabel(trip)}</h3>
-        <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginBottom: 12 }}>
+        <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginBottom: 4 }}>
           <i className="fa-solid fa-location-dot" /> {trip.destination}
         </p>
+        {trip.organizer && (
+          <p style={{ color: 'var(--text-3)', fontSize: '0.78rem', marginBottom: 12 }}>
+            <i className="fa-solid fa-user" /> Hosted by{' '}
+            <strong style={{ color: 'var(--text)', fontWeight: 700 }}>{trip.organizer.username || trip.organizer.fullName}</strong>
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-3)', marginBottom: 14, flexWrap: 'wrap' }}>
           <span>
             <i className="fa-solid fa-calendar" /> {dateRange(trip.startDate, trip.endDate)}

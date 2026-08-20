@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { rupee, dateRange, routeLabel, BUDGET_INCLUDES, GENDER_PREFERENCE, todayISO } from '../lib/helpers.js';
+import { rupee, dateRange, routeLabel, todayISO } from '../lib/helpers.js';
 import { suggestMileageForUser } from '../lib/vehicleMileage.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
@@ -13,30 +13,28 @@ import CustomNumberStepper from '../components/CustomNumberStepper.jsx';
 import ChipListInput from '../components/ChipListInput.jsx';
 import PlaceAutocomplete from '../components/PlaceAutocomplete.jsx';
 
+// Each vehicle's own fuel/toll cost splits among its own occupants - a
+// bike's cost splits 2 ways (rider + pillion), a car's 4 ways.
+const VEHICLE_CAPACITY = { Bike: 2, Car: 4 };
+
 const FUEL_TYPES = [
   { value: 'Petrol', label: 'Petrol' },
   { value: 'Diesel', label: 'Diesel' },
   { value: 'CNG', label: 'CNG' },
-  { value: 'Electric', label: 'Electric' },
-  { value: 'Hybrid', label: 'Hybrid' },
 ];
 
 const TIPS = [
-  'Add a clear route (start, via stops, destination) and realistic dates.',
-  'Keep the per-head budget honest - it builds trust.',
-  'Mention pickup location and vehicle type.',
-  'Review join requests promptly - quick hosts get more interest.',
+  'The vehicle count updates automatically as people join your group.',
+  'Mention a clear pickup point so vehicles can group up before departure.',
+  'Review join requests promptly so riders can plan their own vehicle.',
 ];
 
-const POPULAR = ['Leh-Ladakh', 'Spiti Valley', 'Goa', 'Kedarnath', 'Coorg', 'Jaisalmer', 'Meghalaya', 'Manali'];
-
 const EMPTY = {
-  origin: '', viaStops: [], destination: '', startDate: '', endDate: '', budgetPerHead: '', totalSeats: 4,
-  vehicleType: '', budgetIncludes: 'fuel_toll', genderPreference: 'Any', pickupLocation: '', description: '',
-  isCouplesMode: false,
+  vehicleType: 'Bike', origin: '', viaStops: [], destination: '', startDate: '', endDate: '',
+  budgetPerHead: '', pickupLocation: '', description: '',
 };
 
-export default function PlanTrip() {
+export default function PlanGroupTrip() {
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
   const canTrip = useCanTrip();
@@ -45,16 +43,11 @@ export default function PlanTrip() {
   const canPlan = isMember && profileDone;
 
   const [form, setForm] = useState(EMPTY);
-  const [trips, setTrips] = useState([]);
+  const [groupTrips, setGroupTrips] = useState([]);
   const [busy, setBusy] = useState(false);
-  const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
 
-  // Cost estimator - a planning aid, not part of the trip itself, so it's
-  // kept separate from `form`. Seeded from a vehicle the host already
-  // registered (Dashboard > My Vehicles) matching this trip's vehicle
-  // type, if one has a mileage on file - otherwise falls back to a guess
-  // from their legacy profile vehicle model, then a generic default. The
-  // host can always override both fields.
+  // Cost estimator - a planning aid, not part of the group trip itself, so
+  // it's kept separate from `form`. Same endpoint PlanTrip.jsx uses.
   const [mileageKmpl, setMileageKmpl] = useState(() => suggestMileageForUser(user, form.vehicleType).kmpl);
   const [fuelType, setFuelType] = useState(() => suggestMileageForUser(user, form.vehicleType).fuelType);
   const [costEstimate, setCostEstimate] = useState(null);
@@ -76,24 +69,7 @@ export default function PlanTrip() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  // A bike only fits the rider plus one pillion - totalSeats counts
-  // co-traveler slots only (the organizer doesn't occupy one outside
-  // Couples Mode), so "1 pillion seat" means totalSeats: 1, not 2.
-  const setVehicleType = (e) => {
-    const vehicleType = e.target.value;
-    setForm((f) => ({
-      ...f,
-      vehicleType,
-      totalSeats: vehicleType === 'Bike' ? 1 : f.totalSeats,
-    }));
-  };
-
-  const toggleCouplesMode = (e) => {
-    const on = e.target.checked;
-    setForm((f) => ({ ...f, isCouplesMode: on, vehicleType: on ? 'Car' : f.vehicleType }));
-  };
-
-  const loadMine = () => api.get('/trips/my').then((r) => setTrips(r.data.trips)).catch(() => {});
+  const loadMine = () => api.get('/group-trips/my').then((r) => setGroupTrips(r.data.groupTrips)).catch(() => {});
   useEffect(() => {
     loadMine();
   }, []);
@@ -128,7 +104,8 @@ export default function PlanTrip() {
 
   const applyCostSuggestion = () => {
     if (!costEstimate) return;
-    const perHead = Math.round(costEstimate.totalCost / (Number(form.totalSeats) || 1));
+    const capacity = VEHICLE_CAPACITY[form.vehicleType] || 1;
+    const perHead = Math.round(costEstimate.totalCost / capacity);
     setForm((f) => ({ ...f, budgetPerHead: perHead }));
     toast('fa-solid fa-wand-magic-sparkles', `Budget/head set to ${rupee(perHead)}`);
   };
@@ -140,18 +117,10 @@ export default function PlanTrip() {
       toast('fa-solid fa-triangle-exclamation', 'End date must be after start date');
       return;
     }
-    if (form.isCouplesMode && (Number(form.totalSeats) < 4 || Number(form.totalSeats) % 2 !== 0)) {
-      toast('fa-solid fa-triangle-exclamation', 'Couples mode needs an even number of seats (4 or more)');
-      return;
-    }
-    if (form.isCouplesMode && !hasPartnerInfo) {
-      toast('fa-solid fa-triangle-exclamation', "Add your partner's mobile number and ID document in your profile first");
-      return;
-    }
     setBusy(true);
     try {
-      await api.post('/trips', form);
-      toast('fa-solid fa-map-location-dot', 'Trip posted! A destination photo will appear shortly.');
+      await api.post('/group-trips', form);
+      toast('fa-solid fa-people-group', 'Group trip posted!');
       setForm(EMPTY);
       loadMine();
     } catch (err) {
@@ -162,10 +131,10 @@ export default function PlanTrip() {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this trip?')) return;
+    if (!window.confirm('Delete this group trip?')) return;
     try {
-      await api.delete(`/trips/${id}`);
-      toast('fa-solid fa-trash', 'Trip deleted');
+      await api.delete(`/group-trips/${id}`);
+      toast('fa-solid fa-trash', 'Group trip deleted');
       loadMine();
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -174,7 +143,14 @@ export default function PlanTrip() {
 
   return (
     <>
-      <PageHero showBack tag="Organize" tagIcon="fa-solid fa-map-location-dot" title="Plan a" highlight="Trip" sub="Create a trip, set the budget, and let verified travelers request to join." />
+      <PageHero
+        showBack
+        tag="Ride Together"
+        tagIcon="fa-solid fa-people-group"
+        title="Plan a"
+        highlight="Group Trip"
+        sub="Bikers group, cars group - post your ride and we'll work out how many vehicles are needed as people join."
+      />
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
@@ -192,17 +168,17 @@ export default function PlanTrip() {
             </div>
           ) : null}
 
-          <Link to="/plan-group-trip" className="btn btn-outline mb-4" style={{ width: '100%', justifyContent: 'center' }}>
-            <i className="fa-solid fa-people-group" /> Plan a Group Trip instead
-          </Link>
-
           <div className="detail-grid">
-            {/* Create form */}
             <form className="card" style={{ padding: 20 }} onSubmit={submit}>
-              <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Trip details</h3>
-              <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}>
-                <i className="fa-solid fa-image" /> A destination photo is added automatically - no upload needed.
-              </p>
+              <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Group trip details</h3>
+
+              <div className="form-group"><label>Group type *</label>
+                <CustomSelect
+                  value={form.vehicleType}
+                  onChange={set('vehicleType')}
+                  options={[{ value: 'Bike', label: 'Bikers Group' }, { value: 'Car', label: 'Cars Group' }]}
+                />
+              </div>
 
               <div className="form-group"><label>Starting from *</label><PlaceAutocomplete className="form-input" required value={form.origin} onChange={set('origin')} placeholder="e.g. Chandigarh" /></div>
 
@@ -211,38 +187,16 @@ export default function PlanTrip() {
                 <ChipListInput values={form.viaStops} onChange={(viaStops) => setForm((f) => ({ ...f, viaStops }))} placeholder="e.g. Solan" />
               </div>
 
-              <div className="form-group"><label>Destination *</label><PlaceAutocomplete className="form-input" required value={form.destination} onChange={set('destination')} placeholder="e.g. Shimla" /></div>
+              <div className="form-group"><label>Destination *</label><PlaceAutocomplete className="form-input" required value={form.destination} onChange={set('destination')} placeholder="e.g. Manali" /></div>
 
               <div className="form-row">
                 <div className="form-group"><label>Start date *</label><CustomDatePicker value={form.startDate} onChange={set('startDate')} min={todayISO()} /></div>
                 <div className="form-group"><label>End date *</label><CustomDatePicker value={form.endDate} onChange={set('endDate')} min={form.startDate || todayISO()} /></div>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Budget / head (₹) *</label>
-                  <CustomNumberStepper value={form.budgetPerHead || 0} onChange={set('budgetPerHead')} min={0} step={100} prefix="₹" />
-                </div>
-                <div className="form-group">
-                  <label>Total seats *</label>
-                  <CustomNumberStepper value={form.totalSeats} onChange={set('totalSeats')} min={1} max={form.vehicleType === 'Bike' ? 1 : 100} step={form.isCouplesMode ? 2 : 1} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group"><label>Vehicle type</label>
-                  <CustomSelect
-                    value={form.vehicleType}
-                    onChange={setVehicleType}
-                    disabled={form.isCouplesMode}
-                    options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Train', 'Mixed']}
-                  />
-                </div>
-                <div className="form-group"><label>Budget includes</label>
-                  <CustomSelect
-                    value={form.budgetIncludes}
-                    onChange={set('budgetIncludes')}
-                    options={BUDGET_INCLUDES}
-                  />
-                </div>
+
+              <div className="form-group">
+                <label>Budget / head (₹) *</label>
+                <CustomNumberStepper value={form.budgetPerHead || 0} onChange={set('budgetPerHead')} min={0} step={100} prefix="₹" />
               </div>
 
               <div className="cost-estimator-box">
@@ -254,15 +208,15 @@ export default function PlanTrip() {
                     <strong>{form.vehicleType === 'Bike' ? 'Estimate fuel cost' : 'Estimate fuel & toll cost'}</strong>
                     <p className="text-muted" style={{ fontSize: '0.78rem', margin: '2px 0 0' }}>
                       {form.vehicleType === 'Bike'
-                        ? "Uses the route distance and your bike's mileage to suggest a round-trip fuel cost - bikes are toll-exempt on most highways."
-                        : "Uses the route distance and your vehicle's mileage to suggest a round-trip fuel + toll cost."}
+                        ? `Uses the route distance and a bike's mileage to suggest a per-head fuel cost - each bike splits its own fuel among its ${VEHICLE_CAPACITY[form.vehicleType]} occupants (bikes are toll-exempt on most highways).`
+                        : `Uses the route distance and a vehicle's mileage to suggest a per-head cost - each ${form.vehicleType.toLowerCase()} splits its own fuel & toll among its ${VEHICLE_CAPACITY[form.vehicleType]} occupants.`}
                     </p>
                   </div>
                 </div>
 
                 <div className="form-row" style={{ marginTop: 14 }}>
                   <div className="form-group">
-                    <label>Enter Your Vehicle's mileage (km/l)</label>
+                    <label>Vehicle mileage (km/l)</label>
                     <CustomNumberStepper value={mileageKmpl} onChange={(e) => setMileageKmpl(Number(e.target.value))} min={1} max={100} />
                   </div>
                   <div className="form-group">
@@ -296,7 +250,7 @@ export default function PlanTrip() {
                       </div>
                     )}
                     <div className="row-between" style={{ fontSize: '0.95rem', marginTop: 6, paddingTop: 10, borderTop: '1px solid var(--glass-bdr)' }}>
-                      <span>Total (whole vehicle)</span>
+                      <span>Total (per {form.vehicleType.toLowerCase()})</span>
                       <strong className="trip-price" style={{ fontSize: '1.1rem' }}>{rupee(costEstimate.totalCost)}</strong>
                     </div>
                     <p className="text-muted" style={{ fontSize: '0.72rem', margin: '10px 0 12px' }}>
@@ -309,75 +263,37 @@ export default function PlanTrip() {
                       Actual costs vary by route and current prices.
                     </p>
                     <button type="button" className="btn btn-primary btn-sm" onClick={applyCostSuggestion} style={{ width: '100%', justifyContent: 'center' }}>
-                      <i className="fa-solid fa-wand-magic-sparkles" /> Use {rupee(Math.round(costEstimate.totalCost / (Number(form.totalSeats) || 1)))}/head as budget
+                      <i className="fa-solid fa-wand-magic-sparkles" /> Use {rupee(Math.round(costEstimate.totalCost / VEHICLE_CAPACITY[form.vehicleType]))}/head as budget
                     </button>
                   </div>
                 )}
               </div>
 
-              <div className="form-group"><label>Who can join</label>
-                <CustomSelect
-                  value={form.genderPreference}
-                  onChange={set('genderPreference')}
-                  options={GENDER_PREFERENCE}
-                />
-              </div>
-
-              <div className="couples-safety-box">
-                <div className="couples-safety-header">
-                  <span className="couples-safety-icon"><i className="fa-solid fa-heart" /></span>
-                  <div>
-                    <label className={`perm-check${form.isCouplesMode ? ' checked' : ''}`} style={{ background: 'transparent', border: 'none', padding: 0 }}>
-                      <input type="checkbox" className="perm-check-input" checked={form.isCouplesMode} onChange={toggleCouplesMode} />
-                      <strong>Couples Mode</strong>
-                    </label>
-                  </div>
-                </div>
-                <p className="text-muted" style={{ fontSize: '0.8rem', margin: '10px 0 0' }}>
-                  For couples traveling together - needs a car with 4+ seats. Fuel &amp; toll cost splits between the host couple and joining couple(s), cheaper and comfier than public transport.
-                </p>
-                {form.isCouplesMode && (
-                  hasPartnerInfo ? (
-                    <div className="couples-safety-alert success" style={{ marginBottom: 0 }}>
-                      <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7' }} />
-                      <span>Using your saved partner details - update anytime in your profile.</span>
-                    </div>
-                  ) : (
-                    <div className="couples-safety-alert" style={{ marginBottom: 0 }}>
-                      <i className="fa-solid fa-triangle-exclamation" style={{ color: '#fca5a5' }} />
-                      <span>
-                        Add your partner's mobile number and ID document in your{' '}
-                        <Link to="/complete-profile" style={{ color: 'var(--fire-2)', textDecoration: 'underline' }}>profile</Link> to enable Couples Mode.
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-
               <div className="form-group"><label>Pickup location</label><input className="form-input" value={form.pickupLocation} onChange={set('pickupLocation')} placeholder="Exact meeting point" /></div>
-              <div className="form-group"><label>Description</label><textarea className="form-input" value={form.description} onChange={set('description')} placeholder="Plan, what to expect…" /></div>
+              <div className="form-group"><label>Description</label><textarea className="form-input" value={form.description} onChange={set('description')} placeholder="Plan, route, what to expect…" /></div>
 
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy || !canPlan}>
-                {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Post Trip
+                {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Post Group Trip
               </button>
             </form>
 
-            {/* Right column */}
             <div>
               <div className="card" style={{ padding: 16, marginBottom: 20 }}>
-                <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My posted trips</h3>
-                {trips.length === 0 ? (
-                  <div className="empty-state-sm"><i className="fa-solid fa-map-pin" /><p>No trips yet. Create your first!</p></div>
+                <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My group trips</h3>
+                {groupTrips.length === 0 ? (
+                  <div className="empty-state-sm"><i className="fa-solid fa-people-group" /><p>No group trips yet. Create your first!</p></div>
                 ) : (
-                  trips.map((t) => (
+                  groupTrips.map((t) => (
                     <div key={t._id} className="notif-item" style={{ alignItems: 'center' }}>
                       <div style={{ flex: 1 }}>
                         <strong style={{ fontSize: '0.9rem' }}>{routeLabel(t)}</strong>
                         <div className="text-muted" style={{ fontSize: '0.75rem' }}>{dateRange(t.startDate, t.endDate)}</div>
-                        <div className="text-muted" style={{ fontSize: '0.75rem' }}>{rupee(t.budgetPerHead)}/head · {t.filledSeats}/{t.totalSeats} joined</div>
+                        <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                          {rupee(t.budgetPerHead)}/head · {t.currentHeadcount} traveler{t.currentHeadcount === 1 ? '' : 's'} · {t.vehiclesNeeded} {t.vehicleType.toLowerCase()}{t.vehiclesNeeded > 1 ? 's' : ''}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <Link to={`/trips/${t._id}`} className="btn btn-sm btn-outline"><i className="fa-solid fa-eye" /></Link>
+                        <Link to={`/group-trips/${t._id}`} className="btn btn-sm btn-outline"><i className="fa-solid fa-eye" /></Link>
                         <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => remove(t._id)}><i className="fa-solid fa-trash" /></button>
                       </div>
                     </div>
@@ -385,22 +301,13 @@ export default function PlanTrip() {
                 )}
               </div>
 
-              <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+              <div className="card" style={{ padding: 16 }}>
                 <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}><i className="fa-solid fa-lightbulb" /> Tips</h4>
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {TIPS.map((t) => (
                     <li key={t} style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}><i className="fa-solid fa-circle-check" style={{ color: 'var(--fire)' }} /> {t}</li>
                   ))}
                 </ul>
-              </div>
-
-              <div className="card" style={{ padding: 16 }}>
-                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Popular destinations</h4>
-                <div className="filter-chips" style={{ marginBottom: 0 }}>
-                  {POPULAR.map((p) => (
-                    <button key={p} type="button" className="chip" onClick={() => setForm((f) => ({ ...f, destination: p }))}>{p}</button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../store/auth.js';
+import Seo from './Seo.jsx';
 
+// Every route behind this guard (member dashboard, chat, admin panel, ...) is
+// private and has nothing for search engines to index - one noindex here
+// covers all of them instead of repeating <Seo noindex /> on every page.
 export default function ProtectedRoute({ children, admin = false, superadmin = false }) {
   const user = useAuth((s) => s.user);
   const accessToken = useAuth((s) => s.accessToken);
@@ -18,5 +22,10 @@ export default function ProtectedRoute({ children, admin = false, superadmin = f
   if (admin && !isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
-  return children;
+  return (
+    <>
+      <Seo noindex />
+      {children}
+    </>
+  );
 }

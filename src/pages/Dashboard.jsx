@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { useSwipeable } from 'react-swipeable';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import {
@@ -8,61 +7,48 @@ import {
   rupee,
   paiseToRupee,
   timeAgo,
-  formatDate,
-  PREF_LABEL,
   AVATAR_FALLBACK,
-  SOCIAL_PLATFORMS,
-  socialUrl,
-  TRAVEL_INTEREST_ICONS,
   isVehicleModelYearMistake,
   VEHICLE_MODEL_YEAR_MISTAKE_MSG,
+  SOCIAL_PLATFORMS,
 } from '../lib/helpers.js';
 import { getBrandsForType, getModelsForBrand, getVehicleYearOptions, OTHER_OPTION } from '../lib/vehicleCatalog.js';
+import { toEmbedUrl, getThumbnail } from '../lib/videoEmbed.js';
 import { toast } from '../lib/toast.js';
-import DestinationImage from '../components/DestinationImage.jsx';
 import Modal from '../components/Modal.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import SelfieCapture from '../components/SelfieCapture.jsx';
-import VerificationBadge from '../components/VerificationBadge.jsx';
+import Loader from '../components/Loader.jsx';
 
-const TABS = [
-  { key: 'trips', label: 'My Trips', icon: 'fa-solid fa-map-location-dot' },
-  { key: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
-  { key: 'payments', label: 'Payments', icon: 'fa-solid fa-credit-card' },
-  { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear' },
-];
-
+// "My Profile" IS the public profile page (MemberDetail, at /members/:id) -
+// same page everyone else's profile uses, Instagram-style, just with
+// isSelf-gated extras (Host a Trip, delete trip, Edit Profile). Settings is
+// the only thing that still lives on /dashboard, reached via the navbar's
+// "Settings" link or a notification/CTA deep link (?tab=settings).
 export default function Dashboard() {
   const user = useAuth((s) => s.user);
   const viewMode = useAuth((s) => s.viewMode);
-  const [searchParams] = useSearchParams();
-  const validTabs = TABS.map((t) => t.key);
-  const [tab, setTab] = useState(() => {
-    const requested = searchParams.get('tab');
-    return validTabs.includes(requested) ? requested : 'trips';
-  });
-
-  // Swipe between tabs on mobile/tablet (trackMouse stays off, so this never
-  // interferes with desktop clicks/drags inside the tab content).
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => {
-      const i = TABS.findIndex((t) => t.key === tab);
-      if (i >= 0 && i < TABS.length - 1) setTab(TABS[i + 1].key);
-    },
-    onSwipedRight: () => {
-      const i = TABS.findIndex((t) => t.key === tab);
-      if (i > 0) setTab(TABS[i - 1].key);
-    },
-    preventScrollOnSwipe: false,
-  });
-
-  const [trips, setTrips] = useState([]);
-  const [connections, setConnections] = useState([]);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') === 'settings' ? 'settings' : 'profile';
+  const settingsView = ['payments', 'influencer', 'wallet'].includes(searchParams.get('view'))
+    ? searchParams.get('view')
+    : null;
   const [payments, setPayments] = useState([]);
 
+  // Pushes a real history entry per sub-view (instead of just swapping local
+  // state) so the back button - navigate(-1) below - retraces the actual
+  // path taken: Profile → Settings → Wallet steps back one hop at a time,
+  // while a direct Profile → Wallet deep link steps back straight to Profile.
+  const setSettingsView = (v) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', 'settings');
+    if (v) next.set('view', v);
+    else next.delete('view');
+    setSearchParams(next);
+  };
+
   useEffect(() => {
-    api.get('/trips/my').then((r) => setTrips(r.data.trips)).catch(() => {});
-    api.get('/members/connections').then((r) => setConnections(r.data.connections)).catch(() => {});
     api.get('/payments/history').then((r) => setPayments(r.data.payments)).catch(() => {});
   }, []);
 
@@ -72,279 +58,62 @@ export default function Dashboard() {
     return <Navigate to="/admin" replace />;
   }
 
-  const acceptedCount = connections.filter((c) => c.status === 'accepted').length;
+  if (tab !== 'settings') {
+    return <Navigate to={`/members/${user?.id}`} replace />;
+  }
 
-  const removeTrip = async (id) => {
-    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
-    try {
-      await api.delete(`/trips/${id}`);
-      setTrips((ts) => ts.filter((t) => t._id !== id));
-      toast('fa-solid fa-trash', 'Trip deleted');
-    } catch (err) {
-      toast('fa-solid fa-circle-xmark', apiError(err));
-    }
-  };
-
-  const copyId = () => {
-    navigator.clipboard?.writeText(String(user?.id || ''));
-    toast('fa-solid fa-clipboard', 'User ID copied - share it to be added to groups');
-  };
-
-  const shareProfile = () => {
-    const url = `${window.location.origin}/members/${user?.id}`;
-    if (navigator.share) {
-      navigator.share({ title: `${user?.fullName} on SastiTripsWale`, url }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(url);
-      toast('fa-solid fa-clipboard', 'Profile link copied!');
-    }
-  };
+  const settingsTitle =
+    settingsView === 'payments' ? 'Payments' : settingsView === 'influencer' ? 'Influencer / Promoter' : settingsView === 'wallet' ? 'Wallet' : 'Settings';
 
   return (
-    <section className="detail-section">
-      <div className="container dashboard-container">
-        {/* Profile header - matches the real Instagram profile layout: a
-            top row of avatar + stats, then name/bio/links full-width below. */}
-        <div className="ig-header">
-          <div className="ig-top-row">
-            <img
-              className="ig-avatar"
-              src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)}
-              alt={user?.fullName}
-              onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-            />
-            <div className="ig-stats">
-              <div className="ig-stat"><strong>{trips.length}</strong><span>Trips</span></div>
-              <div className="ig-stat"><strong>{acceptedCount}</strong><span>Connections</span></div>
-              <div className="ig-stat"><strong>{payments.length}</strong><span>Payments</span></div>
-            </div>
-          </div>
-
-          <div className="ig-header-body">
-            <div className="ig-name-row">
-              <h1>{user?.fullName}</h1>
-              <VerificationBadge role={user?.role} verificationLevel={user?.verificationLevel} isVerified={user?.isVerified} />
-            </div>
-
-            {user?.username && <p className="ig-username">@{user.username}</p>}
-            <p className="ig-joined">Member since {formatDate(user?.createdAt)}</p>
-
-            <p className="ig-meta">
-              {user?.profession && <span><i className="fa-solid fa-briefcase" /> {user.profession}</span>}
-              <span><i className="fa-solid fa-location-dot" /> {user?.city || 'India'}{user?.vehicleType ? ` · ${user.vehicleType}` : ''}</span>
-              <span><i className="fa-solid fa-envelope" /> {user?.email}</span>
-            </p>
-
-            {user?.bio && <p className="ig-bio">{user.bio}</p>}
-
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <span className={`badge ${user?.membershipActive ? 'badge-green' : 'badge-red'}`}>
-                {user?.membershipActive ? '● Active member' : '○ Membership inactive'}
-              </span>
-              {user?.membershipActive && user?.membershipExpiresAt && (
-                <span className="badge badge-gold">Valid till {formatDate(user.membershipExpiresAt)}</span>
-              )}
-              {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
-            </div>
-
-            {SOCIAL_PLATFORMS.some((p) => user?.[p.key]) && (
-              <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
-                {SOCIAL_PLATFORMS.filter((p) => user?.[p.key]).map((p) => (
-                  <a key={p.key} href={socialUrl(p.key, user[p.key])} target="_blank" rel="noreferrer" title={p.label} style={{ fontSize: '1.2rem', color: 'var(--text-2)' }}>
-                    <i className={p.icon} />
-                  </a>
-                ))}
-              </div>
-            )}
-
-            {user?.travelInterests?.length > 0 && (
-              <div className="interest-pill-row" style={{ marginTop: 12 }}>
-                {user.travelInterests.map((t) => (
-                  <span key={t} className="interest-pill">
-                    <i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /> {t}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Complete-profile gate banner */}
-        {!user?.profileComplete && (
-          <div className="card mt-3" style={{ padding: 14, borderColor: 'rgba(224,64,251,0.4)' }}>
-            <div className="row-between">
-              <div>
-                <strong>Complete your profile to unlock trips</strong>
-                <p className="text-muted" style={{ fontSize: '0.85rem' }}>Add your name, city, interests, vehicle &amp; ID. You can't plan or join trips until it's done.</p>
-              </div>
-              <Link to="/complete-profile" className="btn btn-primary btn-sm"><i className="fa-solid fa-user-gear" /> Complete now</Link>
-            </div>
-          </div>
-        )}
-
-        {!user?.membershipPaid && (
-          <div className="card mt-3" style={{ padding: 14, borderColor: 'rgba(255,107,0,0.3)' }}>
-            <div className="row-between">
-              <div>
-                <strong>Activate your membership</strong>
-                <p className="text-muted" style={{ fontSize: '0.85rem' }}>Unlock trip creation, joining and connections.</p>
-              </div>
-              <Link to="/join" className="btn btn-primary btn-sm"><i className="fa-solid fa-crown" /> View Plans</Link>
-            </div>
-          </div>
-        )}
-
-        <div className="ig-action-row mt-3">
-          <Link to="/edit-profile" className="ig-flat-btn"><i className="fa-solid fa-pen" /> Edit profile</Link>
-          <button className="ig-flat-btn" onClick={shareProfile}><i className="fa-solid fa-share-nodes" /> Share profile</button>
-          <button className="ig-flat-btn" onClick={copyId} title="Copy your User ID - share it to be added to groups">
-            <i className="fa-solid fa-copy" /> Copy ID
-          </button>
-        </div>
-
-        <div className="ig-highlights mt-3">
-          <Link to="/plan-trip" className="ig-highlight-item">
-            <span className="ig-highlight-avatar ig-highlight-new"><i className="fa-solid fa-plus" /></span>
-            <span className="ig-highlight-label">New</span>
-          </Link>
-          {trips.map((t) => (
-            <Link to={`/trips/${t._id}`} key={t._id} className="ig-highlight-item">
-              <span className="ig-highlight-avatar"><DestinationImage trip={t} loading="lazy" /></span>
-              <span className="ig-highlight-label">{t.destination}</span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Tabs - pill row on mobile/tablet, replaced by a persistent left
-            sidebar at $bp-lg+ (same TABS/tab state, see .ig-dashboard-* in
-            app.scss). Both render; CSS shows only one per breakpoint. */}
-        <div className="ig-tabs mt-4">
-          {TABS.map((t) => (
-            <button key={t.key} className={`ig-tab${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)} title={t.label}>
-              <i className={t.icon} /> <span>{t.label}</span>
+    <section className="cp-section">
+      <div className="container" style={{ maxWidth: 680 }}>
+        <div className="edit-profile-head">
+          {settingsView ? (
+            <button type="button" className="ig-id-btn" onClick={() => navigate(-1)} aria-label="Back">
+              <i className="fa-solid fa-arrow-left" />
             </button>
-          ))}
+          ) : (
+            <Link to={`/members/${user?.id}`} className="ig-id-btn" aria-label="Back to profile">
+              <i className="fa-solid fa-arrow-left" />
+            </Link>
+          )}
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', margin: 0 }}>{settingsTitle}</h1>
         </div>
-
-        <div className="ig-dashboard-body mt-4">
-          <nav className="ig-dashboard-sidebar">
-            {TABS.map((t) => (
-              <button key={t.key} className={`ig-dashboard-sidebar-link${tab === t.key ? ' active' : ''}`} onClick={() => setTab(t.key)}>
-                <i className={t.icon} /> {t.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="ig-dashboard-content" {...swipeHandlers}>
-
-        {/* OVERVIEW */}
-        {tab === 'overview' && (
-          <div className="grid-2">
-            <div className="card" style={{ padding: 16 }}>
-              <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Profile</h3>
-              <Detail label="Profession" value={user?.profession} />
-              <Detail label="City / State" value={[user?.city, user?.state].filter(Boolean).join(', ')} />
-              <Detail label="Age" value={user?.age} />
-              <Detail label="Vehicle" value={[user?.vehicleType, user?.vehicleModel].filter(Boolean).join(' · ')} />
-              <Detail label="Mobile" value={user?.mobile} />
-              <Detail label="Travels with" value={PREF_LABEL[user?.coTravelerPreference]} />
-              <Detail
-                label="Membership"
-                value={user?.membershipActive ? `${user?.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(user?.membershipExpiresAt)}` : 'Inactive'}
-              />
-            </div>
-            <div>
-              <div className="card" style={{ padding: 16 }}>
-                <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Quick actions</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Link to="/trips" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-compass" /> Browse Trips</Link>
-                  <Link to="/plan-trip" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-map-location-dot" /> Plan a Trip</Link>
-                  <Link to="/chat" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-comment-dots" /> Messages</Link>
-                  <Link to="/members" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-solid fa-users" /> Find Members</Link>
-                  <Link to="/gallery" className="btn btn-outline btn-sm" style={{ justifyContent: 'flex-start' }}><i className="fa-regular fa-image" /> Gallery</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MY TRIPS */}
-        {tab === 'trips' && (
-          <>
-            <div className="row-between mb-3">
-              <h4 style={{ fontFamily: 'var(--font-display)' }}>Trips you host</h4>
-              <Link to="/plan-trip" className="btn btn-sm btn-primary"><i className="fa-solid fa-plus" /> Host a Trip</Link>
-            </div>
-            {trips.length === 0 ? (
-              <div className="empty-state"><i className="fa-solid fa-map-location-dot" /><p>You haven't hosted any trips yet.</p><Link to="/plan-trip" className="btn btn-primary mt-3">Host a Trip</Link></div>
-            ) : (
-              <div className="ig-grid">
-                {trips.map((t) => (
-                  <Link to={`/trips/${t._id}`} key={t._id} className="ig-tile">
-                    <DestinationImage trip={t} loading="lazy" />
-                    <div className="ig-tile-overlay">
-                      <div className="ig-tile-dest">{t.destination}</div>
-                      <div className="ig-tile-meta">{rupee(t.budgetPerHead)}</div>
-                    </div>
-                    <button
-                      className="ig-tile-delete"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeTrip(t._id); }}
-                      title="Delete trip"
-                    >
-                      <i className="fa-solid fa-trash" />
-                    </button>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* PAYMENTS */}
-        {tab === 'payments' && (
-          <div style={{ maxWidth: 680 }}>
-            {payments.length === 0 ? (
-              <div className="empty-state"><i className="fa-solid fa-credit-card" /><p>No payments yet.</p>{!user?.membershipActive && <Link to="/join" className="btn btn-primary mt-3">View plans</Link>}</div>
-            ) : (
-              payments.map((p) => (
-                <div key={p._id} className="notif-item">
-                  <div className="notif-icon"><i className="fa-solid fa-credit-card" /></div>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ fontSize: '0.88rem', textTransform: 'capitalize' }}>{p.purpose}</strong>
-                    <p className="text-muted" style={{ fontSize: '0.78rem' }}>
-                      {p.razorpayPaymentId || p._id}{p.couponUsed ? ` · ${p.couponUsed}` : ''} · {timeAgo(p.createdAt)}
-                    </p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700 }}>{paiseToRupee(p.amount)}</div>
-                    <span className={`badge ${p.status === 'success' ? 'badge-green' : p.status === 'failed' ? 'badge-red' : 'badge-gold'}`}>{p.status}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* SETTINGS */}
-        {tab === 'settings' && <SettingsForm user={user} />}
-          </div>
-        </div>
+        <SettingsForm user={user} payments={payments} view={settingsView} setView={setSettingsView} />
       </div>
     </section>
   );
 }
 
-function Detail({ label, value }) {
-  if (!value) return null;
+function SettingsRow({ icon, title, sub, onClick, to }) {
+  const content = (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span className="notif-icon"><i className={icon} /></span>
+        <div>
+          <strong style={{ fontSize: '0.92rem' }}>{title}</strong>
+          <div className="text-muted" style={{ fontSize: '0.78rem' }}>{sub}</div>
+        </div>
+      </div>
+      <i className="fa-solid fa-chevron-right text-muted" />
+    </>
+  );
+  if (to) {
+    return <Link to={to} className="card row-between" style={{ padding: 16, alignItems: 'center' }}>{content}</Link>;
+  }
   return (
-    <div className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--glass-bdr)' }}>
-      <span className="text-muted" style={{ fontSize: '0.8rem' }}>{label}</span>
-      <span style={{ fontSize: '0.85rem' }}>{value}</span>
-    </div>
+    <button type="button" className="card row-between" style={{ padding: 16, alignItems: 'center', width: '100%', textAlign: 'left' }} onClick={onClick}>
+      {content}
+    </button>
   );
 }
 
-function SettingsForm({ user }) {
+// Mobile-app-style settings hub: a menu of rows, some navigating out (Edit
+// profile, Help), some drilling into an inline sub-view within this same
+// tab (Payments, Influencer) - matches how Instagram/most apps structure
+// their settings screen instead of scattering these across top-level tabs.
+function SettingsForm({ user, payments, view, setView }) {
   const clear = useAuth((s) => s.clear);
 
   const logout = async () => {
@@ -353,8 +122,42 @@ function SettingsForm({ user }) {
     toast('fa-solid fa-hand', 'Logged out');
   };
 
+  if (view === 'payments') {
+    return (
+      <div style={{ maxWidth: 680 }}>
+        {payments.length === 0 ? (
+          <div className="empty-state"><i className="fa-solid fa-credit-card" /><p>No payments yet.</p>{!user?.membershipActive && <Link to="/join" className="btn btn-primary mt-3">View plans</Link>}</div>
+        ) : (
+          payments.map((p) => (
+            <div key={p._id} className="notif-item">
+              <div className="notif-icon"><i className="fa-solid fa-credit-card" /></div>
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '0.88rem', textTransform: 'capitalize' }}>{p.purpose}</strong>
+                <p className="text-muted" style={{ fontSize: '0.78rem' }}>
+                  {p.razorpayPaymentId || p._id}{p.couponUsed ? ` · ${p.couponUsed}` : ''} · {timeAgo(p.createdAt)}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700 }}>{paiseToRupee(p.amount)}</div>
+                <span className={`badge ${p.status === 'success' ? 'badge-green' : p.status === 'failed' ? 'badge-red' : 'badge-gold'}`}>{p.status}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  if (view === 'influencer') {
+    return <InfluencerTab />;
+  }
+
+  if (view === 'wallet') {
+    return <WalletTab user={user} />;
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 640 }}>
       <Link to="/edit-profile" className="card row-between" style={{ padding: 16, alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img
@@ -371,8 +174,15 @@ function SettingsForm({ user }) {
         <i className="fa-solid fa-chevron-right text-muted" />
       </Link>
 
+      <SettingsRow icon="fa-solid fa-credit-card" title="Payments" sub="Membership payment history" onClick={() => setView('payments')} />
+      <SettingsRow icon="fa-solid fa-wallet" title="Wallet" sub="Referral & influencer earnings, withdrawals" onClick={() => setView('wallet')} />
+      <SettingsRow icon="fa-solid fa-star" title="Influencer / Promoter" sub="Your coupon, earnings & referrals" onClick={() => setView('influencer')} />
+
       <DocumentsCard />
-      <VehiclesCard />
+      <VehiclesCard user={user} />
+
+      <SettingsRow icon="fa-solid fa-circle-question" title="Help & Support" sub="Contact us or report an issue" to="/contact" />
+
       <div className="card" style={{ padding: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
         <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
         <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
@@ -453,12 +263,15 @@ function DocumentsCard() {
     <div className="card" style={{ padding: 16 }}>
       <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My Documents</h4>
       <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={onFile} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {docs.map((d) => (
           <div key={d._id} className="row-between" style={{ alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '0.85rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</div>
-              <span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span className="notif-icon"><i className="fa-solid fa-id-card" /></span>
+              <div>
+                <strong style={{ fontSize: '0.88rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</strong>
+                <div><span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span></div>
+              </div>
             </div>
             {d.status === 'rejected' && (
               <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
@@ -476,16 +289,20 @@ function DocumentsCard() {
   );
 }
 
-function VehiclesCard() {
+function VehiclesCard({ user }) {
+  const setUser = useAuth((s) => s.setUser);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEditPrimary, setShowEditPrimary] = useState(false);
 
   const load = () => {
     setLoading(true);
     api.get('/members/vehicles').then((r) => setVehicles(r.data.vehicles)).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(load, []);
+
+  const hasPrimary = Boolean(user?.hasVehicle && user?.vehicleType);
 
   return (
     <div className="card" style={{ padding: 16 }}>
@@ -496,20 +313,40 @@ function VehiclesCard() {
         </button>
       </div>
 
-      {loading ? null : vehicles.length === 0 ? (
-        <p className="text-muted" style={{ fontSize: '0.82rem' }}>No vehicles added yet. Add one to work toward the Verified Vehicle Owner badge.</p>
+      {loading ? null : !hasPrimary && vehicles.length === 0 ? (
+        <div className="empty-state-sm">
+          <i className="fa-solid fa-car-side" />
+          <p>No vehicles added yet. Add one to work toward the Verified Vehicle Owner badge.</p>
+        </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {hasPrimary && (
+            <div className="row-between" style={{ alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="notif-icon"><i className="fa-solid fa-car" /></span>
+                <div>
+                  <strong style={{ fontSize: '0.88rem' }}>
+                    {[user.vehicleType, user.vehicleModel].filter(Boolean).join(' · ')}
+                  </strong>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>From your profile</div>
+                </div>
+              </div>
+              <button type="button" className="btn btn-sm btn-outline" onClick={() => setShowEditPrimary(true)}>Edit</button>
+            </div>
+          )}
           {vehicles.map((v) => (
             <div key={v.id} className="row-between" style={{ alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: '0.85rem' }}>
-                  {[v.brand, v.vehicleModel, v.year].filter(Boolean).join(' ') || v.vehicleType}
-                </div>
-                <div className="text-muted" style={{ fontSize: '0.72rem' }}>
-                  {v.regNumber}
-                  {v.mileageKmpl ? ` · ${v.mileageKmpl} km/l` : ''}
-                  {v.fuelType ? ` · ${v.fuelType}` : ''}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="notif-icon"><i className="fa-solid fa-car" /></span>
+                <div>
+                  <strong style={{ fontSize: '0.88rem' }}>
+                    {[v.brand, v.vehicleModel, v.year].filter(Boolean).join(' ') || v.vehicleType}
+                  </strong>
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                    {v.regNumber}
+                    {v.mileageKmpl ? ` · ${v.mileageKmpl} km/l` : ''}
+                    {v.fuelType ? ` · ${v.fuelType}` : ''}
+                  </div>
                 </div>
               </div>
               <span className={`badge ${DOC_STATUS_BADGE[v.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem' }}>{v.status}</span>
@@ -526,11 +363,145 @@ function VehiclesCard() {
           }}
         />
       </Modal>
+
+      <Modal open={showEditPrimary} onClose={() => setShowEditPrimary(false)} title="Edit your vehicle">
+        <EditPrimaryVehicleForm
+          user={user}
+          onDone={(updatedUser) => {
+            setUser(updatedUser);
+            setShowEditPrimary(false);
+          }}
+        />
+      </Modal>
     </div>
   );
 }
 
-const VEHICLE_FUEL_TYPES = [{ value: '', label: 'Select' }, 'Petrol', 'Diesel', 'CNG', 'Electric'];
+// The profile's primary vehicle stores brand+model as one free-text string
+// (e.g. "Honda Amaze") - best-effort split it back into brand/model so the
+// catalog dropdowns below can start pre-filled instead of blank.
+function guessBrandModel(vehicleType, vehicleModel) {
+  const text = (vehicleModel || '').trim();
+  if (!text) return { brand: '', model: '' };
+  for (const brand of getBrandsForType(vehicleType)) {
+    if (brand === OTHER_OPTION) continue;
+    if (text === brand) return { brand, model: '' };
+    if (text.startsWith(`${brand} `)) return { brand, model: text.slice(brand.length + 1) };
+  }
+  return { brand: '', model: '' };
+}
+
+function EditPrimaryVehicleForm({ user, onDone }) {
+  const [vehicleType, setVehicleType] = useState(user?.vehicleType || '');
+  const guessed = guessBrandModel(user?.vehicleType, user?.vehicleModel);
+  const [brand, setBrand] = useState(guessed.brand);
+  const [brandOther, setBrandOther] = useState(guessed.brand ? '' : user?.vehicleModel || '');
+  const [vehicleModel, setVehicleModel] = useState(guessed.model);
+  const [modelOther, setModelOther] = useState('');
+  const [year, setYear] = useState(user?.vehicleYear || '');
+  const [mileageKmpl, setMileageKmpl] = useState(user?.mileageKmpl || '');
+  const [fuelType, setFuelType] = useState(user?.fuelType || '');
+  const [busy, setBusy] = useState(false);
+
+  const handleVehicleType = (e) => {
+    setVehicleType(e.target.value);
+    setBrand('');
+    setBrandOther('');
+    setVehicleModel('');
+    setModelOther('');
+  };
+  const handleBrand = (e) => {
+    setBrand(e.target.value);
+    setVehicleModel('');
+    setModelOther('');
+  };
+
+  const brandOptions = [{ value: '', label: 'Select' }, ...getBrandsForType(vehicleType)];
+  const modelOptions = [{ value: '', label: 'Select' }, ...getModelsForBrand(vehicleType, brand)];
+  const yearOptions = [{ value: '', label: 'Select' }, ...getVehicleYearOptions()];
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select your vehicle type');
+    const finalBrand = brand === OTHER_OPTION ? brandOther.trim() : brand;
+    const finalModel = vehicleModel === OTHER_OPTION ? modelOther.trim() : vehicleModel;
+    const combined = [finalBrand, finalModel].filter(Boolean).join(' ');
+    if (isVehicleModelYearMistake(combined)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('vehicleType', vehicleType);
+      fd.append('vehicleModel', combined);
+      fd.append('vehicleYear', year);
+      fd.append('mileageKmpl', mileageKmpl);
+      fd.append('fuelType', fuelType);
+      const { data } = await api.put('/members/profile', fd);
+      toast('fa-solid fa-circle-check', 'Vehicle updated');
+      onDone(data.user);
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="form-group">
+        <label>Vehicle type *</label>
+        <CustomSelect
+          value={vehicleType}
+          onChange={handleVehicleType}
+          options={[{ value: '', label: 'Select' }, 'Bike', 'Car', 'Bus', 'Other']}
+        />
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Brand</label>
+          <CustomSelect value={brand} onChange={handleBrand} options={brandOptions} disabled={!vehicleType} />
+        </div>
+        <div className="form-group">
+          <label>Model name</label>
+          <CustomSelect value={vehicleModel} onChange={(e) => setVehicleModel(e.target.value)} options={modelOptions} disabled={!brand} />
+        </div>
+      </div>
+      {brand === OTHER_OPTION && (
+        <div className="form-group">
+          <label>Brand name</label>
+          <input className="form-input" value={brandOther} onChange={(e) => setBrandOther(e.target.value)} placeholder="Enter brand name" />
+        </div>
+      )}
+      {vehicleModel === OTHER_OPTION && (
+        <div className="form-group">
+          <label>Model name</label>
+          <input className="form-input" value={modelOther} onChange={(e) => setModelOther(e.target.value)} placeholder="Enter model name" />
+        </div>
+      )}
+      <div className="form-row">
+        <div className="form-group">
+          <label>Model year</label>
+          <CustomSelect value={year} onChange={(e) => setYear(e.target.value)} options={yearOptions} />
+        </div>
+        <div className="form-group">
+          <label>Mileage (km/l)</label>
+          <input className="form-input" type="number" min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Fuel type</label>
+        <CustomSelect value={fuelType} onChange={(e) => setFuelType(e.target.value)} options={VEHICLE_FUEL_TYPES} />
+      </div>
+      <p className="text-muted" style={{ fontSize: '0.72rem', margin: '-8px 0 12px' }}>
+        <i className="fa-solid fa-gas-pump" /> Mileage &amp; fuel type here auto-suggest your trip's fuel cost on Plan a Trip.
+      </p>
+      <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
+        {busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save
+      </button>
+    </form>
+  );
+}
+
+const VEHICLE_FUEL_TYPES = [{ value: '', label: 'Select' }, 'Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'];
 const CURRENT_YEAR = new Date().getFullYear();
 
 function AddVehicleForm({ onDone }) {
@@ -645,15 +616,15 @@ function AddVehicleForm({ onDone }) {
       <div className="form-row">
         <div className="form-group">
           <label>RC - front *</label>
-          <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-front')?.click()}>
-            <div className="upload-label">{rcFront ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcFront.name}</> : 'Upload photo'}</div>
+          <div className="upload-box upload-box-doc" onClick={() => document.getElementById('vehicle-rc-front')?.click()}>
+            <div className="upload-label">{rcFront ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> <span className="upload-filename">{rcFront.name}</span></> : 'Upload photo'}</div>
             <input id="vehicle-rc-front" type="file" accept="image/*,application/pdf" onChange={(e) => setRcFront(e.target.files?.[0] || null)} />
           </div>
         </div>
         <div className="form-group">
           <label>RC - back *</label>
-          <div className="upload-box" onClick={() => document.getElementById('vehicle-rc-back')?.click()}>
-            <div className="upload-label">{rcBack ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> {rcBack.name}</> : 'Upload photo'}</div>
+          <div className="upload-box upload-box-doc" onClick={() => document.getElementById('vehicle-rc-back')?.click()}>
+            <div className="upload-label">{rcBack ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> <span className="upload-filename">{rcBack.name}</span></> : 'Upload photo'}</div>
             <input id="vehicle-rc-back" type="file" accept="image/*,application/pdf" onChange={(e) => setRcBack(e.target.files?.[0] || null)} />
           </div>
         </div>
@@ -663,5 +634,492 @@ function AddVehicleForm({ onDone }) {
         {busy ? <span className="spinner" /> : <i className="fa-solid fa-car" />} Add vehicle
       </button>
     </form>
+  );
+}
+
+const WITHDRAWAL_STATUS_BADGE = { pending: 'badge-gold', approved: 'badge-cyan', paid: 'badge-green', rejected: 'badge-red' };
+
+// Wallet: referral rewards + (for influencers) commission earnings, with a
+// withdrawal-request form. Admin reviews/pays out manually - see AdminWallet.jsx.
+function WalletTab({ user }) {
+  const [wallet, setWallet] = useState(undefined); // undefined = loading
+  const [showWithdraw, setShowWithdraw] = useState(false);
+
+  const load = () => api.get('/wallet/me').then((r) => setWallet(r.data)).catch(() => setWallet(null));
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (wallet === undefined) return <Loader label="Loading wallet…" />;
+
+  const balancePaise = wallet?.balancePaise || 0;
+  const lifetimeEarningsPaise = wallet?.lifetimeEarningsPaise || 0;
+  const withdrawals = wallet?.withdrawals || [];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 640 }}>
+      <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+        <div className="why-icon" style={{ background: 'rgba(16,185,129,0.14)', color: '#6ee7b7', margin: '0 auto 12px' }}>
+          <i className="fa-solid fa-wallet" />
+        </div>
+        <div style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>{paiseToRupee(balancePaise)}</div>
+        <p className="text-muted" style={{ fontSize: '0.85rem' }}>Available balance</p>
+
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, padding: '4px 12px', borderRadius: 'var(--r-pill)', background: 'rgba(255,201,77,0.1)', border: '1px solid rgba(255,201,77,0.2)' }}>
+          <i className="fa-solid fa-chart-line" style={{ color: 'var(--gold)', fontSize: '0.75rem' }} />
+          <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{paiseToRupee(lifetimeEarningsPaise)}</span>
+          <span className="text-muted" style={{ fontSize: '0.72rem' }}>lifetime earnings</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginTop: 12 }}>
+          <button className="btn btn-primary" onClick={() => setShowWithdraw(true)} disabled={balancePaise < 10000}>
+            <i className="fa-solid fa-money-bill-transfer" /> Withdraw
+          </button>
+        </div>
+        {balancePaise < 10000 && (
+          <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 8 }}>Minimum withdrawal amount is ₹100.</p>
+        )}
+      </div>
+
+      <div className="card" style={{ padding: 24 }}>
+        <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Withdrawal History</h4>
+        {withdrawals.length === 0 ? (
+          <p className="text-muted" style={{ fontSize: '0.85rem' }}>No withdrawal requests yet.</p>
+        ) : (
+          withdrawals.map((w) => (
+            <div key={w._id} className="notif-item" style={{ flexWrap: 'wrap' }}>
+              <div className="notif-icon"><i className="fa-solid fa-money-bill-transfer" /></div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <strong style={{ fontSize: '0.88rem' }}>{paiseToRupee(w.amountPaise)}</strong>
+                <p className="text-muted" style={{ fontSize: '0.78rem' }}>{w.upiId} · {timeAgo(w.createdAt)}</p>
+                <p className="text-muted" style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)' }}>
+                  {w.transactionRef ? `Txn ID: ${w.transactionRef}` : `Request ID: ${w._id}`}
+                </p>
+                {w.adminNote && <p className="text-muted" style={{ fontSize: '0.72rem' }}>Note: {w.adminNote}</p>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start', gap: 6, width: 92 }}>
+                <span
+                  className={`badge ${WITHDRAWAL_STATUS_BADGE[w.status] || 'badge-gold'}`}
+                  style={{ width: '100%', boxSizing: 'border-box', justifyContent: 'center', padding: '7px 0' }}
+                >
+                  {w.status}
+                </span>
+                <Link
+                  to={`/contact?subject=${encodeURIComponent('Withdrawal / Wallet')}&message=${encodeURIComponent(
+                    `Regarding my withdrawal request (${w.transactionRef ? `Txn ID: ${w.transactionRef}` : `Request ID: ${w._id}`}, amount: ${paiseToRupee(w.amountPaise)}, status: ${w.status}) - `
+                  )}`}
+                  className="btn btn-sm btn-outline"
+                  style={{ width: '100%', boxSizing: 'border-box', justifyContent: 'center', padding: '7px 0', fontSize: '0.72rem' }}
+                >
+                  <i className="fa-regular fa-circle-question" /> Help
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <Modal open={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw from Wallet">
+        <WithdrawForm
+          user={user}
+          maxPaise={balancePaise}
+          onDone={() => {
+            setShowWithdraw(false);
+            load();
+          }}
+        />
+      </Modal>
+    </div>
+  );
+}
+
+function WithdrawForm({ user, maxPaise, onDone }) {
+  const [name, setName] = useState(user?.fullName || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [upiId, setUpiId] = useState('');
+  const [panNumber, setPanNumber] = useState('');
+  const [amount, setAmount] = useState('');
+  const [qrCode, setQrCode] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const amountPaise = Math.round(Number(amount) * 100);
+    if (!name.trim()) return toast('fa-solid fa-triangle-exclamation', 'Enter your name');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid email');
+    if (!upiId.trim()) return toast('fa-solid fa-triangle-exclamation', 'Enter your UPI ID');
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/i.test(panNumber.trim())) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid PAN number');
+    if (!qrCode) return toast('fa-solid fa-triangle-exclamation', 'Upload a QR code image of your bank/UPI account');
+    if (!amountPaise || amountPaise < 10000) return toast('fa-solid fa-triangle-exclamation', 'Minimum withdrawal amount is ₹100');
+    if (amountPaise > maxPaise) return toast('fa-solid fa-triangle-exclamation', 'Amount exceeds your wallet balance');
+
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('name', name.trim());
+      fd.append('email', email.trim());
+      fd.append('upiId', upiId.trim());
+      fd.append('panNumber', panNumber.trim().toUpperCase());
+      fd.append('amountPaise', amountPaise);
+      fd.append('qrCode', qrCode);
+      await api.post('/wallet/withdraw', fd);
+      toast('fa-solid fa-circle-check', 'Withdrawal request submitted');
+      onDone();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="form-group"><label>Full name</label><input className="form-input" value={name} onChange={(e) => setName(e.target.value)} /></div>
+      <div className="form-group"><label>Email</label><input className="form-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+      <div className="form-group"><label>UPI ID</label><input className="form-input" value={upiId} onChange={(e) => setUpiId(e.target.value)} placeholder="yourname@bank" /></div>
+      <div className="form-group"><label>PAN number</label><input className="form-input" value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} /></div>
+      <div className="form-group">
+        <label>QR code of your bank/UPI account</label>
+        <div className="upload-box upload-box-doc" onClick={() => document.getElementById('withdraw-qr')?.click()}>
+          <div className="upload-label">
+            {qrCode ? <><i className="fa-solid fa-check" style={{ color: 'var(--fire)' }} /> <span className="upload-filename">{qrCode.name}</span></> : 'Upload QR code image'}
+          </div>
+          <input id="withdraw-qr" type="file" accept="image/*" hidden onChange={(e) => setQrCode(e.target.files?.[0] || null)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Amount to withdraw (₹)</label>
+        <input className="form-input" type="number" min={100} max={maxPaise / 100} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" />
+        <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>Available: {paiseToRupee(maxPaise)} · Minimum ₹100</p>
+      </div>
+      <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
+        {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Submit Request
+      </button>
+    </form>
+  );
+}
+
+// Self-service influencer status: apply (not applied / previously rejected),
+// "under review" (pending), or coupon + commission + earnings ledger (approved).
+const EMPTY_APPLICATION = {
+  reason: '',
+  totalFollowers: '',
+  avgReelViews: '',
+  instagram: '',
+  facebook: '',
+  twitter: '',
+  youtube: '',
+  linkedin: '',
+};
+
+function InfluencerTab() {
+  const [influencer, setInfluencer] = useState(undefined); // undefined = loading
+  const [form, setForm] = useState(EMPTY_APPLICATION);
+  const [screenshot, setScreenshot] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoBusy, setVideoBusy] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(null);
+  const screenshotRef = useRef(null);
+
+  const load = (silent) => {
+    if (silent) setRefreshing(true);
+    return api
+      .get('/influencers/me')
+      .then((r) => setInfluencer(r.data.influencer))
+      .catch(() => setInfluencer((prev) => (prev === undefined ? null : prev)))
+      .finally(() => setRefreshing(false));
+  };
+  // Poll every 20s so referrals/earnings feel real-time without a manual refresh.
+  useEffect(() => {
+    load();
+    const id = setInterval(() => load(true), 20000);
+    return () => clearInterval(id);
+  }, []);
+
+  const addVideo = async (e) => {
+    e.preventDefault();
+    if (!videoUrl.trim()) return;
+    setVideoBusy(true);
+    try {
+      const { data } = await api.post('/influencers/me/videos', { url: videoUrl.trim() });
+      setInfluencer((inf) => ({ ...inf, videos: data.videos }));
+      setVideoUrl('');
+      toast('fa-solid fa-circle-check', 'Video added');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setVideoBusy(false);
+    }
+  };
+
+  const removeVideo = async (videoId) => {
+    try {
+      const { data } = await api.delete(`/influencers/me/videos/${videoId}`);
+      setInfluencer((inf) => ({ ...inf, videos: data.videos }));
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
+  const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const apply = async (e) => {
+    e.preventDefault();
+    if (!form.reason.trim()) {
+      toast('fa-solid fa-triangle-exclamation', 'Tell us why you want to promote SastiTripsWale');
+      return;
+    }
+    if (!form.totalFollowers || !form.avgReelViews) {
+      toast('fa-solid fa-triangle-exclamation', 'Enter your total followers and average reel/video views');
+      return;
+    }
+    if (![form.instagram, form.facebook, form.twitter, form.youtube, form.linkedin].some((v) => v.trim())) {
+      toast('fa-solid fa-triangle-exclamation', 'Add at least one social media profile link');
+      return;
+    }
+    if (!screenshot && !influencer?.dashboardScreenshotUrl) {
+      toast('fa-solid fa-triangle-exclamation', 'Upload a screenshot of your analytics dashboard (last 6 months\' reach)');
+      return;
+    }
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('reason', form.reason.trim());
+      fd.append('totalFollowers', form.totalFollowers);
+      fd.append('avgReelViews', form.avgReelViews);
+      for (const key of ['instagram', 'facebook', 'twitter', 'youtube', 'linkedin']) {
+        if (form[key].trim()) fd.append(key, form[key].trim());
+      }
+      if (screenshot) fd.append('screenshot', screenshot);
+      await api.post('/influencers/apply', fd);
+      toast('fa-solid fa-star', 'Application submitted! We\'ll review it soon.');
+      setForm(EMPTY_APPLICATION);
+      setScreenshot(null);
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (influencer === undefined) return <Loader label="Loading…" />;
+
+  if (!influencer || influencer.status === 'rejected') {
+    return (
+      <div className="card" style={{ padding: 24, maxWidth: 640 }}>
+        <div className="why-icon" style={{ background: 'rgba(255,201,77,0.14)', color: 'var(--gold)' }}>
+          <i className="fa-solid fa-star" />
+        </div>
+        <h3 style={{ fontFamily: 'var(--font-display)', marginTop: 14, marginBottom: 8 }}>Become an Influencer</h3>
+        <p className="text-muted mb-3">
+          Get your own personal coupon code and earn a commission every time someone uses it to join SastiTripsWale.
+        </p>
+        {influencer?.status === 'rejected' && (
+          <p className="text-muted mb-3" style={{ fontSize: '0.82rem' }}>
+            Your previous application wasn't approved - you're welcome to apply again.
+          </p>
+        )}
+        <form onSubmit={apply}>
+          <div className="form-group">
+            <label>Why do you want to promote us?</label>
+            <textarea
+              className="form-input"
+              value={form.reason}
+              onChange={setField('reason')}
+              maxLength={1000}
+              placeholder="Tell us about your audience, social reach, or community..."
+            />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Total followers *</label>
+              <input className="form-input" type="number" min="1" value={form.totalFollowers} onChange={setField('totalFollowers')} placeholder="e.g. 12000" />
+            </div>
+            <div className="form-group">
+              <label>Average views per reel/video *</label>
+              <input className="form-input" type="number" min="1" value={form.avgReelViews} onChange={setField('avgReelViews')} placeholder="e.g. 5000" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Social media profiles (at least one) *</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {SOCIAL_PLATFORMS.map((p) => (
+                <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className={p.icon} style={{ width: 20, color: 'var(--text-3)' }} />
+                  <input
+                    className="form-input"
+                    value={form[p.key]}
+                    onChange={setField(p.key)}
+                    placeholder={`${p.label} profile link or @handle`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Analytics dashboard screenshot (last 6 months' reach) *</label>
+            <input
+              ref={screenshotRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+            />
+            <button type="button" className="btn btn-sm btn-outline" onClick={() => screenshotRef.current?.click()}>
+              <i className="fa-solid fa-camera" /> {screenshot ? screenshot.name : 'Choose screenshot'}
+            </button>
+            <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+              A screenshot of your Instagram/YouTube/etc. insights dashboard showing your reach over the last 6 months.
+            </p>
+          </div>
+
+          <button className="btn btn-primary" disabled={busy}>
+            {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Apply Now
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  if (influencer.status === 'pending') {
+    return (
+      <div className="empty-state">
+        <i className="fa-regular fa-hourglass-half" />
+        <p>Your influencer application is under review. We'll notify you once it's decided.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+      <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+        <div className="why-icon" style={{ background: 'rgba(255,201,77,0.14)', color: 'var(--gold)', margin: '0 auto 12px' }}>
+          <i className="fa-solid fa-star" />
+        </div>
+        <h3 style={{ fontFamily: 'var(--font-display)' }}>You're an Approved Influencer!</h3>
+        {influencer.coupon && (
+          <>
+            <div style={{ fontSize: '1.8rem', fontFamily: 'var(--font-mono)', fontWeight: 800, margin: '16px 0 4px', color: 'var(--fire-2)' }}>
+              {influencer.coupon.code}
+            </div>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+              {influencer.coupon.discountPct ? `${influencer.coupon.discountPct}% off` : `${rupee(influencer.coupon.discountAmt)} off`} for anyone who uses this code
+            </p>
+          </>
+        )}
+        <div style={{ display: 'flex', gap: 28, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>{influencer.commissionPct}%</div>
+            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Your commission</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>{influencer.coupon?.usedCount || 0}</div>
+            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Signups via your code</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-display)' }}>{paiseToRupee(influencer.totalEarnedPaise)}</div>
+            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Total earned</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 24 }}>
+        <div className="row-between mb-3">
+          <h4 style={{ fontFamily: 'var(--font-display)' }}>Referral Earnings</h4>
+          <button type="button" className="btn btn-sm btn-outline" onClick={() => load(true)} disabled={refreshing}>
+            <i className={`fa-solid fa-rotate${refreshing ? ' fa-spin' : ''}`} /> Refresh
+          </button>
+        </div>
+        {influencer.commissions?.length === 0 ? (
+          <p className="text-muted" style={{ fontSize: '0.85rem' }}>No referrals yet - they'll show up here in real time as soon as someone joins with your code.</p>
+        ) : (
+          influencer.commissions.map((c) => (
+            <div key={c._id} className="notif-item" style={{ marginBottom: 8, alignItems: 'center' }}>
+              <img
+                src={imageUrl(c.user?.avatarUrl, AVATAR_FALLBACK)}
+                alt=""
+                style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ fontSize: '0.88rem' }}>{c.user?.fullName || 'A member'}</strong>
+                <p className="text-muted" style={{ fontSize: '0.75rem' }}>{paiseToRupee(c.amountPaise)} · {timeAgo(c.createdAt)}</p>
+              </div>
+              <span className={`badge ${c.status === 'paid' ? 'badge-green' : 'badge-gold'}`}>{c.status}</span>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="card" style={{ padding: 24 }}>
+        <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Promo Videos</h4>
+        <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: -6, marginBottom: 14 }}>
+          Link a YouTube or Instagram video promoting SastiTripsWale - it'll show up here for you to keep track of.
+        </p>
+        <form onSubmit={addVideo} className="form-row" style={{ alignItems: 'flex-start' }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <input
+              className="form-input"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Paste a YouTube or Instagram video link"
+            />
+          </div>
+          <button className="btn btn-primary" disabled={videoBusy} style={{ marginTop: 2 }}>
+            {videoBusy ? <span className="spinner" /> : <i className="fa-solid fa-plus" />} Add
+          </button>
+        </form>
+
+        {influencer.videos?.length > 0 && (
+          <div className="reel-grid" style={{ marginTop: 8 }}>
+            {influencer.videos.map((v) => {
+              const thumb = getThumbnail(v.url, v.platform);
+              return (
+                <button type="button" key={v._id} className="reel-tile" onClick={() => setPlayingVideo(v)}>
+                  {thumb ? (
+                    <img src={thumb} alt="" />
+                  ) : (
+                    <div className="reel-tile-fallback"><i className="fa-brands fa-instagram" /></div>
+                  )}
+                  <div className="reel-tile-overlay"><i className="fa-solid fa-play" /></div>
+                  <span className="reel-tile-badge">
+                    <i className={v.platform === 'youtube' ? 'fa-brands fa-youtube' : 'fa-brands fa-instagram'} />
+                  </span>
+                  <span
+                    className="reel-tile-remove"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeVideo(v._id);
+                    }}
+                    title="Remove video"
+                  >
+                    <i className="fa-solid fa-xmark" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Modal open={Boolean(playingVideo)} onClose={() => setPlayingVideo(null)} title="Promo video">
+        {playingVideo && (
+          <div style={{ position: 'relative', width: '100%', paddingTop: playingVideo.platform === 'instagram' ? '125%' : '56.25%', borderRadius: 'var(--r)', overflow: 'hidden', background: 'var(--surface)' }}>
+            <iframe
+              src={toEmbedUrl(playingVideo.url, playingVideo.platform)}
+              title={`${playingVideo.platform} video`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+            />
+          </div>
+        )}
+      </Modal>
+    </div>
   );
 }

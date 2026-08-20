@@ -4,6 +4,7 @@ import PageHero from '../components/PageHero.jsx';
 import MemberCard from '../components/MemberCard.jsx';
 import Loader from '../components/Loader.jsx';
 import PromoBanner from '../components/PromoBanner.jsx';
+import Seo from '../components/Seo.jsx';
 
 const FILTERS = [
   { key: 'all', label: 'All', params: {} },
@@ -38,6 +39,11 @@ export default function Members() {
 
   return (
     <>
+      <Seo
+        title="Find Travel Partners in India - Bikers, Car Owners & Backpackers"
+        description="Browse verified travel community members across India - filter by bike or car owners, gender and verification status. Find your travel tribe and plan a trip together."
+        path="/members"
+      />
       <PageHero
         tag="The Community"
         tagIcon="fa-solid fa-users"

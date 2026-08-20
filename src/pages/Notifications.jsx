@@ -4,46 +4,9 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { NOTIF_ICON, notificationHref } from '../lib/notifications.js';
+import { useNotifStore } from '../store/notifications.js';
 import Loader from '../components/Loader.jsx';
-
-const NOTIF_ICON = {
-  welcome: 'fa-solid fa-hand-holding-heart',
-  trip_interest: 'fa-solid fa-fire',
-  payment: 'fa-solid fa-credit-card',
-  connection: 'fa-solid fa-user-plus',
-  verification: 'fa-solid fa-circle-check',
-  system: 'fa-solid fa-circle-info',
-  group: 'fa-solid fa-users-rectangle',
-  message: 'fa-solid fa-comment-dots',
-  join_request: 'fa-solid fa-inbox',
-  join_accepted: 'fa-solid fa-champagne-glasses',
-  join_rejected: 'fa-solid fa-hand',
-};
-
-// Where clicking a notification should take you, based on its type + meta.
-function notificationHref(n) {
-  const meta = n.meta || {};
-  switch (n.type) {
-    case 'connection':
-      return meta.senderId ? `/members/${meta.senderId}` : meta.userId ? `/members/${meta.userId}` : null;
-    case 'group':
-    case 'message':
-      return meta.groupId ? `/chat/${meta.groupId}` : '/chat';
-    case 'join_request':
-    case 'join_accepted':
-    case 'join_rejected':
-    case 'trip_interest':
-      return meta.tripId ? `/trips/${meta.tripId}` : null;
-    case 'payment':
-      return '/dashboard?tab=payments';
-    case 'verification':
-      return '/dashboard?tab=settings';
-    case 'welcome':
-      return '/dashboard';
-    default:
-      return null;
-  }
-}
 
 // A dedicated full-page "Activity" screen (Instagram-style) instead of a
 // dashboard tab - reached from the bell icon in the header.
@@ -54,12 +17,21 @@ export default function Notifications() {
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const setGlobalUnread = useNotifStore((s) => s.setUnread);
+  const decrementGlobalUnread = useNotifStore((s) => s.decrement);
+
   useEffect(() => {
     Promise.all([
-      api.get('/members/notifications').then((r) => setNotifs(r.data.notifications)).catch(() => {}),
+      api
+        .get('/members/notifications')
+        .then((r) => {
+          setNotifs(r.data.notifications);
+          setGlobalUnread(r.data.unread || 0);
+        })
+        .catch(() => {}),
       api.get('/members/connections').then((r) => setConnections(r.data.connections)).catch(() => {}),
     ]).finally(() => setLoading(false));
-  }, []);
+  }, [setGlobalUnread]);
 
   const unread = notifs.filter((n) => !n.isRead).length;
   const pendingReceived = connections.filter((c) => c.status === 'pending' && String(c.receiver?._id) === String(user?.id));
@@ -77,12 +49,14 @@ export default function Notifications() {
   const markRead = async () => {
     await api.patch('/members/notifications/read').catch(() => {});
     setNotifs((ns) => ns.map((n) => ({ ...n, isRead: true })));
+    setGlobalUnread(0);
   };
 
   const openNotification = (n) => {
     if (!n.isRead) {
       api.patch(`/members/notifications/${n._id}/read`).catch(() => {});
       setNotifs((ns) => ns.map((x) => (x._id === n._id ? { ...x, isRead: true } : x)));
+      decrementGlobalUnread();
     }
     const href = notificationHref(n);
     if (href) navigate(href);
@@ -90,8 +64,10 @@ export default function Notifications() {
 
   const clearNotification = (e, id) => {
     e.stopPropagation();
+    const wasUnread = notifs.some((n) => n._id === id && !n.isRead);
     api.delete(`/members/notifications/${id}`).catch(() => {});
     setNotifs((ns) => ns.filter((n) => n._id !== id));
+    if (wasUnread) decrementGlobalUnread();
   };
 
   const clearAllNotifications = async () => {
@@ -99,6 +75,7 @@ export default function Notifications() {
     try {
       await api.delete('/members/notifications');
       setNotifs([]);
+      setGlobalUnread(0);
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
     }
