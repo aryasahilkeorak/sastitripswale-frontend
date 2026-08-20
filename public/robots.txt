@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Private / auth-gated / utility pages - keep crawl budget on money pages
+Disallow: /dashboard
+Disallow: /edit-profile
+Disallow: /notifications
+Disallow: /referrals
+Disallow: /chat
+Disallow: /complete-profile
+Disallow: /plan-trip
+Disallow: /plan-group-trip
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /trips/*/edit
+Disallow: /group-trips/*/edit
+
+# Individual member profiles carry personal data - keep out of search even
+# though the route itself isn't auth-gated. The /members directory listing
+# stays crawlable.
+Disallow: /members/*
+
+Sitemap: https://sastitripswale.com/sitemap.xml
