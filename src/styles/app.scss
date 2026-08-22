@@ -1865,6 +1865,179 @@
   }
 }
 
+/* ── India map (About page - cities covered) ── */
+.india-map-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  aspect-ratio: 2500 / 2843;
+  overflow: hidden;
+  touch-action: none;
+  border-radius: 16px;
+}
+
+.india-map-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  transition: transform 0.15s ease-out;
+}
+
+.india-map-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: var(--india-map-filter, none);
+  opacity: 0.9;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.india-map-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.india-map-zoom-controls button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-bdr-2);
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: background var(--t), color var(--t), opacity var(--t);
+}
+
+.india-map-zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.india-map-zoom-controls button:not(:disabled) {
+  @include hover-only {
+    background: var(--fire);
+    color: #fff;
+  }
+}
+
+:root:not([data-theme="light"]) {
+  --india-map-filter: invert(1) brightness(1.6) saturate(0.4);
+}
+:root[data-theme="light"] {
+  --india-map-filter: none;
+}
+
+.india-map-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.india-map-dot-member {
+  background: var(--fire);
+  box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.18);
+}
+
+.india-map-dot-trip {
+  background: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(62, 142, 247, 0.18);
+}
+
+.india-map-dot-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.55;
+  animation: india-map-ping 2.4s ease-out infinite;
+}
+
+.india-map-legend {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--glass-bdr-2);
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+.india-map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.india-map-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.india-map-legend-dot-member {
+  background: var(--fire);
+}
+
+.india-map-legend-dot-trip {
+  background: var(--cyan);
+}
+
+@keyframes india-map-ping {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+.india-map-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--surface-2, #1a1a1a);
+  border: 1px solid var(--glass-bdr-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 0.78rem;
+  z-index: 5;
+}
+
+.india-map-tooltip strong {
+  color: var(--text);
+}
+
+.india-map-tooltip span {
+  color: var(--text-3);
+  font-size: 0.72rem;
+}
+
 /* ── Multi-line chart tooltip ── */
 .chart-tooltip {
   pointer-events: none;
@@ -3910,7 +4083,6 @@ table.data-table {
 .admin-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
   padding: 16px 28px;
   border-bottom: 1px solid var(--glass-bdr);
@@ -3919,6 +4091,14 @@ table.data-table {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+// Title eats all the leftover space so the bell/theme/user-chip cluster on
+// the right stays snug together instead of space-between scattering them
+// evenly across the whole bar.
+.admin-topbar-title {
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-topbar h1 {
@@ -4432,6 +4612,11 @@ table.data-table {
   .tl-card {
     grid-template-columns: 1fr !important;
   }
+
+  .club-chat-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Desktop: keep the trip detail action card in view while scrolling */
@@ -4650,11 +4835,6 @@ table.data-table {
   // thread's own header can sit flush against the screen edge.
   .chat-page.has-active {
     padding-top: 0 !important;
-  }
-
-  .chat-wrap {
-    height: calc(100dvh - 172px);
-    min-height: 340px;
   }
 
   .chat-thread {

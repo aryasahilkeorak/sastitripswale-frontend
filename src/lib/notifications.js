@@ -16,6 +16,11 @@ export const NOTIF_ICON = {
   follow: 'fa-solid fa-user-plus',
   message_request: 'fa-solid fa-inbox',
   influencer: 'fa-solid fa-star',
+  admin_document: 'fa-solid fa-id-card',
+  admin_query: 'fa-solid fa-headset',
+  admin_influencer: 'fa-solid fa-star',
+  admin_withdrawal: 'fa-solid fa-wallet',
+  admin_report: 'fa-solid fa-flag',
 };
 
 // Where clicking a notification should take you, based on its type + meta.
@@ -43,6 +48,15 @@ export function notificationHref(n) {
       return '/dashboard?tab=settings';
     case 'welcome':
       return '/dashboard';
+    case 'admin_document':
+      return '/admin/users';
+    case 'admin_query':
+    case 'admin_report':
+      return '/admin/messages';
+    case 'admin_influencer':
+      return '/admin/influencers';
+    case 'admin_withdrawal':
+      return '/admin/wallet';
     default:
       return null;
   }

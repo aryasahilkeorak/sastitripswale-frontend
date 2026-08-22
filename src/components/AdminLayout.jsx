@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../store/auth.js';
 import { useTheme } from '../store/theme.js';
+import { useNotifStore } from '../store/notifications.js';
 import { api } from '../lib/api.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
@@ -41,11 +42,28 @@ export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme((s) => s.theme);
   const toggleTheme = useTheme((s) => s.toggleTheme);
+  const unread = useNotifStore((s) => s.unread);
+  const setUnread = useNotifStore((s) => s.setUnread);
+
+  // Poll for admin-facing notifications (new documents, queries, influencer
+  // applications, withdrawal requests, reports) - same endpoint the public
+  // site's bell uses, just scoped to whichever admin is logged in here.
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      api.get('/members/notifications').then((r) => active && setUnread(r.data.unread || 0)).catch(() => {});
+    load();
+    const id = setInterval(load, 60000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [setUnread]);
 
   const visibleLinks = LINKS.filter((l) => !l.perm || hasPerm(l.perm));
   const visibleTabs = BOTTOM_TABS.filter((l) => !l.perm || hasPerm(l.perm));
   const blockedLink = LINKS.find((l) => l.perm && location.pathname.startsWith(l.to) && !hasPerm(l.perm));
-  const currentLabel = [...LINKS, { to: '/admin/admins', label: 'Admins' }, { to: '/admin/referral-settings', label: 'Referral Settings' }, { to: '/admin/profile', label: 'My Profile' }]
+  const currentLabel = [...LINKS, { to: '/admin/admins', label: 'Admins' }, { to: '/admin/referral-settings', label: 'Referral Settings' }, { to: '/admin/profile', label: 'My Profile' }, { to: '/admin/notifications', label: 'Notifications' }]
     .filter((l) => location.pathname === l.to || (l.to !== '/admin' && location.pathname.startsWith(l.to)))
     .sort((a, b) => b.to.length - a.to.length)[0]?.label || 'Overview';
 
@@ -115,6 +133,11 @@ export default function AdminLayout() {
             <h1>{currentLabel}</h1>
             <div className="sub">Manage members, trips, revenue &amp; support</div>
           </div>
+
+          <Link to="/admin/notifications" className="theme-toggle-btn" style={{ position: 'relative' }} aria-label="Notifications">
+            <i className="fa-regular fa-bell" />
+            {unread > 0 && <span className="notif-badge">{unread}</span>}
+          </Link>
 
           <button
             className="theme-toggle-btn"
