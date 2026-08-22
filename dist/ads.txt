@@ -1,0 +1,6 @@
+# Google requires this file at the domain root to verify you own the
+# AdSense account serving ads on this site (prevents ad fraud/spoofing).
+# Replace pub-0000000000000000 with your REAL publisher ID from
+# adsense.google.com (same value as VITE_ADSENSE_CLIENT_ID, without "ca-").
+# Ads will not serve correctly until this matches your real account.
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
