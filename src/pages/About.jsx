@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { imageUrl } from '../lib/helpers.js';
 import PageHero from '../components/PageHero.jsx';
 import AnimatedCounter from '../components/AnimatedCounter.jsx';
+import IndiaMapDots from '../components/IndiaMapDots.jsx';
 import Seo from '../components/Seo.jsx';
 
 const STAT_META = [
@@ -154,6 +155,22 @@ export default function About() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      <RouteDivider />
+
+      {/* Cities we cover */}
+      <section>
+        <div className="container">
+          <div className="text-center fade-up" style={{ marginBottom: 34 }}>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-map-location-dot" /> Where We Travel</div>
+            <h2 className="section-title" style={{ fontSize: '2rem' }}>Cities We <span className="highlight">Cover</span></h2>
+            <p style={{ color: 'var(--text-2)', maxWidth: 520, margin: '12px auto 0' }}>
+              Every dot is a real city our members call home - the map grows on its own as members join from new places.
+            </p>
+          </div>
+          <IndiaMapDots />
         </div>
       </section>
 

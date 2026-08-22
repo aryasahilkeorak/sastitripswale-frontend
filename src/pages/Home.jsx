@@ -11,6 +11,7 @@ import Lightbox from '../components/Lightbox.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
 import HomeSearchWidget from '../components/HomeSearchWidget.jsx';
 import PromoBanner from '../components/PromoBanner.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import AppHome from './AppHome.jsx';
 import Seo from '../components/Seo.jsx';
 import { buildOrganizationLd, buildWebSiteLd, buildFaqLd } from '../lib/seo.js';
@@ -303,6 +304,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <div className="container"><AdSlot placement="home" /></div>
 
       {/* How It Works */}
       <section style={{ background: 'var(--bg-2)' }}>

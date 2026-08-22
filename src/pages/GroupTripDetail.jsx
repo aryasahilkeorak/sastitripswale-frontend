@@ -5,7 +5,10 @@ import { useAuth } from '../store/auth.js';
 import { imageUrl, rupee, dateRange, tripDays, routeLabel, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
+import Lightbox from '../components/Lightbox.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
+import ProfileGateCard from '../components/ProfileGateCard.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
 import Seo from '../components/Seo.jsx';
@@ -25,6 +28,7 @@ export default function GroupTripDetail() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [heroZoom, setHeroZoom] = useState(null);
 
   const load = () => {
     api
@@ -121,7 +125,12 @@ export default function GroupTripDetail() {
         <div className="detail-grid mt-3">
           {/* LEFT */}
           <div>
-            <DestinationImage trip={trip} className="trip-hero-img" />
+            <DestinationImage
+              trip={trip}
+              className="trip-hero-img"
+              onClick={(e) => setHeroZoom(e.currentTarget.src)}
+              style={{ cursor: 'pointer' }}
+            />
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
               <span className={`badge ${vb.cls}`}>
@@ -178,6 +187,7 @@ export default function GroupTripDetail() {
             ) : (
               <p className="text-muted">No one has joined yet - be the first!</p>
             )}
+            <AdSlot placement="detail" />
           </div>
 
           {/* RIGHT */}
@@ -203,6 +213,8 @@ export default function GroupTripDetail() {
                 </span>
               </Link>
             )}
+
+            {trip.status === 'upcoming' && !isOrganizer && <ProfileGateCard action="join a trip" />}
 
             {trip.status === 'upcoming' && !isOrganizer && (
               <button
@@ -273,6 +285,7 @@ export default function GroupTripDetail() {
           </div>
         </div>
       </div>
+      <Lightbox images={heroZoom ? [heroZoom] : []} index={heroZoom ? 0 : null} onClose={() => setHeroZoom(null)} onIndex={() => {}} />
     </section>
   );
 }

@@ -6,6 +6,7 @@ import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import Seo from '../components/Seo.jsx';
 
 const CATS = [
@@ -90,6 +91,8 @@ export default function Gallery() {
               </>
             )}
           </div>
+
+          <AdSlot placement="gallery" />
 
           {loading ? (
             <Loader label="Loading gallery…" />

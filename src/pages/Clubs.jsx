@@ -8,6 +8,7 @@ import Loader from '../components/Loader.jsx';
 import PromoBanner from '../components/PromoBanner.jsx';
 import Seo from '../components/Seo.jsx';
 import ScrollRow from '../components/ScrollRow.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 
 const FILTERS = [{ key: 'all', label: 'All Clubs' }, ...CLUB_CATEGORIES.map((c) => ({ key: c.key, label: c.label }))];
 
@@ -66,6 +67,8 @@ export default function Clubs() {
               </button>
             ))}
           </div>
+
+          <AdSlot placement="listing" />
 
           {loading ? (
             <Loader label="Loading clubs…" />

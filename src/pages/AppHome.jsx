@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
+import { useHasRejectedDocument } from '../lib/useHasRejectedDocument.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { NOTIF_ICON, notificationHref } from '../lib/notifications.js';
 import { useNotifStore } from '../store/notifications.js';
 import usePullToRefresh from '../lib/usePullToRefresh.js';
 import TripCard from '../components/TripCard.jsx';
 import CompletedTripCard from '../components/CompletedTripCard.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import Loader from '../components/Loader.jsx';
 import ScrollRow from '../components/ScrollRow.jsx';
 
@@ -26,6 +28,11 @@ const CATEGORIES = [
 export default function AppHome() {
   const navigate = useNavigate();
   const user = useAuth((s) => s.user);
+  const isStaff = user?.role === 'admin' || user?.role === 'superadmin';
+  // A rejected document is a personal housekeeping notice, not an access
+  // gate - staff already have full access regardless, but still uploaded
+  // documents of their own that can still be rejected/need resubmitting.
+  const hasRejectedDoc = useHasRejectedDocument(Boolean(user));
 
   const [myTrips, setMyTrips] = useState([]);
   const [joinedTrips, setJoinedTrips] = useState([]);
@@ -128,7 +135,7 @@ export default function AppHome() {
                 {daysLeft != null && (
                   <span className="badge badge-gold">{daysLeft > 0 ? `${daysLeft}d left` : 'Expires today'}</span>
                 )}
-                {!user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
+                {!isStaff && !user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
               </div>
             </div>
           </div>
@@ -150,17 +157,25 @@ export default function AppHome() {
             </Link>
           </div>
 
-          {(!user?.profileComplete || !user?.membershipPaid) && (
+          {(hasRejectedDoc || (!isStaff && (!user?.profileComplete || !user?.membershipActive))) && (
             <div className="ahg-alert-stack">
-              {!user?.profileComplete && (
-                <Link to="/complete-profile" className="ahg-alert ahg-alert-magenta">
-                  <i className="fa-solid fa-user-gear" />
-                  <span>Complete your profile to unlock trips</span>
+              {hasRejectedDoc ? (
+                <Link to="/activate-profile" className="ahg-alert ahg-alert-magenta">
+                  <i className="fa-solid fa-rotate" />
+                  <span>Some documents were rejected - resubmit to unlock trips</span>
                   <i className="fa-solid fa-chevron-right" />
                 </Link>
+              ) : (
+                !isStaff && !user?.profileComplete && (
+                  <Link to="/activate-profile" className="ahg-alert ahg-alert-magenta">
+                    <i className="fa-solid fa-user-gear" />
+                    <span>Complete your profile to unlock trips</span>
+                    <i className="fa-solid fa-chevron-right" />
+                  </Link>
+                )
               )}
-              {!user?.membershipPaid && (
-                <Link to="/join" className="ahg-alert ahg-alert-fire">
+              {!isStaff && !user?.membershipActive && (
+                <Link to="/activate-profile" className="ahg-alert ahg-alert-fire">
                   <i className="fa-solid fa-crown" />
                   <span>Activate membership to plan &amp; join trips</span>
                   <i className="fa-solid fa-chevron-right" />
@@ -192,6 +207,8 @@ export default function AppHome() {
           </div>
         </div>
       </section>
+
+      <div className="container"><AdSlot placement="home" /></div>
 
       {/* Below $bp-lg this is normal stacked document flow (identical to the
           old markup); at $bp-lg+ it becomes a 2-column dashboard grid - see

@@ -70,6 +70,7 @@ export default function AdminUsers() {
                   <td data-label="Name">
                     <span className="admin-clickable" onClick={() => setDetailId(u.id)}>{u.fullName}</span>
                     {u.role === 'admin' && <span className="badge badge-gold" style={{ marginLeft: 8, fontSize: '0.62rem' }}>Admin</span>}
+                    {u.role === 'superadmin' && <span className="badge badge-gold" style={{ marginLeft: 8, fontSize: '0.62rem' }}><i className="fa-solid fa-crown" /> Super Admin</span>}
                   </td>
                   <td data-label="Email">{u.email}</td>
                   <td data-label="Mobile">{u.mobile}</td>
@@ -86,23 +87,29 @@ export default function AdminUsers() {
                   <td data-label="Actions">
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button className="btn btn-sm btn-outline" title="View details" onClick={() => setDetailId(u.id)}><i className="fa-solid fa-eye" /></button>
-                      <button
-                        className="btn btn-sm"
-                        style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
-                        title={u.isActive ? 'Disable account' : 'Enable account'}
-                        onClick={() => toggle(u.id)}
-                      >
-                        {u.isActive ? 'Ban' : 'Unban'}
-                      </button>
-                      {(isSuper || u.role === 'member') && (
-                        <button
-                          className="btn btn-sm"
-                          style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5' }}
-                          title="Delete user permanently"
-                          onClick={() => removeUser(u.id)}
-                        >
-                          <i className="fa-solid fa-trash" />
-                        </button>
+                      {u.role === 'superadmin' ? (
+                        <span className="text-muted" style={{ fontSize: '0.72rem', alignSelf: 'center' }} title="Super admins are protected and cannot be banned or deleted here">Protected</span>
+                      ) : (
+                        <>
+                          <button
+                            className="btn btn-sm"
+                            style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}
+                            title={u.isActive ? 'Disable account' : 'Enable account'}
+                            onClick={() => toggle(u.id)}
+                          >
+                            {u.isActive ? 'Ban' : 'Unban'}
+                          </button>
+                          {(isSuper || u.role === 'member') && (
+                            <button
+                              className="btn btn-sm"
+                              style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5' }}
+                              title="Delete user permanently"
+                              onClick={() => removeUser(u.id)}
+                            >
+                              <i className="fa-solid fa-trash" />
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>
@@ -199,7 +206,16 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
               <Row label="Profession" value={u.profession} />
               <Row label="Travels with" value={PREF_LABEL[u.coTravelerPreference]} />
               <Row label="Vehicle" value={[u.vehicleType, u.vehicleModel].filter(Boolean).join(' · ')} />
-              <Row label="Plan" value={u.membershipActive ? `${u.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(u.membershipExpiresAt)}` : 'Inactive'} />
+              <Row
+                label="Plan"
+                value={
+                  u.membershipDuration === 'lifetime'
+                    ? 'Lifetime'
+                    : u.membershipActive
+                    ? `${u.membershipDuration === '1y' ? '1 year' : '6 months'} · till ${formatDate(u.membershipExpiresAt)}`
+                    : 'Inactive'
+                }
+              />
               <Row label="Signup coupon" value={u.couponUsed} />
               <Row label="Trips (host / joined)" value={`${d.stats.tripsOrganized} / ${d.stats.tripsJoined}`} />
               <Row label="Connections" value={d.stats.connections} />

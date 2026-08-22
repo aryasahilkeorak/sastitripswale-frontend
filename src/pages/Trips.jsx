@@ -13,6 +13,7 @@ import CustomDatePicker from '../components/CustomDatePicker.jsx';
 import CustomNumberStepper from '../components/CustomNumberStepper.jsx';
 import PlaceAutocomplete from '../components/PlaceAutocomplete.jsx';
 import Modal from '../components/Modal.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import Seo from '../components/Seo.jsx';
 
 const FILTERS = [
@@ -254,6 +255,8 @@ export default function Trips() {
             </div>
             <CustomSelect style={{ width: 200 }} value={sort} onChange={(e) => setSort(e.target.value)} options={SORTS} />
           </div>
+
+          <AdSlot placement="listing" />
 
           {loading ? (
             <Loader label="Loading trips…" />
