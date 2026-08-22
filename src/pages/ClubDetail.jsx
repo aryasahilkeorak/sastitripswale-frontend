@@ -5,6 +5,9 @@ import { useAuth } from '../store/auth.js';
 import { imageUrl, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, CLUB_CATEGORY_LABEL, CLUB_CATEGORY_ICON, COVER_ASPECT_RATIO } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Loader from '../components/Loader.jsx';
+import Lightbox from '../components/Lightbox.jsx';
+import ProfileGateCard from '../components/ProfileGateCard.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import Seo from '../components/Seo.jsx';
 import { buildBreadcrumbLd } from '../lib/seo.js';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
@@ -31,6 +34,7 @@ export default function ClubDetail() {
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [pendingCover, setPendingCover] = useState(null);
   const [addBusy, setAddBusy] = useState(false);
+  const [zoomImg, setZoomImg] = useState(null);
 
   const load = () => {
     api
@@ -228,7 +232,8 @@ export default function ClubDetail() {
                   <img
                     src={cover ? URL.createObjectURL(cover) : imageUrl(club.coverPhotoUrl)}
                     alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                    onClick={() => setZoomImg(cover ? URL.createObjectURL(cover) : imageUrl(club.coverPhotoUrl))}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                   />
                 )}
                 {isAdmin && editing && (
@@ -274,6 +279,7 @@ export default function ClubDetail() {
                     src={photo ? URL.createObjectURL(photo) : imageUrl(club.photoUrl, DESTINATION_PLACEHOLDER)}
                     alt={club.name}
                     onError={(e) => (e.currentTarget.src = DESTINATION_PLACEHOLDER)}
+                    onClick={() => setZoomImg(photo ? URL.createObjectURL(photo) : imageUrl(club.photoUrl, DESTINATION_PLACEHOLDER))}
                     style={{
                       width: 120,
                       height: 120,
@@ -281,6 +287,7 @@ export default function ClubDetail() {
                       objectFit: 'cover',
                       border: '4px solid var(--surface)',
                       display: 'block',
+                      cursor: 'pointer',
                     }}
                   />
                   {isAdmin && editing && (
@@ -315,7 +322,7 @@ export default function ClubDetail() {
               <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {isMember ? (
                   <>
-                    <button className="btn btn-primary" onClick={() => navigate(`/chat/${club._id}`)}>
+                    <button className="btn btn-primary club-chat-btn" onClick={() => navigate(`/chat/${club._id}`)}>
                       <i className="fa-solid fa-comment-dots" /> Open Club Chat
                     </button>
                     {!isOwner && (
@@ -333,9 +340,12 @@ export default function ClubDetail() {
                     <i className={club.hasRequested ? 'fa-regular fa-clock' : 'fa-solid fa-user-plus'} /> {club.hasRequested ? 'Requested - tap to withdraw' : 'Request to Join'}
                   </button>
                 )}
-                {isAdmin && (
-                  <button className="btn btn-sm btn-outline" onClick={() => setEditing((v) => !v)}>
-                    <i className="fa-solid fa-pen" /> {editing ? 'Cancel Editing' : 'Edit Club Info'}
+              </div>
+              {!isMember && <ProfileGateCard action="join a club" />}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
+                {isAdmin && !editing && (
+                  <button className="btn btn-sm btn-outline" onClick={() => setEditing(true)}>
+                    <i className="fa-solid fa-pen" /> Edit Club Info
                   </button>
                 )}
                 {isOwner && (
@@ -360,9 +370,23 @@ export default function ClubDetail() {
                   <label>Description</label>
                   <textarea className="form-input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
                 </div>
-                <button className="btn btn-sm btn-primary" disabled={busy}>
-                  {busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes
-                </button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className="btn btn-sm btn-primary" disabled={busy}>
+                    {busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline"
+                    disabled={busy}
+                    onClick={() => {
+                      setName(club.name || '');
+                      setDescription(club.description || '');
+                      setEditing(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
             )}
 
@@ -460,6 +484,7 @@ export default function ClubDetail() {
                 </div>
               </div>
             )}
+            <AdSlot placement="detail" />
           </div>
 
           {/* RIGHT - both cards stick together as one unit while scrolling. */}
@@ -503,6 +528,7 @@ export default function ClubDetail() {
         setCover(cropped);
       }}
     />
+    <Lightbox images={zoomImg ? [zoomImg] : []} index={zoomImg ? 0 : null} onClose={() => setZoomImg(null)} onIndex={() => {}} />
     </>
   );
 }

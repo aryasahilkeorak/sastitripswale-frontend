@@ -6,6 +6,7 @@ import { rupee, dateRange, routeLabel, BUDGET_INCLUDES, GENDER_PREFERENCE, today
 import { suggestMileageForUser } from '../lib/vehicleMileage.js';
 import { toast } from '../lib/toast.js';
 import PageHero from '../components/PageHero.jsx';
+import ProfileGateCard from '../components/ProfileGateCard.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
 import CustomSelect from '../components/CustomSelect.jsx';
 import CustomDatePicker from '../components/CustomDatePicker.jsx';
@@ -178,19 +179,7 @@ export default function PlanTrip() {
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
-          {!isMember ? (
-            <div className="card mb-4" style={{ padding: 16, borderColor: 'rgba(255,107,0,0.3)' }}>
-              <strong>Membership required.</strong>
-              <p className="text-muted mt-2">Activate a membership (free with coupon FREEJOIN) to post trips.</p>
-              <Link to="/join" className="btn btn-primary mt-3"><i className="fa-solid fa-crown" /> View Plans</Link>
-            </div>
-          ) : !profileDone ? (
-            <div className="card mb-4" style={{ padding: 16, borderColor: 'rgba(255,107,0,0.3)' }}>
-              <strong>Complete your profile first.</strong>
-              <p className="text-muted mt-2">Add your name, city, interests, vehicle and ID to plan trips.</p>
-              <Link to="/complete-profile" className="btn btn-primary mt-3"><i className="fa-solid fa-user-gear" /> Complete Profile</Link>
-            </div>
-          ) : null}
+          <ProfileGateCard action="post trips" />
 
           <Link to="/plan-group-trip" className="btn btn-outline mb-4" style={{ width: '100%', justifyContent: 'center' }}>
             <i className="fa-solid fa-people-group" /> Plan a Group Trip instead

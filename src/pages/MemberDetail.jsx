@@ -237,7 +237,9 @@ export default function MemberDetail() {
     <section className="detail-section">
       <Seo noindex title={member?.fullName ? `${member.fullName}'s Profile` : 'Member Profile'} path={`/members/${id}`} />
       <div className="container" style={{ maxWidth: 1120, position: 'relative' }}>
-        <div className={`row-between member-detail-topbar${member.isSelf ? ' is-self' : ''}`} style={{ alignItems: 'center' }}>
+        <div className="detail-grid member-detail-grid" style={{ marginTop: 8 }}>
+          <div>
+        <div className={`row-between member-detail-topbar${member.isSelf ? ' is-self' : ''}`} style={{ alignItems: 'center', marginBottom: 16 }}>
           <Link to="/members" className="ig-id-btn member-back-btn" aria-label="All members" title="All members">
             <i className="fa-solid fa-arrow-left" />
           </Link>
@@ -265,9 +267,6 @@ export default function MemberDetail() {
             </div>
           )}
         </div>
-
-        <div className="detail-grid member-detail-grid" style={{ marginTop: 8 }}>
-          <div>
         <ProfileHeader
           member={member}
           id={id}

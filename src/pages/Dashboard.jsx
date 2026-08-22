@@ -202,7 +202,7 @@ const DOC_TYPE_LABEL = {
 };
 const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
 
-function DocumentsCard() {
+export function DocumentsCard() {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reuploadingId, setReuploadingId] = useState(null);

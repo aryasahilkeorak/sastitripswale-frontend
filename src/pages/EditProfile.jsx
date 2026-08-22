@@ -26,6 +26,7 @@ export default function EditProfile() {
             setUser(updated);
             navigate(-1);
           }}
+          onCancel={() => navigate(-1)}
         />
       </div>
     </section>

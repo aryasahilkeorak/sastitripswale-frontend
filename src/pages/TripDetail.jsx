@@ -9,6 +9,8 @@ import Lightbox from '../components/Lightbox.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
 import Stars from '../components/Stars.jsx';
+import ProfileGateCard from '../components/ProfileGateCard.jsx';
+import AdSlot from '../components/AdSlot.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
 import Seo from '../components/Seo.jsx';
 import { buildBreadcrumbLd } from '../lib/seo.js';
@@ -113,6 +115,7 @@ export default function TripDetail() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [lb, setLb] = useState(null);
+  const [heroZoom, setHeroZoom] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef(null);
   const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
@@ -296,7 +299,12 @@ export default function TripDetail() {
           <div className="detail-grid mt-3">
             {/* LEFT */}
             <div>
-              <DestinationImage trip={trip} className="trip-hero-img" />
+              <DestinationImage
+                trip={trip}
+                className="trip-hero-img"
+                onClick={(e) => setHeroZoom(e.currentTarget.src)}
+                style={{ cursor: 'pointer' }}
+              />
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
                 {trip.vehicleType && (
@@ -491,6 +499,7 @@ export default function TripDetail() {
                   )}
                 </>
               )}
+              <AdSlot placement="detail" />
             </div>
 
             {/* RIGHT - sticky action card (static on mobile) */}
@@ -535,6 +544,8 @@ export default function TripDetail() {
                   </span>
                 </Link>
               )}
+
+              {trip.status === 'upcoming' && !isOrganizer && <ProfileGateCard action="join a trip" />}
 
               {trip.status === 'upcoming' && needsCoupleInfo && !hasPartnerInfo && (
                 <div className="couples-safety-alert">
@@ -643,6 +654,7 @@ export default function TripDetail() {
       </section>
 
       <Lightbox images={photos} index={lb} onClose={() => setLb(null)} onIndex={setLb} />
+      <Lightbox images={heroZoom ? [heroZoom] : []} index={heroZoom ? 0 : null} onClose={() => setHeroZoom(null)} onIndex={() => {}} />
     </>
   );
 }

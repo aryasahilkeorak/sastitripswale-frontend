@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK, COVER_ASPECT_RATIO } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import Modal from '../components/Modal.jsx';
+import Lightbox from '../components/Lightbox.jsx';
 import MemberSearchInput from '../components/MemberSearchInput.jsx';
 import ImageCropModal from '../components/ImageCropModal.jsx';
 import PhotoActionMenu from '../components/PhotoActionMenu.jsx';
@@ -71,6 +72,7 @@ export default function Chat() {
   const [rowMenuFor, setRowMenuFor] = useState(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [zoomImg, setZoomImg] = useState(null);
 
   const threadRef = useRef(null);
   const lastAtRef = useRef(null);
@@ -569,7 +571,8 @@ export default function Chat() {
                         src={imageUrl(detail.photoUrl, AVATAR_FALLBACK)}
                         alt=""
                         onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        onClick={(e) => setZoomImg(e.currentTarget.src)}
+                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, cursor: 'pointer' }}
                       />
                     ) : isDm && (isSupportAccount(detailPartner) || isHelpBot(detailPartner) || isSupportAccount(listPartner) || isHelpBot(listPartner)) ? (
                       <div className="chat-support-ava" style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0 }}>
@@ -580,7 +583,8 @@ export default function Chat() {
                         src={imageUrl((detailPartner || listPartner).avatarUrl, AVATAR_FALLBACK)}
                         alt=""
                         onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        onClick={(e) => setZoomImg(e.currentTarget.src)}
+                        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, cursor: 'pointer' }}
                       />
                     ) : null}
                     <div style={{ minWidth: 0 }}>
@@ -704,7 +708,13 @@ export default function Chat() {
                 </div>
 
                 {isSupportChat && (
-                  <div className="chat-quick-questions" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 14px', maxHeight: 220, overflowY: 'auto', flexShrink: 0 }}>
+                  <div
+                    className="chat-quick-questions"
+                    style={{
+                      display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px 14px', flexShrink: 0,
+                      ...(showAllQuestions ? {} : { maxHeight: 220, overflowY: 'auto' }),
+                    }}
+                  >
                     {(showAllQuestions ? QUICK_QUESTIONS : QUICK_QUESTIONS.slice(0, 3)).map((q) => (
                       <button
                         key={q.text}
@@ -761,6 +771,8 @@ export default function Chat() {
         currentUserId={user?.id}
         onChanged={() => { api.get(`/chat/groups/${groupId}`).then((r) => setDetail(r.data.group)).catch(() => {}); loadGroups(); }}
       />
+
+      <Lightbox images={zoomImg ? [zoomImg] : []} index={zoomImg ? 0 : null} onClose={() => setZoomImg(null)} onIndex={() => {}} />
     </section>
   );
 }
@@ -845,6 +857,7 @@ function GroupSettingsModal({ open, onClose, group, currentUserId, onChanged }) 
   const [pendingCover, setPendingCover] = useState(null);
   const [addBusy, setAddBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
+  const [zoomImg, setZoomImg] = useState(null);
 
   useEffect(() => {
     if (group) {
@@ -926,6 +939,7 @@ function GroupSettingsModal({ open, onClose, group, currentUserId, onChanged }) 
   };
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title={`Group Info · ${group.name}`}>
       {/* Instagram-style header: cover banner + overlapping profile photo,
           each with its own small camera (change) / trash (remove) badge
@@ -936,7 +950,8 @@ function GroupSettingsModal({ open, onClose, group, currentUserId, onChanged }) 
             <img
               src={cover ? URL.createObjectURL(cover) : imageUrl(group.coverPhotoUrl)}
               alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              onClick={(e) => setZoomImg(e.currentTarget.src)}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
             />
           )}
           {canManage && (
@@ -980,7 +995,8 @@ function GroupSettingsModal({ open, onClose, group, currentUserId, onChanged }) 
           <img
             src={photo ? URL.createObjectURL(photo) : imageUrl(group.photoUrl, AVATAR_FALLBACK)}
             alt=""
-            style={{ width: 84, height: 84, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--surface)', display: 'block', margin: '0 auto' }}
+            onClick={(e) => setZoomImg(e.currentTarget.src)}
+            style={{ width: 84, height: 84, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--surface)', display: 'block', margin: '0 auto', cursor: 'pointer' }}
           />
           {canManage && (
             <>
@@ -1064,5 +1080,7 @@ function GroupSettingsModal({ open, onClose, group, currentUserId, onChanged }) 
         }}
       />
     </Modal>
+    <Lightbox images={zoomImg ? [zoomImg] : []} index={zoomImg ? 0 : null} onClose={() => setZoomImg(null)} onIndex={() => {}} />
+    </>
   );
 }
