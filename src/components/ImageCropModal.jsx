@@ -21,8 +21,13 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
   const isSquare = aspect === 1;
   const viewW = isSquare ? 300 : 480;
   const viewH = isSquare ? 300 : Math.round(viewW / aspect);
-  const outW = isSquare ? 480 : 960;
-  const outH = isSquare ? 480 : Math.round(outW / aspect);
+  // Exported at a much higher resolution than the crop editor's own on-screen
+  // viewport - this is what actually gets uploaded/stored, so it's what
+  // determines how good the photo looks in the full-screen viewer later.
+  // 1600 matches the backend's own compressImage() resize cap (uploadStore.js)
+  // so nothing here goes to waste getting downscaled again server-side.
+  const outW = isSquare ? 1024 : 1600;
+  const outH = isSquare ? 1024 : Math.round(outW / aspect);
 
   useEffect(() => {
     if (!file) return undefined;

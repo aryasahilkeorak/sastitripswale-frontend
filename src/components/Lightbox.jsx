@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 // Controlled lightbox: `images` = [url...], `index` = active index or null.
 export default function Lightbox({ images, index, onClose, onIndex }) {
   const show = index !== null && index !== undefined;
+  const hasMultiple = images.length > 1;
 
   const go = useCallback(
     (dir) => {
@@ -29,7 +31,12 @@ export default function Lightbox({ images, index, onClose, onIndex }) {
 
   if (!show) return null;
 
-  return (
+  // Rendered into document.body directly - if left in the normal tree, an
+  // ancestor with a CSS transform (e.g. the scroll-reveal "fade-up" class)
+  // would trap this `position: fixed` overlay inside itself instead of the
+  // real viewport, letting page content (like a sticky sidebar card) paint
+  // on top of it instead of being covered.
+  return createPortal(
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
@@ -60,13 +67,18 @@ export default function Lightbox({ images, index, onClose, onIndex }) {
       <button className="lb-btn" style={lbBtn('top')} onClick={onClose} aria-label="Close">
         <i className="fa-solid fa-xmark" />
       </button>
-      <button className="lb-btn" style={lbBtn('left')} onClick={() => go(-1)} aria-label="Previous">
-        <i className="fa-solid fa-angle-left" />
-      </button>
-      <button className="lb-btn" style={lbBtn('right')} onClick={() => go(1)} aria-label="Next">
-        <i className="fa-solid fa-angle-right" />
-      </button>
-    </div>
+      {hasMultiple && (
+        <>
+          <button className="lb-btn" style={lbBtn('left')} onClick={() => go(-1)} aria-label="Previous">
+            <i className="fa-solid fa-angle-left" />
+          </button>
+          <button className="lb-btn" style={lbBtn('right')} onClick={() => go(1)} aria-label="Next">
+            <i className="fa-solid fa-angle-right" />
+          </button>
+        </>
+      )}
+    </div>,
+    document.body
   );
 }
 

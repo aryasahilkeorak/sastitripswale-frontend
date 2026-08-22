@@ -25,6 +25,7 @@ import Influencers from './pages/Influencers.jsx';
 import Contact from './pages/Contact.jsx';
 import Join from './pages/Join.jsx';
 import CompleteProfile from './pages/CompleteProfile.jsx';
+import ActivateProfile from './pages/ActivateProfile.jsx';
 import Login from './pages/Login.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
@@ -52,6 +53,7 @@ import AdminWallet from './pages/admin/AdminWallet.jsx';
 import AdminAdmins from './pages/admin/AdminAdmins.jsx';
 import AdminReferralSettings from './pages/admin/AdminReferralSettings.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
+import AdminNotifications from './pages/admin/AdminNotifications.jsx';
 
 export default function App() {
   // Refresh the cached user on load (and drop a dead session).
@@ -90,6 +92,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/join" element={<Join />} />
           <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
+          <Route path="/activate-profile" element={<ProtectedRoute><ActivateProfile /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -121,6 +124,7 @@ export default function App() {
           <Route path="admins" element={<ProtectedRoute superadmin><AdminAdmins /></ProtectedRoute>} />
           <Route path="referral-settings" element={<ProtectedRoute superadmin><AdminReferralSettings /></ProtectedRoute>} />
           <Route path="profile" element={<AdminProfile />} />
+          <Route path="notifications" element={<AdminNotifications />} />
         </Route>
       </Routes>
     </>

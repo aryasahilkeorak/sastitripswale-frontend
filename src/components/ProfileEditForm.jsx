@@ -9,25 +9,35 @@ import ProfileHeaderPhotos from './ProfileHeaderPhotos.jsx';
 // Shared "edit profile" form - used both in the Dashboard Settings tab and
 // in the Instagram-style edit-profile modal opened from a member's own
 // profile page. Saves via PUT /members/profile either way.
-export default function ProfileEditForm({ user, onSaved }) {
+const initialForm = (user) => ({
+  fullName: user?.fullName || '', profession: user?.profession || '', city: user?.city || '',
+  state: user?.state || '', whatsapp: user?.whatsapp || '', instagram: user?.instagram || '',
+  facebook: user?.facebook || '', twitter: user?.twitter || '', youtube: user?.youtube || '', linkedin: user?.linkedin || '',
+  vehicleModel: user?.vehicleModel || '', bio: user?.bio || '',
+  relationshipStatus: user?.relationshipStatus || '', username: user?.username || '',
+  email: user?.email || '', mobile: user?.mobile || '',
+});
+
+export default function ProfileEditForm({ user, onSaved, onCancel }) {
   const partnerDocRef = useRef(null);
-  const [form, setForm] = useState({
-    fullName: user?.fullName || '', profession: user?.profession || '', city: user?.city || '',
-    state: user?.state || '', whatsapp: user?.whatsapp || '', instagram: user?.instagram || '',
-    facebook: user?.facebook || '', twitter: user?.twitter || '', youtube: user?.youtube || '', linkedin: user?.linkedin || '',
-    vehicleModel: user?.vehicleModel || '', bio: user?.bio || '',
-    relationshipStatus: user?.relationshipStatus || '', username: user?.username || '',
-    email: user?.email || '', mobile: user?.mobile || '',
-  });
+  const [form, setForm] = useState(() => initialForm(user));
   const [avatar, setAvatar] = useState(null);
   const [cover, setCover] = useState(null);
   const [partnerMobile, setPartnerMobile] = useState(user?.partnerMobile || '');
   const [partnerDoc, setPartnerDoc] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [editing, setEditing] = useState(false);
   const showCouplesBox = form.relationshipStatus === 'in_a_relationship' || form.relationshipStatus === 'married';
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const cancel = () => {
+    setForm(initialForm(user));
+    setAvatar(null);
+    setCover(null);
+    setPartnerMobile(user?.partnerMobile || '');
+    setPartnerDoc(null);
+    onCancel?.();
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -50,7 +60,6 @@ export default function ProfileEditForm({ user, onSaved }) {
       if (partnerDoc) fd.append('partnerDoc', partnerDoc);
       const { data } = await api.put('/members/profile', fd);
       onSaved?.(data.user);
-      setEditing(false);
       toast('fa-solid fa-circle-check', 'Profile updated!');
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -63,9 +72,6 @@ export default function ProfileEditForm({ user, onSaved }) {
     <form className="card" style={{ padding: 16 }} onSubmit={save}>
       <div className="row-between mb-3">
         <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Your details</span>
-        <button type="button" className="btn btn-sm btn-outline" onClick={() => setEditing((v) => !v)}>
-          <i className={`fa-solid ${editing ? 'fa-lock' : 'fa-pen'}`} /> {editing ? 'Lock' : 'Edit'}
-        </button>
       </div>
       <ProfileHeaderPhotos
         avatarFile={avatar}
@@ -75,42 +81,41 @@ export default function ProfileEditForm({ user, onSaved }) {
         onAvatarChange={setAvatar}
         onCoverChange={setCover}
       />
-      <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} disabled={!editing} /></div>
-      <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} disabled={!editing} /></div>
+      <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
+      <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
       <StateCitySelect
         state={form.state}
         city={form.city}
         onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
         onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
-        disabled={!editing}
       />
       <div className="form-row">
-        <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} disabled={!editing} /></div>
-        <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} disabled={!editing} /></div>
+        <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
+        <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} /></div>
       </div>
-      <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} disabled={!editing} /></div>
+      <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
       <div className="form-group">
         <label>Username</label>
-        <input className="form-input" value={form.username} onChange={set('username')} placeholder="e.g. sahil.k" disabled={!editing} />
+        <input className="form-input" value={form.username} onChange={set('username')} placeholder="e.g. sahil.k" />
         <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
           Lets other members add you to chat groups by username instead of your User ID.
         </p>
       </div>
-      <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} disabled={!editing} /></div>
+      <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} /></div>
 
       <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>Social links</label>
       <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: -4, marginBottom: 10 }}>
         Just your username on each platform - we add the link automatically.
       </p>
       <div className="form-row">
-        <div className="form-group"><label><i className="fa-brands fa-instagram" /> Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="username" disabled={!editing} /></div>
-        <div className="form-group"><label><i className="fa-brands fa-facebook" /> Facebook</label><input className="form-input" value={form.facebook} onChange={set('facebook')} placeholder="username" disabled={!editing} /></div>
+        <div className="form-group"><label><i className="fa-brands fa-instagram" /> Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="username" /></div>
+        <div className="form-group"><label><i className="fa-brands fa-facebook" /> Facebook</label><input className="form-input" value={form.facebook} onChange={set('facebook')} placeholder="username" /></div>
       </div>
       <div className="form-row">
-        <div className="form-group"><label><i className="fa-brands fa-x-twitter" /> X (Twitter)</label><input className="form-input" value={form.twitter} onChange={set('twitter')} placeholder="username" disabled={!editing} /></div>
-        <div className="form-group"><label><i className="fa-brands fa-youtube" /> YouTube</label><input className="form-input" value={form.youtube} onChange={set('youtube')} placeholder="channel handle" disabled={!editing} /></div>
+        <div className="form-group"><label><i className="fa-brands fa-x-twitter" /> X (Twitter)</label><input className="form-input" value={form.twitter} onChange={set('twitter')} placeholder="username" /></div>
+        <div className="form-group"><label><i className="fa-brands fa-youtube" /> YouTube</label><input className="form-input" value={form.youtube} onChange={set('youtube')} placeholder="channel handle" /></div>
       </div>
-      <div className="form-group"><label><i className="fa-brands fa-linkedin" /> LinkedIn</label><input className="form-input" value={form.linkedin} onChange={set('linkedin')} placeholder="username" disabled={!editing} /></div>
+      <div className="form-group"><label><i className="fa-brands fa-linkedin" /> LinkedIn</label><input className="form-input" value={form.linkedin} onChange={set('linkedin')} placeholder="username" /></div>
       <div className="form-group">
         <label>Relationship status</label>
         <CustomSelect
@@ -123,7 +128,6 @@ export default function ProfileEditForm({ user, onSaved }) {
             { value: 'married', label: 'Married' },
             { value: 'prefer_not_to_say', label: 'Prefer not to say' },
           ]}
-          disabled={!editing}
         />
       </div>
       {showCouplesBox ? (
@@ -139,7 +143,7 @@ export default function ProfileEditForm({ user, onSaved }) {
             <i className="fa-solid fa-shield-halved" /> Needed to host or join Couples Mode trips - visible to
             platform admins only, never shown to other travelers.
           </p>
-          <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" disabled={!editing} /></div>
+          <div className="form-group"><label>Partner's mobile number</label><input className="form-input" value={partnerMobile} onChange={(e) => setPartnerMobile(e.target.value)} placeholder="10-digit mobile number" /></div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>Partner's government ID</label>
             <div className="upload-box upload-box-doc" onClick={() => partnerDocRef.current?.click()}>
@@ -160,9 +164,10 @@ export default function ProfileEditForm({ user, onSaved }) {
           <i className="fa-solid fa-heart" /> Set your status to "In a relationship" or "Married" to unlock Couples Mode.
         </p>
       )}
-      {editing && (
+      <div style={{ display: 'flex', gap: 10 }}>
         <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes</button>
-      )}
+        <button type="button" className="btn btn-outline" disabled={busy} onClick={cancel}>Cancel</button>
+      </div>
     </form>
   );
 }

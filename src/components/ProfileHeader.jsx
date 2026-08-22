@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { imageUrl, rupee, paiseToRupee, formatDate, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, SOCIAL_PLATFORMS, socialUrl, CLUB_CATEGORY_ICON } from '../lib/helpers.js';
 import { VerifiedIcon, FounderPill } from './VerificationBadge.jsx';
 import { toast } from '../lib/toast.js';
+import Lightbox from './Lightbox.jsx';
 
 // The Instagram-style profile header (avatar+stat cards, name/bio/meta
 // chips, Member Of + socials cards) - shared by MemberDetail.jsx (any
@@ -10,6 +12,7 @@ export default function ProfileHeader({ member, id, actions }) {
   const hasClubs = member.clubs?.length > 0;
   const hasSocials = SOCIAL_PLATFORMS.some((p) => member[p.key]);
   const referralLink = member.referralCode ? `${window.location.origin}/join?ref=${member.referralCode}` : '';
+  const [zoomImg, setZoomImg] = useState(null);
 
   const copyReferralLink = (e) => {
     e.preventDefault();
@@ -27,6 +30,8 @@ export default function ProfileHeader({ member, id, actions }) {
             src={imageUrl(member.avatarUrl, AVATAR_FALLBACK)}
             alt={member.fullName}
             onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+            onClick={() => setZoomImg(imageUrl(member.avatarUrl, AVATAR_FALLBACK))}
+            style={{ cursor: 'pointer' }}
           />
           {hasClubs && (
             <span className="member-club-badge" title={member.clubs.map((c) => c.name).join(', ')}>
@@ -193,6 +198,7 @@ export default function ProfileHeader({ member, id, actions }) {
           </Link>
         )}
       </div>
+      <Lightbox images={zoomImg ? [zoomImg] : []} index={zoomImg ? 0 : null} onClose={() => setZoomImg(null)} onIndex={() => {}} />
     </div>
   );
 }
