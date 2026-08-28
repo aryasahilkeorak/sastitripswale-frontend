@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, CLUB_CATEGORY_LABEL, CLUB_CATEGORY_ICON, COVER_ASPECT_RATIO } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import ProfileGateCard from '../components/ProfileGateCard.jsx';
@@ -22,8 +23,10 @@ export default function ClubDetail() {
   const canAct = useCanTrip();
   const photoRef = useRef(null);
   const coverRef = useRef(null);
+  const menuRef = useRef(null);
 
   const [club, setClub] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -48,6 +51,14 @@ export default function ClubDetail() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
+  }, []);
 
   useEffect(() => {
     if (club) {
@@ -91,7 +102,7 @@ export default function ClubDetail() {
   };
 
   const leave = async () => {
-    if (!window.confirm(`Leave "${club.name}"?`)) return;
+    if (!(await confirm(`Leave "${club.name}"?`))) return;
     try {
       await api.delete(`/clubs/${club._id}/members/${meId}`);
       toast('fa-solid fa-hand', 'You left the club');
@@ -102,7 +113,7 @@ export default function ClubDetail() {
   };
 
   const disband = async () => {
-    if (!window.confirm(`Disband "${club.name}"? This cannot be undone.`)) return;
+    if (!(await confirm({ message: `Disband "${club.name}"? This cannot be undone.`, danger: true, confirmLabel: 'Disband' }))) return;
     try {
       await api.delete(`/clubs/${club._id}`);
       toast('fa-solid fa-trash', 'Club disbanded');
@@ -193,6 +204,23 @@ export default function ClubDetail() {
     }
   };
 
+  const shareClub = () => {
+    setMenuOpen(false);
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: `${club.name} on SastiTripsWale`, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url);
+      toast('fa-solid fa-clipboard', 'Club link copied!');
+    }
+  };
+
+  const copyClubUrl = () => {
+    setMenuOpen(false);
+    navigator.clipboard?.writeText(window.location.href);
+    toast('fa-solid fa-clipboard', 'Club link copied!');
+  };
+
   const respond = async (uid, action) => {
     try {
       await api.patch(`/clubs/${club._id}/requests/${uid}`, { action });
@@ -218,9 +246,22 @@ export default function ClubDetail() {
         ])}
       />
       <div className="container">
-        <Link to="/clubs" className="ig-id-btn" aria-label="All clubs" title="All clubs">
-          <i className="fa-solid fa-arrow-left" />
-        </Link>
+        <div className="row-between">
+          <Link to="/clubs" className="ig-id-btn" aria-label="All clubs" title="All clubs">
+            <i className="fa-solid fa-arrow-left" />
+          </Link>
+          <div className="ig-menu" ref={menuRef} style={{ position: 'relative' }}>
+            <button className="ig-id-btn" onClick={() => setMenuOpen((v) => !v)} title="Share club">
+              <i className="fa-solid fa-share-nodes" />
+            </button>
+            {menuOpen && (
+              <div className="ig-menu-dropdown">
+                <button onClick={shareClub}><i className="fa-solid fa-share-nodes" /> Share club</button>
+                <button onClick={copyClubUrl}><i className="fa-solid fa-link" /> Copy club URL</button>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="detail-grid mt-3">
           {/* LEFT */}

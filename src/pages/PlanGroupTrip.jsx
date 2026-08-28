@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth.js';
 import { rupee, dateRange, routeLabel, todayISO } from '../lib/helpers.js';
 import { suggestMileageForUser } from '../lib/vehicleMileage.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import PageHero from '../components/PageHero.jsx';
 import ProfileGateCard from '../components/ProfileGateCard.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
@@ -132,7 +133,7 @@ export default function PlanGroupTrip() {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this group trip?')) return;
+    if (!(await confirm({ message: 'Delete this group trip?', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/group-trips/${id}`);
       toast('fa-solid fa-trash', 'Group trip deleted');

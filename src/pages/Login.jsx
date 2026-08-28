@@ -1,17 +1,22 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
 import PasswordInput from '../components/PasswordInput.jsx';
 import Seo from '../components/Seo.jsx';
+import { useT } from '../i18n/index.js';
 
 export default function Login() {
+  const t = useT();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const setSession = useAuth((s) => s.setSession);
   const setViewMode = useAuth((s) => s.setViewMode);
-  const [email, setEmail] = useState('');
+  // Prefilled when arriving from Join after "you already have an account" -
+  // saves re-typing the email they just entered there.
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -146,8 +151,8 @@ export default function Login() {
       <Seo noindex path="/login" title="Log In" />
       <div className="page-hero-bg" />
       <div className="auth-card">
-        <h1>Welcome back <i className="fa-solid fa-hand" /></h1>
-        <p className="muted">Log in to plan trips, join groups and connect.</p>
+        <h1>{t('login.welcomeBack')} <i className="fa-solid fa-hand" /></h1>
+        <p className="muted">{t('login.subtitle')}</p>
 
         {err && (
           <div className="badge badge-red" style={{ display: 'block', padding: '10px 14px', marginBottom: 16 }}>
@@ -157,25 +162,25 @@ export default function Login() {
 
         <form onSubmit={submit}>
           <div className="form-group">
-            <label>Email</label>
-            <input className="form-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <label htmlFor="login-email">{t('login.email')}</label>
+            <input id="login-email" className="form-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <label htmlFor="login-password">{t('login.password')}</label>
+            <PasswordInput id="login-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div style={{ textAlign: 'right', marginBottom: 16 }}>
             <Link to="/forgot-password" style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>
-              Forgot password?
+              {t('login.forgotPassword')}
             </Link>
           </div>
           <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
-            {busy ? <span className="spinner" /> : <i className="fa-solid fa-right-to-bracket" />} Log In
+            {busy ? <span className="spinner" /> : <i className="fa-solid fa-right-to-bracket" />} {t('login.logIn')}
           </button>
         </form>
 
         <p className="auth-switch">
-          New here? <Link to="/join">Join the community →</Link>
+          {t('login.newHere')} <Link to="/join">{t('login.joinCommunityLink')}</Link>
         </p>
       </div>
     </div>

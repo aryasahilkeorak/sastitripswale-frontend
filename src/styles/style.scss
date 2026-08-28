@@ -1286,6 +1286,10 @@ section {
   width: 100%;
 }
 
+.date-picker-sm {
+  max-width: 260px;
+}
+
 .date-picker-trigger {
   width: 100%;
   display: flex;
@@ -1347,6 +1351,49 @@ section {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+
+.date-picker-title {
+  @include hover-only {
+    background: var(--glass-2);
+    color: var(--fire);
+  }
+}
+
+.date-picker-year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.date-picker-year-cell {
+  padding: 10px 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+
+.date-picker-year-cell {
+  @include hover-only {
+    background: var(--glass-2);
+  }
+}
+
+.date-picker-year-cell.selected {
+  background: rgba($orange-500, 0.15);
+  color: var(--fire-2);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba($orange-500, 0.4) inset;
 }
 
 .date-picker-nav {
@@ -1475,7 +1522,8 @@ section {
   gap: 4px;
 }
 
-.stepper-prefix {
+.stepper-prefix,
+.stepper-suffix {
   color: var(--text-3);
   font-size: 0.9rem;
 }
@@ -1490,6 +1538,81 @@ section {
   color: var(--text);
   font-size: 0.9rem;
   font-family: var(--font-body);
+}
+
+/* ── Custom range slider (RangeSlider.jsx) - native <input type=range> for
+   drag/keyboard/a11y, fully re-skinned track + thumb via --range-pct. ── */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+.range-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(
+    to right,
+    var(--fire) var(--range-pct),
+    var(--glass-2) var(--range-pct)
+  );
+}
+
+.range-slider::-moz-range-track {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--glass-2);
+}
+
+.range-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--fire);
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--grad-fire);
+  border: 2px solid var(--text-inv);
+  box-shadow: 0 0 0 1px rgba($orange-500, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: box-shadow var(--t), transform var(--t);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--grad-fire);
+  border: 2px solid var(--text-inv);
+  box-shadow: 0 0 0 1px rgba($orange-500, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: box-shadow var(--t), transform var(--t);
+}
+
+.range-slider:hover::-webkit-slider-thumb,
+.range-slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba($orange-500, 0.18), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.range-slider:hover::-moz-range-thumb,
+.range-slider:focus-visible::-moz-range-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba($orange-500, 0.18), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.range-slider:focus-visible {
+  outline: none;
 }
 
 /* ── Chip list input (ChipListInput.jsx) - via-stops editor ── */
@@ -1616,6 +1739,36 @@ section {
   color: var(--fire);
   width: 16px;
   text-align: center;
+}
+
+/* ── Generic themed checkbox (Checkbox.jsx) - a lighter-weight sibling of
+   .perm-check for plain form checkboxes that shouldn't look like a chip. ── */
+.checkbox-inline {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.checkbox-inline .perm-check-input {
+  margin-top: 2px;
+}
+
+.checkbox-inline i {
+  color: var(--fire);
+  width: 16px;
+  text-align: center;
+}
+
+.checkbox-inline.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-bare {
+  display: inline-flex;
 }
 
 textarea.form-input {
@@ -1769,28 +1922,6 @@ textarea.form-input {
   transform: translateY(0);
 }
 
-.fade-left {
-  opacity: 0;
-  transform: translateX(-40px);
-  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
-}
-
-.fade-left.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.fade-right {
-  opacity: 0;
-  transform: translateX(40px);
-  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
-}
-
-.fade-right.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-
 .scale-in {
   opacity: 0;
   transform: scale(0.92);
@@ -1800,24 +1931,6 @@ textarea.form-input {
 .scale-in.visible {
   opacity: 1;
   transform: scale(1);
-}
-
-// .fade-left/.fade-right's translateX(±40px) starting offset briefly (or
-// permanently, for elements near either screen edge) widens the page past
-// the viewport width on phones, causing a horizontal scrollbar. There's
-// little room to spare on mobile anyway, so drop the sideways slide there
-// and keep only a vertical reveal (matches .fade-up) - same effect, no
-// horizontal offset, so nothing can ever overflow sideways.
-@media (max-width: 768px) {
-  .fade-left,
-  .fade-right {
-    transform: translateY(20px);
-  }
-
-  .fade-left.visible,
-  .fade-right.visible {
-    transform: translateY(0);
-  }
 }
 
 .delay-1 {
@@ -2028,6 +2141,29 @@ textarea.form-input {
   background: rgba($danger, 0.2);
   color: $danger-light;
   border-color: rgba($danger, 0.3);
+}
+
+/* ── Confirm dialog (window.confirm replacement, see lib/confirm.js) ── */
+.confirm-modal {
+  text-align: center;
+}
+
+.confirm-modal-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 16px;
+  background: rgba($orange-500, 0.12);
+  color: var(--fire-2);
+}
+
+.confirm-modal-icon.danger {
+  background: rgba($danger, 0.15);
+  color: $danger-light;
 }
 
 /* ── FAQ ── */

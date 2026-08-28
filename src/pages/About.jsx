@@ -6,28 +6,29 @@ import PageHero from '../components/PageHero.jsx';
 import AnimatedCounter from '../components/AnimatedCounter.jsx';
 import IndiaMapDots from '../components/IndiaMapDots.jsx';
 import Seo from '../components/Seo.jsx';
+import { useT } from '../i18n/index.js';
 
 const STAT_META = [
-  { icon: 'fa-solid fa-users', label: 'Verified Members', key: 'members' },
-  { icon: 'fa-solid fa-route', label: 'Trips Completed', key: 'completedTrips' },
-  { icon: 'fa-solid fa-location-dot', label: 'Cities Covered', key: 'cities' },
-  { icon: 'fa-solid fa-handshake', label: 'Connections Made', key: 'connections' },
+  { icon: 'fa-solid fa-users', labelKey: 'about.statMembers', key: 'members' },
+  { icon: 'fa-solid fa-route', labelKey: 'about.statTrips', key: 'completedTrips' },
+  { icon: 'fa-solid fa-location-dot', labelKey: 'about.statCities', key: 'cities' },
+  { icon: 'fa-solid fa-handshake', labelKey: 'about.statConnections', key: 'connections' },
 ];
 
 const STEPS = [
-  { n: '01', icon: 'fa-solid fa-user-plus', h: 'Sign Up', p: 'Create your account with just an email, mobile number & travel preference - under a minute.' },
-  { n: '02', icon: 'fa-solid fa-id-card', h: 'Get Verified', p: 'Pick a plan, complete your profile and upload an ID. Every member is verified before joining a group.' },
-  { n: '03', icon: 'fa-solid fa-map-location-dot', h: 'Plan or Join a Trip', p: 'Host your own trip, or browse verified trips by destination, vehicle type and budget.' },
-  { n: '04', icon: 'fa-solid fa-people-carry-box', h: 'Travel & Split Costs', p: 'Chat with your group, coordinate logistics, and split the budget fairly - for a fraction of the solo cost.' },
+  { n: '01', icon: 'fa-solid fa-user-plus', hKey: 'about.step1Title', pKey: 'about.step1Desc' },
+  { n: '02', icon: 'fa-solid fa-id-card', hKey: 'about.step2Title', pKey: 'about.step2Desc' },
+  { n: '03', icon: 'fa-solid fa-map-location-dot', hKey: 'about.step3Title', pKey: 'about.step3Desc' },
+  { n: '04', icon: 'fa-solid fa-people-carry-box', hKey: 'about.step4Title', pKey: 'about.step4Desc' },
 ];
 
 const VALUES = [
-  { icon: 'fa-solid fa-shield-halved', h: 'Safety First', p: 'Every member is ID-verified before joining any group.', c: 'fire' },
-  { icon: 'fa-solid fa-wallet', h: 'Budget Travel', p: 'Split costs fairly so anyone can afford to explore India.', c: 'blue' },
-  { icon: 'fa-solid fa-handshake', h: 'Real Connections', p: 'Turn co-travelers into lifelong friends.', c: 'gold' },
-  { icon: 'fa-solid fa-map-location-dot', h: 'Explore India', p: 'From the Himalayas to the beaches of the south.', c: 'fire' },
-  { icon: 'fa-solid fa-bolt', h: 'Easy Planning', p: 'Post a trip in minutes and let members join.', c: 'blue' },
-  { icon: 'fa-solid fa-venus', h: 'Women Safety', p: 'Dedicated women-safe verified groups.', c: 'gold' },
+  { icon: 'fa-solid fa-shield-halved', hKey: 'about.value1Title', pKey: 'about.value1Desc', c: 'fire' },
+  { icon: 'fa-solid fa-wallet', hKey: 'about.value2Title', pKey: 'about.value2Desc', c: 'blue' },
+  { icon: 'fa-solid fa-handshake', hKey: 'about.value3Title', pKey: 'about.value3Desc', c: 'gold' },
+  { icon: 'fa-solid fa-map-location-dot', hKey: 'about.value4Title', pKey: 'about.value4Desc', c: 'fire' },
+  { icon: 'fa-solid fa-bolt', hKey: 'about.value5Title', pKey: 'about.value5Desc', c: 'blue' },
+  { icon: 'fa-solid fa-venus', hKey: 'about.value6Title', pKey: 'about.value6Desc', c: 'gold' },
 ];
 
 const VALUE_STYLE = {
@@ -52,12 +53,15 @@ function RouteDivider() {
 }
 
 // Edit this name, photo and social links to your real founder details.
+// `photo` is the founder's actual uploaded avatar (not a stock placeholder)
+// so there's no flash of a wrong photo before the /members fetch below
+// resolves - that fetch just keeps it in sync if the photo is ever updated.
 const TEAM = [
   {
     name: 'Arya Sahil Keorak',
-    title: 'Founder & CEO',
-    photo: 'https://i.pravatar.cc/400?img=12',
-    quote: 'I built SastiTripsWale after too many solo trips got cancelled. Travel should never wait - here, you always find your tribe.',
+    titleKey: 'about.founderTitle',
+    photo: imageUrl('/api/files/6a86dee7883baffc2b4c6893'),
+    quoteKey: 'about.founderQuote',
     socials: [
       { icon: 'fa-brands fa-instagram', url: 'https://instagram.com/aryasahilkeorak' },
       { icon: 'fa-brands fa-linkedin', url: 'https://linkedin.com/aryasahilkeorak' },
@@ -67,18 +71,21 @@ const TEAM = [
 ];
 
 export default function About() {
+  const t = useT();
   const [stats, setStats] = useState(null);
   const [founderPhoto, setFounderPhoto] = useState('');
 
   useEffect(() => {
     api.get('/stats').then((r) => setStats(r.data.stats)).catch(() => {});
-    // Use the real super admin's uploaded profile photo for the founder
-    // card instead of the placeholder pravatar image, when available.
+    // Use the real founder's dedicated admin/founder photo (adminAvatarUrl -
+    // set separately from their personal member avatar in Admin Profile),
+    // falling back to their member avatar if they haven't set one yet.
     api
       .get('/members', { params: { limit: 60 } })
       .then((r) => {
         const founder = r.data.members?.find((m) => m.role === 'superadmin');
-        if (founder?.avatarUrl) setFounderPhoto(imageUrl(founder.avatarUrl));
+        const photo = founder?.adminAvatarUrl || founder?.avatarUrl;
+        if (photo) setFounderPhoto(imageUrl(photo));
       })
       .catch(() => {});
   }, []);
@@ -88,11 +95,11 @@ export default function About() {
   return (
     <>
       <Seo
-        title="About Us - India's #1 Verified Travel Community"
+        title="About Us - A Verified Travel Community"
         description="SastiTripsWale is a community-driven budget travel platform - host or join trips with bikers, car owners and backpackers, split expenses fairly, and travel safely in verified groups across India."
         path="/about"
       />
-      <PageHero tag="Our Story" tagIcon="fa-solid fa-circle-info" title="About" highlight="SastiTripsWale" sub="India's #1 verified travel community - travel together, split expenses, make friends." />
+      <PageHero tag={t('about.tagOurStory')} tagIcon="fa-solid fa-circle-info" title={t('about.heroTitle')} highlight="SastiTripsWale" sub={t('about.heroSub')} />
 
       {/* Story */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
@@ -100,26 +107,19 @@ export default function About() {
         <div className="orb orb-cyan" style={{ width: 260, height: 260, bottom: -120, left: -100 }} />
         <div className="container">
           <div className="row-between" style={{ alignItems: 'center', gap: 48, marginBottom: 20, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 380px' }} className="fade-left">
-              <div className="section-tag"><i className="fa-solid fa-book-open" /> Why We Started</div>
+            <div style={{ flex: '1 1 380px' }}>
+              <div className="section-tag"><i className="fa-solid fa-book-open" /> {t('about.tagWhyStarted')}</div>
               <h2 className="section-title" style={{ fontSize: '2rem', marginBottom: 18 }}>
-                A Cancelled Trip <span className="highlight">Changed Everything</span>
+                {t('about.storyTitle')} <span className="highlight">{t('about.storyTitleHighlight')}</span>
               </h2>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.9, marginBottom: 16 }}>
-                It started with a solo Spiti Valley ride that never happened. Every riding buddy dropped out
-                one by one, leaving a choice between an expensive solo trip or no trip at all - a frustration
-                shared by thousands of travelers across India who skip adventures every year simply because
-                they can't find the right people to go with, or can't justify the cost alone.
+                {t('about.storyPara1')}
               </p>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.9 }}>
-                <strong style={{ color: 'var(--text)' }}>SastiTripsWale</strong> ("budget traveler" in Hindi) was
-                built to fix exactly that - a verified community where bikers, car travelers and backpackers
-                find each other, split costs fairly, and turn strangers into travel companions. Every member is
-                ID-verified, every group is safety-checked, and every trip is built around one idea: nobody
-                should skip an adventure for lack of company or budget.
+                <strong style={{ color: 'var(--text)' }}>SastiTripsWale</strong> {t('about.storyPara2')}
               </p>
             </div>
-            <div style={{ flex: '1 1 320px' }} className="fade-right">
+            <div style={{ flex: '1 1 320px' }}>
               <div className="card" style={{ padding: 24 }}>
                 <i className="fa-solid fa-quote-left" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
                 <p style={{ fontSize: '1.05rem', fontStyle: 'italic', color: 'var(--text)', margin: '16px 0 20px', lineHeight: 1.8 }}>
@@ -147,10 +147,10 @@ export default function About() {
             {STAT_META.map((s) => {
               const value = stats?.[s.key] ?? 0;
               return (
-                <div className="stat-card fade-up" key={s.label}>
+                <div className="stat-card fade-up" key={s.labelKey}>
                   <div className="stat-icon"><i className={s.icon} /></div>
                   <AnimatedCounter key={value} target={value} suffix="" />
-                  <div className="stat-label">{s.label}</div>
+                  <div className="stat-label">{t(s.labelKey)}</div>
                 </div>
               );
             })}
@@ -164,10 +164,10 @@ export default function About() {
       <section>
         <div className="container">
           <div className="text-center fade-up" style={{ marginBottom: 34 }}>
-            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-map-location-dot" /> Where We Travel</div>
-            <h2 className="section-title" style={{ fontSize: '2rem' }}>Cities We <span className="highlight">Cover</span></h2>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-map-location-dot" /> {t('about.tagWhereWeTravel')}</div>
+            <h2 className="section-title" style={{ fontSize: '2rem' }}>{t('about.citiesTitle')} <span className="highlight">{t('about.citiesTitleHighlight')}</span></h2>
             <p style={{ color: 'var(--text-2)', maxWidth: 520, margin: '12px auto 0' }}>
-              Every dot is a real city our members call home - the map grows on its own as members join from new places.
+              {t('about.citiesDesc')}
             </p>
           </div>
           <IndiaMapDots />
@@ -181,38 +181,36 @@ export default function About() {
           <div className="grid-2" style={{ marginBottom: 70 }}>
             <div className="card fade-up" style={{ padding: 22 }}>
               <div className="why-icon" style={{ background: 'rgba(255,122,26,0.12)', color: 'var(--fire)' }}><i className="fa-solid fa-bullseye" /></div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Mission</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>{t('about.missionTitle')}</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
-                To make travel affordable, safe and social for every young Indian - by connecting solo
-                travelers into verified groups that split costs and explore together.
+                {t('about.missionDesc')}
               </p>
             </div>
             <div className="card fade-up" style={{ padding: 22 }}>
               <div className="why-icon" style={{ background: 'rgba(62,142,247,0.12)', color: 'var(--cyan)' }}><i className="fa-solid fa-binoculars" /></div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>Our Vision</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', marginBottom: 10 }}>{t('about.visionTitle')}</h3>
               <p style={{ color: 'var(--text-2)', lineHeight: 1.85 }}>
-                An India where no one skips a trip for lack of company or budget - where every road,
-                mountain and beach is explored with a trusted tribe.
+                {t('about.visionDesc')}
               </p>
             </div>
           </div>
 
           {/* How it works */}
           <div className="text-center fade-up" style={{ marginBottom: 44 }}>
-            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-diagram-project" /> How It Works</div>
-            <h2 className="section-title" style={{ fontSize: '2rem' }}>From Sign-Up to <span className="highlight">Send-Off</span></h2>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-diagram-project" /> {t('about.tagHowItWorks')}</div>
+            <h2 className="section-title" style={{ fontSize: '2rem' }}>{t('about.howTitle')} <span className="highlight">{t('about.howTitleHighlight')}</span></h2>
           </div>
           <div className="grid-4" style={{ marginBottom: 70 }}>
             {STEPS.map((s) => (
               <div className="card fade-up" style={{ padding: 18 }} key={s.n}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-3)', letterSpacing: '0.08em' }}>
-                  STEP {s.n}
+                  {t('about.stepLabel')} {s.n}
                 </div>
                 <div className="why-icon" style={{ background: 'rgba(255,122,26,0.1)', color: 'var(--fire)', marginTop: 10, marginBottom: 16 }}>
                   <i className={s.icon} />
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', marginBottom: 6 }}>{s.h}</h3>
-                <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', lineHeight: 1.7 }}>{s.p}</p>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', marginBottom: 6 }}>{t(s.hKey)}</h3>
+                <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', lineHeight: 1.7 }}>{t(s.pKey)}</p>
               </div>
             ))}
           </div>
@@ -221,8 +219,8 @@ export default function About() {
 
           {/* Team - Founder */}
           <div className="text-center fade-up" style={{ marginBottom: 44 }}>
-            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-people-group" /> Leadership</div>
-            <h2 className="section-title" style={{ fontSize: '2rem' }}>Meet the <span className="highlight">Founder</span></h2>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-people-group" /> {t('about.tagLeadership')}</div>
+            <h2 className="section-title" style={{ fontSize: '2rem' }}>{t('about.teamTitle')} <span className="highlight">{t('about.teamTitleHighlight')}</span></h2>
           </div>
           <div style={{ marginBottom: 70 }}>
             {team.map((m) => (
@@ -230,14 +228,14 @@ export default function About() {
                 <div className="founder-orb" aria-hidden="true" />
                 <div className="founder-photo-wrap">
                   <img src={m.photo} alt={m.name} />
-                  <span className="founder-ribbon"><i className="fa-solid fa-star" /> Founder</span>
+                  <span className="founder-ribbon"><i className="fa-solid fa-star" /> {t('about.founderBadge')}</span>
                 </div>
                 <div className="founder-info">
                   <h3>{m.name}</h3>
-                  <div className="section-tag" style={{ margin: '10px 0 20px' }}>{m.title}</div>
+                  <div className="section-tag" style={{ margin: '10px 0 20px' }}>{t(m.titleKey)}</div>
                   <div className="founder-quote">
                     <i className="fa-solid fa-quote-left" aria-hidden="true" />
-                    <p>{m.quote}</p>
+                    <p>{t(m.quoteKey)}</p>
                   </div>
                   <div className="social-links">
                     {m.socials.map((s) => (
@@ -255,15 +253,15 @@ export default function About() {
 
           {/* Values */}
           <div className="text-center fade-up" style={{ marginBottom: 44 }}>
-            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-star" /> Our Values</div>
-            <h2 className="section-title" style={{ fontSize: '2rem' }}>What We <span className="highlight">Stand For</span></h2>
+            <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-star" /> {t('about.tagValues')}</div>
+            <h2 className="section-title" style={{ fontSize: '2rem' }}>{t('about.valuesTitle')} <span className="highlight">{t('about.valuesTitleHighlight')}</span></h2>
           </div>
           <div className="grid-3" style={{ marginBottom: 30 }}>
             {VALUES.map((v) => (
-              <div className="why-card fade-up" key={v.h}>
+              <div className="why-card fade-up" key={v.hKey}>
                 <div className="why-icon" style={VALUE_STYLE[v.c]}><i className={v.icon} /></div>
-                <h3>{v.h}</h3>
-                <p>{v.p}</p>
+                <h3>{t(v.hKey)}</h3>
+                <p>{t(v.pKey)}</p>
               </div>
             ))}
           </div>
@@ -277,14 +275,14 @@ export default function About() {
             <div className="cta-orb-1" />
             <div className="cta-orb-2" />
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div className="section-tag" style={{ margin: '0 auto 16px' }}><i className="fa-solid fa-rocket" /> Ready When You Are</div>
-              <h2 className="section-title">Your Next <span className="highlight">Adventure</span> Starts Here</h2>
+              <div className="section-tag" style={{ margin: '0 auto 16px' }}><i className="fa-solid fa-rocket" /> {t('about.tagReady')}</div>
+              <h2 className="section-title">{t('about.ctaTitlePre')} <span className="highlight">{t('about.ctaTitleHighlight')}</span> {t('about.ctaTitlePost')}</h2>
               <p style={{ color: 'var(--text-2)', maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.75 }}>
-                Join thousands of verified travelers already splitting costs and making memories across India.
+                {t('about.ctaDesc')}
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <Link to="/join" className="btn btn-primary btn-lg"><i className="fa-solid fa-users" /> Join Community</Link>
-                <Link to="/contact" className="btn btn-outline btn-lg"><i className="fa-solid fa-envelope" /> Get in Touch</Link>
+                <Link to="/join" className="btn btn-primary btn-lg"><i className="fa-solid fa-users" /> {t('about.joinCommunityBtn')}</Link>
+                <Link to="/contact" className="btn btn-outline btn-lg"><i className="fa-solid fa-envelope" /> {t('about.getInTouchBtn')}</Link>
               </div>
             </div>
           </div>

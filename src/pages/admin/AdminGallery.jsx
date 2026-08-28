@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { imageUrl, timeAgo } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import Loader from '../../components/Loader.jsx';
+import Checkbox from '../../components/Checkbox.jsx';
 
 const CATS = [
   { key: 'all', label: 'All' },
@@ -45,7 +47,7 @@ export default function AdminGallery() {
   const clearSelection = () => setSelected(new Set());
 
   const remove = async (id) => {
-    if (!window.confirm('Permanently delete this photo from the gallery?')) return;
+    if (!(await confirm({ message: 'Permanently delete this photo from the gallery?', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/admin/gallery/${id}`);
       setPhotos((ps) => ps.filter((p) => p._id !== id));
@@ -58,7 +60,7 @@ export default function AdminGallery() {
 
   const removeSelected = async () => {
     if (!selected.size) return;
-    if (!window.confirm(`Permanently delete ${selected.size} selected photo(s)?`)) return;
+    if (!(await confirm({ message: `Permanently delete ${selected.size} selected photo(s)?`, danger: true, confirmLabel: 'Delete' }))) return;
     setBulkBusy(true);
     try {
       const ids = [...selected];
@@ -120,17 +122,12 @@ export default function AdminGallery() {
               style={{ padding: 10, position: 'relative', outline: selected.has(p._id) ? '2px solid var(--fire)' : 'none' }}
               key={p._id}
             >
-              <label
-                style={{ position: 'absolute', top: 18, left: 18, zIndex: 1, width: 20, height: 20, cursor: 'pointer' }}
+              <span
+                style={{ position: 'absolute', top: 18, left: 18, zIndex: 1 }}
                 title="Select"
               >
-                <input
-                  type="checkbox"
-                  checked={selected.has(p._id)}
-                  onChange={() => toggleSelect(p._id)}
-                  style={{ width: 20, height: 20, cursor: 'pointer' }}
-                />
-              </label>
+                <Checkbox checked={selected.has(p._id)} onChange={() => toggleSelect(p._id)} />
+              </span>
               <img
                 src={imageUrl(p.photoUrl)}
                 alt={p.caption || 'Gallery'}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import { timeAgo } from '../../lib/helpers.js';
 import { NOTIF_ICON, notificationHref } from '../../lib/notifications.js';
 import { useNotifStore } from '../../store/notifications.js';
@@ -56,7 +57,7 @@ export default function AdminNotifications() {
   };
 
   const clearAllNotifications = async () => {
-    if (!window.confirm('Clear all notifications? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Clear all notifications? This cannot be undone.', danger: true, confirmLabel: 'Clear' }))) return;
     try {
       await api.delete('/members/notifications');
       setNotifs([]);

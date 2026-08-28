@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { useAuth } from '../../store/auth.js';
-import { imageUrl, paiseToRupee, formatDate, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK, PREF_LABEL } from '../../lib/helpers.js';
+import { imageUrl, authedFileUrl, paiseToRupee, formatDate, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK, PREF_LABEL } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import Loader from '../../components/Loader.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -43,7 +44,7 @@ export default function AdminUsers() {
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const removeUser = async (id) => {
-    if (!window.confirm('Permanently DELETE this user and ALL their data? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Permanently DELETE this user and ALL their data? This cannot be undone.', danger: true, confirmLabel: 'Delete' }))) return;
     try { await api.delete(`/admin/users/${id}`); setUsers((us) => us.filter((u) => u.id !== id)); setDetailId(null); toast('fa-solid fa-trash', 'User deleted'); }
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
@@ -143,6 +144,7 @@ function Row({ label, value }) {
 }
 
 function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete }) {
+  const accessToken = useAuth((s) => s.accessToken);
   const [d, setD] = useState(null);
   useEffect(() => {
     if (!id) { setD(null); return; }
@@ -249,8 +251,8 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
             <div className="grid-2">
               {d.documents.map((doc) => (
                 <div key={doc._id} className="card" style={{ padding: 8 }}>
-                  <a href={imageUrl(doc.fileUrl)} target="_blank" rel="noreferrer">
-                    <img className="doc-thumb" src={imageUrl(doc.fileUrl)} alt={doc.docType} onError={(e) => (e.currentTarget.src = DOC_FALLBACK)} />
+                  <a href={authedFileUrl(doc.fileUrl, accessToken)} target="_blank" rel="noreferrer">
+                    <img className="doc-thumb" src={authedFileUrl(doc.fileUrl, accessToken)} alt={doc.docType} onError={(e) => (e.currentTarget.src = DOC_FALLBACK)} />
                   </a>
                   <div className="row-between" style={{ marginTop: 6, alignItems: 'center' }}>
                     <div className="text-muted" style={{ fontSize: '0.72rem', textTransform: 'uppercase' }}>
@@ -305,27 +307,32 @@ function UserDetailModal({ id, isSuper, onClose, onVerify, onToggle, onDelete })
           {/* Actions */}
           {u.role === 'member' && (
             <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+              {/* Vehicle Owner is a superset of Normal Traveler (both get
+                  granted by one click on Vehicle Owner), so Normal Traveler
+                  shows ticked whenever EITHER tier is set - not just the
+                  narrow 'verified' one - otherwise a vehicle-verified user
+                  looks like they're still missing the base tier. */}
               <button
-                className={`btn btn-sm ${u.verificationLevel === 'verified' ? 'btn-primary' : 'btn-outline'}`}
-                title="Manually grant/revoke the Normal Traveler verified badge, independent of document review"
+                className={`btn btn-sm ${u.verificationLevel && u.verificationLevel !== 'none' ? 'btn-primary' : 'btn-outline'}`}
+                title="Manually grant/revoke verification, independent of document review. Unverifying here clears both tiers."
                 onClick={() => {
-                  const level = u.verificationLevel === 'verified' ? 'none' : 'verified';
+                  const level = u.verificationLevel && u.verificationLevel !== 'none' ? 'none' : 'verified';
                   onVerify(u.id, level);
                   setD((x) => ({ ...x, user: { ...x.user, verificationLevel: level, isVerified: level !== 'none' } }));
                 }}
               >
-                <i className="fa-solid fa-circle-check" /> {u.verificationLevel === 'verified' ? 'Unverify' : 'Verify: Normal Traveler'}
+                <i className="fa-solid fa-circle-check" /> {u.verificationLevel && u.verificationLevel !== 'none' ? 'Unverify' : 'Verify: Normal Traveler'}
               </button>
               <button
                 className={`btn btn-sm ${u.verificationLevel === 'vehicle_verified' ? 'btn-primary' : 'btn-outline'}`}
-                title="Manually grant/revoke the Verified Vehicle Owner badge, independent of document review"
+                title="Manually grant/revoke the Verified Vehicle Owner tier - also grants Normal Traveler in the same click"
                 onClick={() => {
-                  const level = u.verificationLevel === 'vehicle_verified' ? 'none' : 'vehicle_verified';
+                  const level = u.verificationLevel === 'vehicle_verified' ? 'verified' : 'vehicle_verified';
                   onVerify(u.id, level);
                   setD((x) => ({ ...x, user: { ...x.user, verificationLevel: level, isVerified: level !== 'none' } }));
                 }}
               >
-                <i className="fa-solid fa-car-side" /> {u.verificationLevel === 'vehicle_verified' ? 'Unverify' : 'Verify: Vehicle Owner'}
+                <i className="fa-solid fa-car-side" /> {u.verificationLevel === 'vehicle_verified' ? 'Downgrade to Normal Traveler' : 'Verify: Vehicle Owner'}
               </button>
               <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => { onToggle(u.id); setD((x) => ({ ...x, user: { ...x.user, isActive: !x.user.isActive } })); }}>
                 {u.isActive ? 'Ban' : 'Unban'}

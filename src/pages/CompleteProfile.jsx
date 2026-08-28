@@ -1,15 +1,91 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { toast } from '../lib/toast.js';
-import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../lib/helpers.js';
+import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG, imageUrl, AVATAR_FALLBACK, TRAVEL_INTEREST_ICONS, SMOKES_ICON, DRINKS_ICON } from '../lib/helpers.js';
 import CustomSelect from '../components/CustomSelect.jsx';
+import CustomDatePicker from '../components/CustomDatePicker.jsx';
+import Checkbox from '../components/Checkbox.jsx';
 import StateCitySelect from '../components/StateCitySelect.jsx';
 import ProfileHeaderPhotos from '../components/ProfileHeaderPhotos.jsx';
 import SelfieCapture from '../components/SelfieCapture.jsx';
 
 const INTERESTS = ['Mountains', 'Beaches', 'Camping', 'Trekking', 'Road Trips', 'Backpacking', 'Photography', 'Food Travel', 'Night Rides'];
+const HABIT_OPTIONS = ['No', 'Occasionally', 'Yes'];
+
+// Debounce a fast-changing value (form picks) so the match-suggestions
+// request only fires once the member pauses, not on every click.
+function useDebounced(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+function HabitPicker({ icon, label, value, onChange }) {
+  return (
+    <div className="form-group">
+      <label><i className={icon} /> {label}</label>
+      <div className="interest-grid">
+        {HABIT_OPTIONS.map((opt) => (
+          <span key={opt} className={`interest-chip${value === opt ? ' selected' : ''}`} onClick={() => onChange(opt)}>{opt}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// "People like you" - live preview matched against whatever's picked in the
+// form so far (not yet saved), so a member can see they're not the only one
+// before they commit to an interest or habit. Silent no-op until at least
+// one interest or non-"No" habit is picked.
+function MatchSuggestions({ interests, smokes, drinks }) {
+  const debouncedInterests = useDebounced(interests, 500);
+  const debouncedSmokes = useDebounced(smokes, 500);
+  const debouncedDrinks = useDebounced(drinks, 500);
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    const hasHabit = ['Occasionally', 'Yes'].includes(debouncedSmokes) || ['Occasionally', 'Yes'].includes(debouncedDrinks);
+    if (!debouncedInterests.length && !hasHabit) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get('/members/match-suggestions', { params: { interests: debouncedInterests.join(','), smokes: debouncedSmokes, drinks: debouncedDrinks } })
+      .then((r) => { if (!cancelled) setSuggestions(r.data.suggestions || []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [debouncedInterests, debouncedSmokes, debouncedDrinks]);
+
+  if (!suggestions.length) return null;
+
+  return (
+    <div className="form-group">
+      <label><i className="fa-solid fa-users" /> People like you ({suggestions.length})</label>
+      <div className="match-suggest-row">
+        {suggestions.map((s) => (
+          <Link key={s.id} to={`/members/${s.username || s.id}`} target="_blank" rel="noreferrer" className="match-suggest-card">
+            <img src={imageUrl(s.avatarUrl, AVATAR_FALLBACK)} alt="" onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+            <div className="match-suggest-name">{s.fullName}{s.isVerified && <i className="fa-solid fa-circle-check" style={{ color: '#6ee7b7', marginLeft: 4 }} />}</div>
+            {s.city && <div className="match-suggest-city">{s.city}</div>}
+            <div className="match-suggest-badges">
+              {s.sharedInterests.slice(0, 3).map((t) => (
+                <span key={t} className="match-suggest-badge" title={t}><i className={TRAVEL_INTEREST_ICONS[t] || 'fa-solid fa-star'} /></span>
+              ))}
+              {s.sharedSmokes && <span className="match-suggest-badge" title="Also smokes"><i className={SMOKES_ICON} /></span>}
+              {s.sharedDrinks && <span className="match-suggest-badge" title="Also drinks"><i className={DRINKS_ICON} /></span>}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function DocBox({ id, label, file, onChange }) {
   return (
@@ -36,8 +112,8 @@ export default function CompleteProfile() {
 
   const [form, setForm] = useState({
     fullName: '', city: '', state: '', profession: '', bio: '',
-    gender: '', emergencyContact: '', hasVehicle: false, vehicleType: '', vehicleModel: '',
-    relationshipStatus: '',
+    gender: '', dateOfBirth: '', emergencyContact: '', hasVehicle: false, vehicleType: '', vehicleModel: '',
+    relationshipStatus: '', smokes: 'No', drinks: 'No',
   });
   const [interests, setInterests] = useState([]);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -63,7 +139,10 @@ export default function CompleteProfile() {
       city: user.city || '',
       state: user.state || '',
       gender: user.gender || '',
+      dateOfBirth: user.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
       relationshipStatus: user.relationshipStatus || '',
+      smokes: user.smokes || 'No',
+      drinks: user.drinks || 'No',
     }));
     setInterests(user.travelInterests || []);
     setPartnerMobile(user.partnerMobile || '');
@@ -78,6 +157,11 @@ export default function CompleteProfile() {
     if (!form.state) return toast('fa-solid fa-triangle-exclamation', 'Please select your state');
     if (!form.city) return toast('fa-solid fa-triangle-exclamation', 'Please select your city');
     if (!form.gender) return toast('fa-solid fa-triangle-exclamation', 'Please select your gender');
+    if (!form.dateOfBirth) return toast('fa-solid fa-triangle-exclamation', 'Date of birth is required');
+    {
+      const ageYears = (Date.now() - new Date(form.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (ageYears < 18 || ageYears > 100) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid date of birth (must be 18+)');
+    }
     if (interests.length === 0) return toast('fa-solid fa-triangle-exclamation', 'Pick at least one travel interest');
     if (form.hasVehicle && !form.vehicleType) return toast('fa-solid fa-triangle-exclamation', 'Select your vehicle type');
     if (isVehicleModelYearMistake(form.vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
@@ -121,7 +205,7 @@ export default function CompleteProfile() {
 
   return (
     <section className="cp-section">
-      <div className="container" style={{ maxWidth: 640 }}>
+      <div className="container form-page-container">
         <div className="text-center mb-4">
           <div className="section-tag" style={{ margin: '0 auto 12px' }}><i className="fa-solid fa-user-gear" /> Almost there</div>
           <h1 className="section-title" style={{ fontSize: '2rem' }}>Complete Your <span className="highlight">Profile</span></h1>
@@ -140,15 +224,17 @@ export default function CompleteProfile() {
             onCoverChange={setCoverFile}
           />
 
-          <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
-          <StateCitySelect
-            state={form.state}
-            city={form.city}
-            onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
-            onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
-            required
-          />
           <div className="form-row">
+            <StateCitySelect
+              state={form.state}
+              city={form.city}
+              onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
+              onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
+              required
+            />
+          </div>
+          <div className="field-grid-3 mb-3">
+            <div className="form-group"><label>Full name *</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
             <div className="form-group"><label>Gender *</label>
               <CustomSelect
                 value={form.gender}
@@ -159,26 +245,38 @@ export default function CompleteProfile() {
             <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
           </div>
           <div className="form-group">
-            <label>Relationship status</label>
-            <CustomSelect
-              value={form.relationshipStatus}
-              onChange={set('relationshipStatus')}
-              options={[
-                { value: '', label: 'Select' },
-                { value: 'single', label: 'Single' },
-                { value: 'in_a_relationship', label: 'In a relationship' },
-                { value: 'married', label: 'Married' },
-                { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-              ]}
+            <label>Date of birth *</label>
+            <CustomDatePicker
+              value={form.dateOfBirth}
+              onChange={set('dateOfBirth')}
+              max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+              className="date-picker-sm"
             />
+            <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+              Used to verify your identity if you ever need to reset your password without email access.
+            </p>
           </div>
-          <div className="form-group"><label>Emergency contact</label><input className="form-input" value={form.emergencyContact} onChange={set('emergencyContact')} placeholder="A family member's number" /></div>
+          <div className="field-grid-3 mb-3">
+            <div className="form-group">
+              <label>Relationship status</label>
+              <CustomSelect
+                value={form.relationshipStatus}
+                onChange={set('relationshipStatus')}
+                options={[
+                  { value: '', label: 'Select' },
+                  { value: 'single', label: 'Single' },
+                  { value: 'in_a_relationship', label: 'In a relationship' },
+                  { value: 'married', label: 'Married' },
+                  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+                ]}
+              />
+            </div>
+            <div className="form-group"><label>Emergency contact</label><input className="form-input" value={form.emergencyContact} onChange={set('emergencyContact')} placeholder="A family member's number" /></div>
+          </div>
           <div className="form-group"><label>Short bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} placeholder="Tell co-travelers about yourself" /></div>
 
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={form.hasVehicle} onChange={set('hasVehicle')} /> I own a vehicle
-            </label>
+            <Checkbox checked={form.hasVehicle} onChange={set('hasVehicle')} label="I own a vehicle" />
           </div>
           {form.hasVehicle && (
             <div className="form-row">
@@ -201,6 +299,13 @@ export default function CompleteProfile() {
               ))}
             </div>
           </div>
+
+          <div className="form-row">
+            <HabitPicker icon={SMOKES_ICON} label="Do you smoke?" value={form.smokes} onChange={(v) => setForm((f) => ({ ...f, smokes: v }))} />
+            <HabitPicker icon={DRINKS_ICON} label="Do you drink?" value={form.drinks} onChange={(v) => setForm((f) => ({ ...f, drinks: v }))} />
+          </div>
+
+          <MatchSuggestions interests={interests} smokes={form.smokes} drinks={form.drinks} />
 
           <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 8px' }}>
             <i className="fa-solid fa-camera-retro" /> A live selfie is mandatory - required to verify it's really you

@@ -35,7 +35,7 @@ const WHY = [
   { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-solid fa-wallet', h: 'Split Expenses Smartly', p: 'Budget trips from ₹500/day by dividing fuel, hotel & food. Ladakh for ₹8,500 vs ₹40,000 alone.' },
   { glow: 'var(--cyan)', bg: 'rgba(0,212,255,0.1)', icon: 'fa-solid fa-shield-halved', h: 'Travel Safely Together', p: 'All members are ID-verified. Women-only sections. Emergency contacts shared within the group.' },
   { glow: 'var(--fire)', bg: 'rgba(255,107,0,0.12)', icon: 'fa-solid fa-motorcycle', h: 'Bike & Car Trips', p: 'Royal Enfield or Maruti Swift - find co-travelers for epic road trips across every corner of India.' },
-  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-solid fa-camera', h: 'Make Lifelong Memories', p: 'Shared trips create bonds that last forever. Our gallery has 2000+ real photos from real trips.' },
+  { glow: 'var(--magenta)', bg: 'rgba(224,64,251,0.12)', icon: 'fa-solid fa-camera', h: 'Make Lifelong Memories', p: 'Shared trips create bonds that last forever. Browse real photos from real member trips in our gallery.' },
   { glow: '#25D366', bg: 'rgba(37,211,102,0.1)', icon: 'fa-brands fa-whatsapp', h: 'WhatsApp Group Access', p: 'Join dedicated groups for every trip. Co-ordinate, share live locations & stay connected real-time.' },
 ];
 
@@ -51,7 +51,7 @@ const CLUB_ICON_BG = {
 };
 
 const CATS = [
-  { img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80', label: 'Bike Trips', sub: '125+ active riders', badge: 'badge-fire', icon: 'fa-solid fa-motorcycle' },
+  { img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80', label: 'Bike Trips', sub: 'Active riders on the road', badge: 'badge-fire', icon: 'fa-solid fa-motorcycle' },
   { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80', label: 'Road Trips', sub: 'Car & SUV groups', badge: 'badge-cyan', icon: 'fa-solid fa-car' },
   { img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80', label: 'Mountains', sub: 'Himalayas & Ghats', badge: 'badge-magenta', icon: 'fa-solid fa-mountain' },
   { img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=600&q=80', label: 'Camping', sub: 'Stargazing & bonfire', badge: 'badge-gold', icon: 'fa-solid fa-campground' },
@@ -60,11 +60,11 @@ const CATS = [
 ];
 
 const FAQS = [
-  { q: 'How do I join SastiTripsWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Use coupon FREEJOIN to join free!' },
+  { q: 'How do I join SastiTripsWale?', a: 'Click "Join Community", sign up, pick a membership plan (from ₹199), then complete your profile and upload your ID for verification. Have a coupon code from an influencer or someone you know? Use it at checkout - it could save you up to 100% off!' },
   { q: 'Is it safe to travel with strangers?', a: 'Yes! Every member is verified with Aadhaar/PAN before joining. Emergency contacts are collected, and we have dedicated women-safe groups.' },
   { q: 'How does expense splitting work?', a: 'When a trip is created, the total estimated budget is divided among all confirmed members on a simple split-contri basis. A ₹25,000 Goa trip with 5 people costs just ₹5,000/person!' },
   { q: 'I have a bike but no travel friends. Can I join?', a: "Absolutely! That's exactly why SastiTripsWale exists. Find hundreds of fellow bikers and car owners and make travel friends for life." },
-  { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. Use coupon FREEJOIN to waive it entirely!' },
+  { q: 'What is the membership fee?', a: 'Plans start at ₹199 (6 months) or ₹299 (1 year) for single-gender groups, and ₹299 / ₹499 for mixed male+female groups. A coupon code from an influencer or someone you know could save you up to 100% off!' },
   { q: 'What is Couples Mode on SastiTripsWale?', a: "Couples Mode is a custom preference for travelling duos - it reserves paired seats on a trip so couples join and travel together instead of being split up." },
   { q: 'Can I filter for girls-only or boys-only trips?', a: 'Yes - set your co-traveler preference to Only Female or Only Male when you join, and you\'ll only see and match with girls-only or boys-only verified groups.' },
 ];
@@ -77,7 +77,7 @@ const HOW_IT_WORKS = [
   { icon: 'fa-solid fa-motorcycle', h: 'Group Travel by Vehicle', p: 'Ride with fellow bikers, road-trip in a car or SUV group, or backpack budget-style - travel together in a verified group, never solo.' },
   { icon: 'fa-solid fa-wallet', h: 'Split Expenses (Split-Contri)', p: 'Fuel, hotels and food are shared equally among the group on a simple split-contri basis - real trips for a fraction of the solo cost.' },
   { icon: 'fa-solid fa-heart', h: 'Special Modes', p: 'Choose Couples Mode for travelling duos, or filter for girls-only / boys-only groups for extra comfort and safety.' },
-  { icon: 'fa-solid fa-user-plus', h: 'Free Sign-Up', p: 'Profile creation and basic community networking are free to start - use coupon FREEJOIN to waive the membership fee entirely.' },
+  { icon: 'fa-solid fa-user-plus', h: 'Free Sign-Up', p: 'Profile creation and basic community networking are free to start - a coupon code from an influencer or someone you know could save you up to 100% off membership.' },
   { icon: 'fa-solid fa-people-group', h: 'Travel Clubs', p: 'Own a bike, car, or off-roader? Start a persistent club - a standing group chat with admins, not just a one-off trip.' },
 ];
 
@@ -197,7 +197,7 @@ export default function Home() {
           <div className="hero-content">
             <div className="hero-top-row">
               <div className="hero-eyebrow">
-                <i className="fa-solid fa-location-dot" /> India's #1 Travel Community
+                <i className="fa-solid fa-location-dot" /> A Verified Travel Community
               </div>
               {Boolean(stats?.members) && (
                 <div className="hero-proof">
@@ -217,8 +217,8 @@ export default function Home() {
               <span className="line2">Explore India.</span>
             </h1>
             <p className="hero-sub">
-              Join 5000+ bikers, car travelers &amp; backpackers. Plan trips, split expenses, and
-              travel safely in verified groups.
+              Join bikers, car travelers &amp; backpackers. Discover, host and join trips, split
+              expenses, and connect with fellow travelers in verified groups.
             </p>
 
             <div className="hero-btns">
@@ -448,11 +448,11 @@ export default function Home() {
       <section>
         <div className="container">
           <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 44 }}>
-            <div className="fade-left">
+            <div>
               <div className="section-tag"><i className="fa-solid fa-fire" /> Hot Right Now</div>
               <h2 className="section-title" style={{ marginBottom: 0 }}>Upcoming <span className="highlight">Trips</span></h2>
             </div>
-            <Link to="/trips" className="btn btn-outline fade-right">View All <i className="fa-solid fa-arrow-right" /></Link>
+            <Link to="/trips" className="btn btn-outline">View All <i className="fa-solid fa-arrow-right" /></Link>
           </div>
           {trips.length === 0 ? (
             <div className="empty-state"><i className="fa-solid fa-compass" /><p>No trips yet - be the first to plan one!</p></div>
@@ -473,11 +473,11 @@ export default function Home() {
         <section>
           <div className="container">
             <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 44 }}>
-              <div className="fade-left">
+              <div>
                 <div className="section-tag"><i className="fa-solid fa-trophy" /> Real Trips, Real Recaps</div>
                 <h2 className="section-title" style={{ marginBottom: 0 }}>Completed <span className="highlight">Journeys</span></h2>
               </div>
-              <Link to="/completed-trips" className="btn btn-outline fade-right">View All <i className="fa-solid fa-arrow-right" /></Link>
+              <Link to="/completed-trips" className="btn btn-outline">View All <i className="fa-solid fa-arrow-right" /></Link>
             </div>
             <div className="deal-carousel">
               {completedTrips.map((t) => (
@@ -539,11 +539,11 @@ export default function Home() {
       <section>
         <div className="container">
           <div className="row-between" style={{ alignItems: 'flex-end', marginBottom: 40 }}>
-            <div className="fade-left">
+            <div>
               <div className="section-tag"><i className="fa-solid fa-image" /> Trip Memories</div>
               <h2 className="section-title" style={{ marginBottom: 0 }}>Our <span className="highlight">Gallery</span></h2>
             </div>
-            <Link to="/gallery" className="btn btn-outline fade-right">All Photos <i className="fa-solid fa-arrow-right" /></Link>
+            <Link to="/gallery" className="btn btn-outline">All Photos <i className="fa-solid fa-arrow-right" /></Link>
           </div>
           <div className="gallery-preview-grid fade-up">
             {galleryImgs.slice(0, 5).map((src, i) => (
@@ -594,8 +594,8 @@ export default function Home() {
               <div className="section-tag" style={{ margin: '0 auto 16px' }}><i className="fa-solid fa-rocket" /> Limited Spots</div>
               <h2 className="section-title">Ready for Your Next <span className="highlight">Adventure?</span></h2>
               <p style={{ color: 'var(--text-2)', maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.75 }}>
-                Join 5000+ travelers already exploring India together. Use code{' '}
-                <strong style={{ color: 'var(--fire-2)', fontFamily: 'var(--font-mono)' }}>FREEJOIN</strong> for free membership!
+                Join fellow travelers already exploring India together. Got a coupon code from an influencer
+                or someone you know? Use it at checkout for a chance to save up to 100% off!
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <Link to="/join" className="btn btn-primary btn-lg"><i className="fa-solid fa-users" /> Join Community</Link>

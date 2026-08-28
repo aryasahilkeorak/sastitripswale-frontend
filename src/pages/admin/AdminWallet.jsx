@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
-import { imageUrl, paiseToRupee, formatDate, AVATAR_FALLBACK } from '../../lib/helpers.js';
+import { confirm } from '../../lib/confirm.js';
+import { useAuth } from '../../store/auth.js';
+import { imageUrl, authedFileUrl, paiseToRupee, formatDate, AVATAR_FALLBACK } from '../../lib/helpers.js';
 import Lightbox from '../../components/Lightbox.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -15,6 +17,7 @@ const STATUS_FILTERS = [
 ];
 
 export default function AdminWallet() {
+  const accessToken = useAuth((s) => s.accessToken);
   const [stats, setStats] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -37,7 +40,7 @@ export default function AdminWallet() {
   useEffect(load, [statusFilter]);
 
   const respond = async (id, action) => {
-    if (action === 'reject' && !window.confirm('Decline this request? The amount will be refunded to their wallet.')) return;
+    if (action === 'reject' && !(await confirm({ message: 'Decline this request? The amount will be refunded to their wallet.', danger: true, confirmLabel: 'Decline' }))) return;
     try {
       await api.patch(`/admin/withdrawals/${id}`, { action });
       toast('fa-solid fa-circle-check', action === 'approve' ? 'Approved' : 'Declined & refunded');
@@ -151,9 +154,9 @@ export default function AdminWallet() {
                     <td data-label="QR">
                       {w.qrCodeUrl && (
                         <img
-                          src={imageUrl(w.qrCodeUrl)}
+                          src={authedFileUrl(w.qrCodeUrl, accessToken)}
                           alt="QR code"
-                          onClick={() => setQrPreview(imageUrl(w.qrCodeUrl))}
+                          onClick={() => setQrPreview(authedFileUrl(w.qrCodeUrl, accessToken))}
                           style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--glass-bdr)' }}
                         />
                       )}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { useHasRejectedDocument } from '../lib/useHasRejectedDocument.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { NOTIF_ICON, notificationHref } from '../lib/notifications.js';
 import { useNotifStore } from '../store/notifications.js';
@@ -12,6 +11,7 @@ import CompletedTripCard from '../components/CompletedTripCard.jsx';
 import AdSlot from '../components/AdSlot.jsx';
 import Loader from '../components/Loader.jsx';
 import ScrollRow from '../components/ScrollRow.jsx';
+import ActivationAlerts from '../components/ActivationAlerts.jsx';
 
 const CATEGORIES = [
   { type: 'bike', label: 'Bike', icon: 'fa-solid fa-motorcycle' },
@@ -32,8 +32,6 @@ export default function AppHome() {
   // A rejected document is a personal housekeeping notice, not an access
   // gate - staff already have full access regardless, but still uploaded
   // documents of their own that can still be rejected/need resubmitting.
-  const hasRejectedDoc = useHasRejectedDocument(Boolean(user));
-
   const [myTrips, setMyTrips] = useState([]);
   const [joinedTrips, setJoinedTrips] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
@@ -96,6 +94,12 @@ export default function AppHome() {
   const daysLeft = user?.membershipActive && user?.membershipExpiresAt
     ? Math.ceil((new Date(user.membershipExpiresAt) - Date.now()) / 86400000)
     : null;
+  // A Trip Pass (pay-per-trip host/join credits) is a lighter alternative
+  // to an active membership - someone holding only credits shouldn't see
+  // the "membership inactive" nag, since they can still host or join.
+  const hostCredits = user?.hostCredits || 0;
+  const joinCredits = user?.joinCredits || 0;
+  const hasTripPack = hostCredits > 0 || joinCredits > 0;
 
   const openNotification = (n) => {
     if (!n.isRead) {
@@ -129,11 +133,14 @@ export default function AppHome() {
             <div>
               <div className="ahg-hi">Hi, {firstName} <i className="fa-solid fa-hand" style={{ color: 'var(--fire)' }} /></div>
               <div className="ahg-badges">
-                <span className={`badge ${user?.membershipActive ? 'badge-green' : 'badge-red'}`}>
-                  {user?.membershipActive ? '● Active member' : '○ Membership inactive'}
+                <span className={`badge ${user?.membershipActive ? 'badge-green' : hasTripPack ? 'badge-gold' : 'badge-red'}`}>
+                  {user?.membershipActive ? '● Active member' : hasTripPack ? '🎫 Trip Pass' : '○ Membership inactive'}
                 </span>
                 {daysLeft != null && (
                   <span className="badge badge-gold">{daysLeft > 0 ? `${daysLeft}d left` : 'Expires today'}</span>
+                )}
+                {!user?.membershipActive && hasTripPack && (
+                  <span className="badge badge-gold">{hostCredits} host · {joinCredits} join</span>
                 )}
                 {!isStaff && !user?.profileComplete && <span className="badge badge-magenta">Profile incomplete</span>}
               </div>
@@ -157,32 +164,7 @@ export default function AppHome() {
             </Link>
           </div>
 
-          {(hasRejectedDoc || (!isStaff && (!user?.profileComplete || !user?.membershipActive))) && (
-            <div className="ahg-alert-stack">
-              {hasRejectedDoc ? (
-                <Link to="/activate-profile" className="ahg-alert ahg-alert-magenta">
-                  <i className="fa-solid fa-rotate" />
-                  <span>Some documents were rejected - resubmit to unlock trips</span>
-                  <i className="fa-solid fa-chevron-right" />
-                </Link>
-              ) : (
-                !isStaff && !user?.profileComplete && (
-                  <Link to="/activate-profile" className="ahg-alert ahg-alert-magenta">
-                    <i className="fa-solid fa-user-gear" />
-                    <span>Complete your profile to unlock trips</span>
-                    <i className="fa-solid fa-chevron-right" />
-                  </Link>
-                )
-              )}
-              {!isStaff && !user?.membershipActive && (
-                <Link to="/activate-profile" className="ahg-alert ahg-alert-fire">
-                  <i className="fa-solid fa-crown" />
-                  <span>Activate membership to plan &amp; join trips</span>
-                  <i className="fa-solid fa-chevron-right" />
-                </Link>
-              )}
-            </div>
-          )}
+          <ActivationAlerts />
 
           <div className="app-tile-grid">
             <Link to="/plan-trip" className="app-tile">
