@@ -10,6 +10,18 @@ export function imageUrl(path, fallback = '') {
   return `${ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
+// Same as imageUrl, but for a protected file (ID documents, live selfie,
+// withdrawal QR codes - anything NOT in fileController's PUBLIC_KINDS).
+// Those routes require the access token, which a plain <img>/<a> tag can't
+// send as a header - so it's appended as ?token= instead (the backend's
+// attachUserFromQuery middleware accepts either). Never use this for public
+// images (avatars, covers, trip/gallery photos) - they don't need it.
+export function authedFileUrl(path, token, fallback = '') {
+  const url = imageUrl(path, fallback);
+  if (!url || !token || url === fallback) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`;
+}
+
 export function rupee(n) {
   const num = Number(n) || 0;
   return '₹' + num.toLocaleString('en-IN');
@@ -145,6 +157,17 @@ export function planPrice(preference, duration) {
 }
 export const PREF_LABEL = { male: 'Only Male', female: 'Only Female', both: 'Male + Female' };
 
+// Trip Pass (pay-per-trip) pricing - kept in sync with backend
+// utils/plans.js. Flat price regardless of co-traveler preference. Each
+// tier grants that many HOST credits AND that many JOIN credits (two
+// separate pools, not a combined total) - buying tops up existing
+// credits rather than resetting them.
+export const TRIP_PACK_TIERS = [1, 2, 3];
+export const TRIP_PACK_PRICES = { 1: 29, 2: 49, 3: 59 };
+export function tripPackLabel(tier) {
+  return `${tier} host + ${tier} join credit${tier > 1 ? 's' : ''}`;
+}
+
 // Travel club categories (bikers/cars/offroading/other) - kept in sync with
 // backend clubController's CATEGORY_VEHICLE map, so the create-club form can
 // tell a member up front which vehicle type they need on their profile.
@@ -205,3 +228,9 @@ export const TRAVEL_INTEREST_ICONS = {
   'Food Travel': 'fa-solid fa-utensils',
   'Night Rides': 'fa-solid fa-moon',
 };
+
+// Shared between CompleteProfile.jsx (setting your own habit) and
+// ProfileHeader.jsx (showing the badge on a profile, when visible - see
+// getMember's smokes/drinks gating in memberController.js).
+export const SMOKES_ICON = 'fa-solid fa-smoking';
+export const DRINKS_ICON = 'fa-solid fa-wine-bottle';

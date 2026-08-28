@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const SEL = '.fade-up, .fade-left, .fade-right, .scale-in';
+const SEL = '.fade-up, .scale-in';
 
 // Instantly neutralizes the fade/scale-in classes' hidden starting state
 // (opacity:0 + transform) instead of animating them in on scroll - used

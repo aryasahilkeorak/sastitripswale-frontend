@@ -9,6 +9,7 @@ import { toast } from '../lib/toast.js';
 import ErrorBoundary from './ErrorBoundary.jsx';
 import BrandLogo from './BrandLogo.jsx';
 import Toaster from './Toaster.jsx';
+import ConfirmDialog from './ConfirmDialog.jsx';
 
 const LINKS = [
   { to: '/admin', label: 'Overview', icon: 'fa-solid fa-gauge-high', end: true },
@@ -155,7 +156,7 @@ export default function AdminLayout() {
                 <i className={isSuper ? 'fa-solid fa-crown' : 'fa-solid fa-shield-halved'} /> {isSuper ? 'Super Admin' : 'Admin'}
               </span>
             </div>
-            <img src={imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+            <img src={imageUrl(user?.adminAvatarUrl || user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
           </Link>
         </div>
 
@@ -187,6 +188,7 @@ export default function AdminLayout() {
       </nav>
 
       <Toaster />
+      <ConfirmDialog />
     </div>
   );
 }

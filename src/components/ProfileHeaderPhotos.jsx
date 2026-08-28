@@ -8,7 +8,7 @@ import ImageCropModal from './ImageCropModal.jsx';
 // ClubDetail.jsx, just self-contained so it drops into any card regardless
 // of that card's own padding.
 export default function ProfileHeaderPhotos({
-  avatarFile, coverFile, currentAvatarUrl, currentCoverUrl, onAvatarChange, onCoverChange,
+  avatarFile, coverFile, currentAvatarUrl, currentCoverUrl, onAvatarChange, onCoverChange, editable = true,
 }) {
   const avatarRef = useRef(null);
   const coverRef = useRef(null);
@@ -24,15 +24,17 @@ export default function ProfileHeaderPhotos({
           {coverSrc && (
             <img src={coverSrc} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
-          <button
-            type="button"
-            className="btn btn-sm"
-            style={{ position: 'absolute', right: 10, bottom: 10, borderRadius: '50%', width: 34, height: 34, padding: 0, justifyContent: 'center', background: 'rgba(0,0,0,0.55)', color: '#fff' }}
-            onClick={() => coverRef.current?.click()}
-            title="Change cover photo"
-          >
-            <i className="fa-solid fa-camera" />
-          </button>
+          {editable && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ position: 'absolute', right: 10, bottom: 10, borderRadius: '50%', width: 34, height: 34, padding: 0, justifyContent: 'center', background: 'rgba(0,0,0,0.55)', color: '#fff' }}
+              onClick={() => coverRef.current?.click()}
+              title="Change cover photo"
+            >
+              <i className="fa-solid fa-camera" />
+            </button>
+          )}
           <input
             ref={coverRef}
             type="file"
@@ -52,15 +54,17 @@ export default function ProfileHeaderPhotos({
             alt=""
             style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--surface)', display: 'block' }}
           />
-          <button
-            type="button"
-            className="btn btn-sm"
-            style={{ position: 'absolute', right: 0, bottom: 0, borderRadius: '50%', width: 30, height: 30, padding: 0, justifyContent: 'center', background: 'var(--fire)', color: '#fff' }}
-            onClick={() => avatarRef.current?.click()}
-            title="Change profile photo"
-          >
-            <i className="fa-solid fa-camera" />
-          </button>
+          {editable && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ position: 'absolute', right: 0, bottom: 0, borderRadius: '50%', width: 30, height: 30, padding: 0, justifyContent: 'center', background: 'var(--fire)', color: '#fff' }}
+              onClick={() => avatarRef.current?.click()}
+              title="Change profile photo"
+            >
+              <i className="fa-solid fa-camera" />
+            </button>
+          )}
           <input
             ref={avatarRef}
             type="file"

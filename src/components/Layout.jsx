@@ -3,6 +3,7 @@ import { Outlet, useLocation, Link, NavLink } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import Footer from './Footer.jsx';
 import Toaster from './Toaster.jsx';
+import ConfirmDialog from './ConfirmDialog.jsx';
 import ErrorBoundary from './ErrorBoundary.jsx';
 import { useScrollReveal } from './useScrollReveal.js';
 import { useAuth } from '../store/auth.js';
@@ -145,6 +146,7 @@ export default function Layout() {
       )}
 
       <Toaster />
+      <ConfirmDialog />
     </>
   );
 }

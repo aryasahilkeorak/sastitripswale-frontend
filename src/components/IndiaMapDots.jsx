@@ -180,41 +180,43 @@ export default function IndiaMapDots() {
     });
 
   return (
-    <div
-      ref={wrapRef}
-      className="india-map-wrap fade-up"
-      style={{ cursor: zoom > 1 ? (dragRef.current ? 'grabbing' : 'grab') : 'default' }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-    >
-      <div className="india-map-legend" onPointerDown={(e) => e.stopPropagation()}>
+    <div className="india-map-outer fade-up">
+      <div
+        ref={wrapRef}
+        className="india-map-wrap"
+        style={{ cursor: zoom > 1 ? (dragRef.current ? 'grabbing' : 'grab') : 'default' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+      >
+        <div className="india-map-zoom-controls" onPointerDown={(e) => e.stopPropagation()}>
+          <button type="button" aria-label="Zoom in" onClick={() => zoomBy(0.6)} disabled={zoom >= MAX_ZOOM}>
+            <i className="fa-solid fa-plus" />
+          </button>
+          <button type="button" aria-label="Zoom out" onClick={() => zoomBy(-0.6)} disabled={zoom <= MIN_ZOOM}>
+            <i className="fa-solid fa-minus" />
+          </button>
+          {zoom > 1 && (
+            <button type="button" aria-label="Reset zoom" onClick={resetZoom}>
+              <i className="fa-solid fa-rotate-left" />
+            </button>
+          )}
+        </div>
+
+        <div
+          className="india-map-canvas"
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+        >
+          <img src="/india-map.svg" alt="Map of India" className="india-map-img" draggable={false} />
+          {renderDots(tripDestinations, 'trip', maxTripCount, 'trip')}
+          {renderDots(cities, 'member', maxMemberCount, 'member')}
+        </div>
+      </div>
+
+      <div className="india-map-legend">
         <span><i className="india-map-legend-dot india-map-legend-dot-member" /> Members</span>
         <span><i className="india-map-legend-dot india-map-legend-dot-trip" /> Trips completed</span>
-      </div>
-
-      <div className="india-map-zoom-controls" onPointerDown={(e) => e.stopPropagation()}>
-        <button type="button" aria-label="Zoom in" onClick={() => zoomBy(0.6)} disabled={zoom >= MAX_ZOOM}>
-          <i className="fa-solid fa-plus" />
-        </button>
-        <button type="button" aria-label="Zoom out" onClick={() => zoomBy(-0.6)} disabled={zoom <= MIN_ZOOM}>
-          <i className="fa-solid fa-minus" />
-        </button>
-        {zoom > 1 && (
-          <button type="button" aria-label="Reset zoom" onClick={resetZoom}>
-            <i className="fa-solid fa-rotate-left" />
-          </button>
-        )}
-      </div>
-
-      <div
-        className="india-map-canvas"
-        style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
-      >
-        <img src="/india-map.svg" alt="Map of India" className="india-map-img" draggable={false} />
-        {renderDots(tripDestinations, 'trip', maxTripCount, 'trip')}
-        {renderDots(cities, 'member', maxMemberCount, 'member')}
       </div>
     </div>
   );

@@ -20,6 +20,8 @@ export default function CustomSelect({
   className = '',
   style,
   disabled = false,
+  id,
+  ariaLabel,
 }) {
   const norm = normalizeOptions(options);
   const selected = norm.find((o) => String(o.value) === String(value));
@@ -123,12 +125,14 @@ export default function CustomSelect({
     <div className={`custom-select ${className}`} style={style} ref={wrapRef}>
       <button
         type="button"
+        id={id}
         ref={triggerRef}
         className={`custom-select-trigger${open ? ' open' : ''}${disabled ? ' disabled' : ''}`}
         onClick={toggle}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label={ariaLabel || (selected ? undefined : 'Select an option')}
       >
         <span className="custom-select-value">{selected ? selected.label : ''}</span>
         <i className="fa-solid fa-chevron-down custom-select-arrow" />

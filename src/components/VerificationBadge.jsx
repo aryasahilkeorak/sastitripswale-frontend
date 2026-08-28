@@ -15,7 +15,7 @@ export function VerifiedIcon({ role, verificationLevel, isVerified, style }) {
   const label = effectiveLevel === 'vehicle_verified' ? 'Verified vehicle owner' : 'Verified';
   return (
     <i
-      className={effectiveLevel === 'vehicle_verified' ? 'fa-solid fa-car-side' : 'fa-solid fa-circle-check'}
+      className="fa-solid fa-circle-check"
       title={label}
       aria-label={label}
       style={{ color: isFounder ? 'var(--gold)' : 'var(--cyan)', ...style }}
@@ -66,14 +66,14 @@ export default function VerificationBadge({ role, verificationLevel, isVerified,
       )}
       {verifiedIconOnly ? (
         <i
-          className={effectiveLevel === 'vehicle_verified' ? 'fa-solid fa-car-side' : 'fa-solid fa-circle-check'}
+          className="fa-solid fa-circle-check"
           title={effectiveLevel === 'vehicle_verified' ? 'Verified vehicle owner' : 'Verified'}
           aria-label={effectiveLevel === 'vehicle_verified' ? 'Verified vehicle owner' : 'Verified'}
           style={{ color: 'var(--cyan)' }}
         />
       ) : (
         <El className={`verified-badge${isFounder ? ' founder-badge' : ''}`}>
-          <i className={effectiveLevel === 'vehicle_verified' ? 'fa-solid fa-car-side' : 'fa-solid fa-circle-check'} />
+          <i className="fa-solid fa-circle-check" />
           {effectiveLevel === 'vehicle_verified' ? ' Verified Vehicle Owner' : ' Verified'}
         </El>
       )}

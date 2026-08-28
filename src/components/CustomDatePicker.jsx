@@ -6,6 +6,7 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+const YEAR_PAGE_SIZE = 12;
 
 // All date math happens in UTC so the calendar never drifts a day
 // depending on the browser's local timezone offset.
@@ -26,13 +27,18 @@ const formatDisplay = (iso) => {
 // Fully custom calendar popover matching CustomSelect.jsx's portal +
 // two-pass positioning + outside-click/Escape pattern, so date inputs
 // never fall back to the native browser date-picker chrome.
-export default function CustomDatePicker({ value, onChange, min, placeholder = 'Select date', className = '' }) {
+export default function CustomDatePicker({ value, onChange, min, max, placeholder = 'Select date', className = '' }) {
   const today = new Date();
-  const initial = parseISO(value) || parseISO(min) || { y: today.getFullYear(), m: today.getMonth(), d: 1 };
+  // For fields with no value yet (e.g. date of birth), default the view to
+  // the max bound rather than "today" - for an 18+ DOB field that lands the
+  // calendar ~18 years back instead of forcing dozens of prev-month clicks.
+  const initial = parseISO(value) || parseISO(max) || parseISO(min) || { y: today.getFullYear(), m: today.getMonth(), d: 1 };
 
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState('days'); // 'days' | 'years'
   const [viewY, setViewY] = useState(initial.y);
   const [viewM, setViewM] = useState(initial.m);
+  const [yearPageStart, setYearPageStart] = useState(Math.floor(initial.y / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
   const [pos, setPos] = useState(null);
 
   const wrapRef = useRef(null);
@@ -42,9 +48,11 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
   const close = () => setOpen(false);
   const toggle = () => {
     if (open) return close();
-    const p = parseISO(value) || parseISO(min) || { y: today.getFullYear(), m: today.getMonth() };
+    const p = parseISO(value) || parseISO(max) || parseISO(min) || { y: today.getFullYear(), m: today.getMonth() };
     setViewY(p.y);
     setViewM(p.m);
+    setYearPageStart(Math.floor(p.y / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
+    setMode('days');
     setOpen(true);
   };
 
@@ -70,7 +78,7 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
     place();
     window.addEventListener('resize', place);
     return () => window.removeEventListener('resize', place);
-  }, [open]);
+  }, [open, mode]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -102,6 +110,8 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
 
   const minP = parseISO(min);
   const minTime = minP ? Date.UTC(minP.y, minP.m, minP.d) : null;
+  const maxP = parseISO(max);
+  const maxTime = maxP ? Date.UTC(maxP.y, maxP.m, maxP.d) : null;
 
   const firstOfMonth = new Date(Date.UTC(viewY, viewM, 1));
   const startWeekday = firstOfMonth.getUTCDay();
@@ -112,7 +122,10 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
 
   const selected = parseISO(value);
   const isSelected = (d) => selected && selected.y === viewY && selected.m === viewM && selected.d === d;
-  const isDisabled = (d) => minTime !== null && Date.UTC(viewY, viewM, d) < minTime;
+  const isDisabled = (d) => {
+    const t = Date.UTC(viewY, viewM, d);
+    return (minTime !== null && t < minTime) || (maxTime !== null && t > maxTime);
+  };
 
   const pick = (d) => {
     onChange?.({ target: { value: toISO(viewY, viewM, d) } });
@@ -135,6 +148,11 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
     } else {
       setViewM((m) => m + 1);
     }
+  };
+
+  const pickYear = (y) => {
+    setViewY(y);
+    setMode('days');
   };
 
   return (
@@ -163,30 +181,72 @@ export default function CustomDatePicker({ value, onChange, min, placeholder = '
             }}
           >
             <div className="date-picker-header">
-              <button type="button" className="date-picker-nav" onClick={prevMonth}><i className="fa-solid fa-chevron-left" /></button>
-              <span className="date-picker-title">{MONTHS[viewM]} {viewY}</span>
-              <button type="button" className="date-picker-nav" onClick={nextMonth}><i className="fa-solid fa-chevron-right" /></button>
+              <button
+                type="button"
+                className="date-picker-nav"
+                onClick={() => (mode === 'days' ? prevMonth() : setYearPageStart((s) => s - YEAR_PAGE_SIZE))}
+              >
+                <i className="fa-solid fa-chevron-left" />
+              </button>
+              <button
+                type="button"
+                className="date-picker-title"
+                onClick={() => {
+                  if (mode === 'days') {
+                    setYearPageStart(Math.floor(viewY / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE);
+                    setMode('years');
+                  } else {
+                    setMode('days');
+                  }
+                }}
+              >
+                {mode === 'days' ? `${MONTHS[viewM]} ${viewY}` : `${yearPageStart} – ${yearPageStart + YEAR_PAGE_SIZE - 1}`}
+              </button>
+              <button
+                type="button"
+                className="date-picker-nav"
+                onClick={() => (mode === 'days' ? nextMonth() : setYearPageStart((s) => s + YEAR_PAGE_SIZE))}
+              >
+                <i className="fa-solid fa-chevron-right" />
+              </button>
             </div>
-            <div className="date-picker-weekdays">
-              {WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}
-            </div>
-            <div className="date-picker-grid">
-              {cells.map((d, i) =>
-                d === null ? (
-                  <span key={i} className="date-picker-cell empty" />
-                ) : (
+            {mode === 'years' ? (
+              <div className="date-picker-year-grid">
+                {Array.from({ length: YEAR_PAGE_SIZE }, (_, i) => yearPageStart + i).map((y) => (
                   <button
                     type="button"
-                    key={i}
-                    className={`date-picker-cell${isSelected(d) ? ' selected' : ''}`}
-                    disabled={isDisabled(d)}
-                    onClick={() => pick(d)}
+                    key={y}
+                    className={`date-picker-year-cell${y === viewY ? ' selected' : ''}`}
+                    onClick={() => pickYear(y)}
                   >
-                    {d}
+                    {y}
                   </button>
-                )
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="date-picker-weekdays">
+                  {WEEKDAYS.map((w, i) => <span key={i}>{w}</span>)}
+                </div>
+                <div className="date-picker-grid">
+                  {cells.map((d, i) =>
+                    d === null ? (
+                      <span key={i} className="date-picker-cell empty" />
+                    ) : (
+                      <button
+                        type="button"
+                        key={i}
+                        className={`date-picker-cell${isSelected(d) ? ' selected' : ''}`}
+                        disabled={isDisabled(d)}
+                        onClick={() => pick(d)}
+                      >
+                        {d}
+                      </button>
+                    )
+                  )}
+                </div>
+              </>
+            )}
           </div>,
           document.body
         )}

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../i18n/index.js';
 
 // Single camera-icon button that opens a small dropdown ("Change photo" /
 // "Remove photo") instead of two separate overlay buttons crowding the
 // avatar/cover corner. `size` controls the trigger button's diameter.
 export default function PhotoActionMenu({ hasPhoto, onChange, onRemove, size = 34, style }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -23,7 +25,7 @@ export default function PhotoActionMenu({ hasPhoto, onChange, onRemove, size = 3
         className="btn btn-sm"
         style={{ borderRadius: '50%', width: size, height: size, padding: 0, justifyContent: 'center', background: 'var(--fire)', color: '#fff' }}
         onClick={() => setOpen((v) => !v)}
-        title="Photo options"
+        title={t('photoActionMenu.photoOptions')}
       >
         <i className="fa-solid fa-camera" />
       </button>
@@ -36,7 +38,7 @@ export default function PhotoActionMenu({ hasPhoto, onChange, onRemove, size = 3
               onChange();
             }}
           >
-            <i className="fa-solid fa-camera" /> Change photo
+            <i className="fa-solid fa-camera" /> {t('photoActionMenu.changePhoto')}
           </button>
           {hasPhoto && (
             <button
@@ -46,7 +48,7 @@ export default function PhotoActionMenu({ hasPhoto, onChange, onRemove, size = 3
                 onRemove();
               }}
             >
-              <i className="fa-solid fa-trash" /> Remove photo
+              <i className="fa-solid fa-trash" /> {t('photoActionMenu.removePhoto')}
             </button>
           )}
         </div>

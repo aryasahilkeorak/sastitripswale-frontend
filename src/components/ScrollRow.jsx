@@ -1,4 +1,5 @@
 import { Children, useEffect, useRef, useState } from 'react';
+import { useT } from '../i18n/index.js';
 
 // Horizontally-scrolling row with prev/next arrow buttons. The arrows only
 // render for fine-pointer devices (mouse/trackpad) via CSS - touch screens
@@ -6,6 +7,7 @@ import { Children, useEffect, useRef, useState } from 'react';
 // be redundant chrome sitting on top of the content there. Each arrow also
 // hides itself once there's nothing left to scroll in that direction.
 export default function ScrollRow({ children, className = '' }) {
+  const t = useT();
   const trackRef = useRef(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -41,7 +43,7 @@ export default function ScrollRow({ children, className = '' }) {
   return (
     <div className="scroll-row-wrap">
       {canPrev && (
-        <button type="button" className="scroll-row-arrow prev" onClick={() => scroll(-1)} aria-label="Scroll left">
+        <button type="button" className="scroll-row-arrow prev" onClick={() => scroll(-1)} aria-label={t('scrollRow.scrollLeft')}>
           <i className="fa-solid fa-angle-left" />
         </button>
       )}
@@ -49,7 +51,7 @@ export default function ScrollRow({ children, className = '' }) {
         {children}
       </div>
       {canNext && (
-        <button type="button" className="scroll-row-arrow next" onClick={() => scroll(1)} aria-label="Scroll right">
+        <button type="button" className="scroll-row-arrow next" onClick={() => scroll(1)} aria-label={t('scrollRow.scrollRight')}>
           <i className="fa-solid fa-angle-right" />
         </button>
       )}

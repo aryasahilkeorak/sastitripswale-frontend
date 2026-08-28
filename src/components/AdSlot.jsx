@@ -3,7 +3,15 @@ import { useEffect } from 'react';
 // See frontend/.env.example for setup instructions (real publisher ID,
 // ad unit slot IDs, and public/ads.txt all need to be filled in with
 // values from adsense.google.com before ads actually serve).
-const CLIENT_ID = import.meta.env.VITE_ADSENSE_CLIENT_ID || '';
+//
+// The repo's default .env ships DUMMY placeholder values (ca-pub-000...,
+// slot 1234567890) so the app runs out of the box - those aren't blank, so
+// a plain truthiness check would "enable" ads and fire a real (failing)
+// request to Google with a fake publisher ID. Treat the known placeholder
+// as unconfigured too.
+const PLACEHOLDER_CLIENT_ID = 'ca-pub-0000000000000000';
+const rawClientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || '';
+const CLIENT_ID = rawClientId === PLACEHOLDER_CLIENT_ID ? '' : rawClientId;
 const DEFAULT_SLOT = import.meta.env.VITE_ADSENSE_SLOT_DEFAULT || '';
 // Per-placement slots, each optional - falls back to DEFAULT_SLOT so a
 // single shared ad unit works everywhere until dedicated ones exist.
