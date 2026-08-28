@@ -1,0 +1,1 @@
+import{j as r}from"./index-BB4FBsme.js";function e({value:t=5}){const a=Math.round(t);return r.jsx("span",{className:"stars",children:Array.from({length:5}).map((n,s)=>r.jsx("span",{style:{opacity:s<a?1:.25},children:"★"},s))})}export{e as S};

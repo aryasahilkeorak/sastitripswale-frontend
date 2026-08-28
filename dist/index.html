@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="SastiTripsWale is India's #1 verified travel community. Host or join bike, car & backpacking trips, split expenses fairly, and travel safely with Couples, girls-only or boys-only modes. Free sign-up."
+      content="SastiTripsWale is a verified travel community. Discover, host or join bike, car & backpacking trips, split expenses fairly, and connect with fellow travelers safely with Couples, girls-only or boys-only modes. Free sign-up."
     />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://sastitripswale.com/" />
@@ -16,22 +16,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SastiTripsWale" />
-    <title>SastiTripsWale - India's #1 Travel Community | Travel Together • Split Expenses</title>
+    <title>SastiTripsWale - Travel Community | Discover, Host & Join Trips</title>
 
     <meta property="og:site_name" content="SastiTripsWale" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="SastiTripsWale - India's #1 Travel Community" />
+    <meta property="og:title" content="SastiTripsWale - Travel Community" />
     <meta
       property="og:description"
-      content="Host or join bike, car & backpacking trips, split expenses fairly, and travel safely in verified groups. Couples, girls-only & boys-only modes. Free sign-up."
+      content="Discover, host or join bike, car & backpacking trips, split expenses fairly, and connect with fellow travelers safely in verified groups. Couples, girls-only & boys-only modes. Free sign-up."
     />
     <meta property="og:url" content="https://sastitripswale.com/" />
     <meta property="og:image" content="https://sastitripswale.com/pwa/icon-512.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="SastiTripsWale - India's #1 Travel Community" />
+    <meta name="twitter:title" content="SastiTripsWale - Travel Community" />
     <meta
       name="twitter:description"
-      content="Host or join bike, car & backpacking trips, split expenses fairly, and travel safely in verified groups."
+      content="Discover, host or join bike, car & backpacking trips, split expenses fairly, and connect with fellow travelers safely in verified groups."
     />
     <meta name="twitter:image" content="https://sastitripswale.com/pwa/icon-512.png" />
     <script>
@@ -44,9 +44,21 @@
           if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
         } catch (e) {}
       })();
+      // Apply the persisted app language before first paint - only matters
+      // for Urdu, which flips the page to rtl. English (India) is default.
+      (function () {
+        try {
+          var raw = localStorage.getItem('stw-language');
+          var lang = raw && JSON.parse(raw).state && JSON.parse(raw).state.language;
+          if (lang) {
+            document.documentElement.setAttribute('lang', lang);
+            if (lang === 'ur-IN') document.documentElement.setAttribute('dir', 'rtl');
+          }
+        } catch (e) {}
+      })();
     </script>
-    <script type="module" crossorigin src="/assets/index-CU2LDSX0.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DW1V_TUM.css">
+    <script type="module" crossorigin src="/assets/index-BB4FBsme.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-EA_HtVph.css">
   <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
