@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from './BrandLogo.jsx';
 import { SOCIAL_LINKS } from '../lib/seo.js';
+import { useT } from '../i18n/index.js';
 
 // Google's no-API-key Maps URL API - opens the address as a search/pin
 // rather than needing an embedded, billable Maps JS/Embed API key.
 const OFFICE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Sector 119, Mohali, Punjab 160055')}`;
 
 export default function Footer() {
+  const t = useT();
   return (
     <footer className="footer">
       <div className="container">
@@ -15,13 +17,7 @@ export default function Footer() {
             <Link to="/" className="nav-brand">
               <BrandLogo variant="horizontal" />
             </Link>
-            <p>
-              India's #1 travel community for bikers, car travelers &amp; backpackers. Travel
-              together, split expenses, make lifelong friends.
-            </p>
-            {/* <p style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-3)' }}>
-              By <strong style={{ color: 'var(--fire-2)' }}>Arya Sahil Keorak</strong>
-            </p> */}
+            <p>{t('footer.tagline')}</p>
             <div className="social-links" style={{ marginTop: 16 }}>
               <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" aria-label="Instagram"><i className="fa-brands fa-instagram" /></a>
               <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noreferrer" aria-label="Facebook"><i className="fa-brands fa-facebook-f" /></a>
@@ -31,37 +27,43 @@ export default function Footer() {
             </div>
           </div>
           <div className="footer-col">
-            <h4>Explore</h4>
+            <h4>{t('footer.exploreHeading')}</h4>
             <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/trips">Upcoming Trips</Link></li>
-              <li><Link to="/clubs">Travel Clubs</Link></li>
-              <li><Link to="/members">Members</Link></li>
-              <li><Link to="/gallery">Gallery</Link></li>
-              <li><Link to="/completed-trips">Completed Trips</Link></li>
-              <li><Link to="/testimonials">Reviews</Link></li>
+              <li><Link to="/">{t('nav.home')}</Link></li>
+              <li><Link to="/trips">{t('footer.upcomingTrips')}</Link></li>
+              <li><Link to="/clubs">{t('footer.travelClubs')}</Link></li>
+              <li><Link to="/members">{t('nav.members')}</Link></li>
+              <li><Link to="/gallery">{t('nav.gallery')}</Link></li>
+              <li><Link to="/completed-trips">{t('nav.completedTrips')}</Link></li>
+              <li><Link to="/testimonials">{t('footer.reviews')}</Link></li>
+              <li><Link to="/pricing">{t('footer.pricing')}</Link></li>
+              <li><Link to="/faq">{t('footer.faq')}</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Get Started</h4>
+            <h4>{t('footer.getStartedHeading')}</h4>
             <ul>
-              <li><Link to="/join">Join Community</Link></li>
-              <li><Link to="/plan-trip">Plan a Trip</Link></li>
-              <li><Link to="/plan-group-trip">Plan a Group Trip</Link></li>
-              <li><Link to="/plan-club">Create a Club</Link></li>
-              <li><Link to="/influencers">Become an Influencer</Link></li>
-              <li><Link to="/login">Log In</Link></li>
+              <li><Link to="/join">{t('nav.joinCommunity')}</Link></li>
+              <li><Link to="/plan-trip">{t('menu.planTrip')}</Link></li>
+              <li><Link to="/plan-group-trip">{t('menu.planGroupTrip')}</Link></li>
+              <li><Link to="/plan-club">{t('menu.createClub')}</Link></li>
+              <li><Link to="/influencers">{t('footer.becomeInfluencer')}</Link></li>
+              <li><Link to="/login">{t('footer.logIn')}</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Company</h4>
+            <h4>{t('footer.companyLegalHeading')}</h4>
             <ul>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/how-it-works">How It Works</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              {/* Email temporarily hidden along with the brand's mobile number.
-              <li><a href="mailto:hello@SastiTripsWale.com"><i className="fa-solid fa-envelope" />  info@sastitripswale.com</a></li> */}
-              {/* <li><a href="tel:+919876543210"><i className="fa-solid fa-phone" /> +91 98765 43210</a></li> */}
+              <li><Link to="/about">{t('footer.aboutUs')}</Link></li>
+              <li><Link to="/how-it-works">{t('nav.howItWorks')}</Link></li>
+              <li><Link to="/contact">{t('nav.contact')}</Link></li>
+              <li><Link to="/terms">{t('footer.terms')}</Link></li>
+              <li><Link to="/privacy">{t('footer.privacy')}</Link></li>
+              <li><Link to="/refund-policy">{t('footer.refundPolicy')}</Link></li>
+              <li><Link to="/shipping-policy">{t('footer.shippingPolicy')}</Link></li>
+              <li><a href="mailto:support@sastitripswale.com"><i className="fa-solid fa-envelope" /> support@sastitripswale.com</a></li>
+              {/* Phone temporarily hidden along with the brand's mobile number.
+              <li><a href="tel:+919876543210"><i className="fa-solid fa-phone" /> +91 98765 43210</a></li> */}
               <li>
                 <a href={OFFICE_MAPS_URL} target="_blank" rel="noreferrer">
                   <i className="fa-solid fa-location-dot" /> Sector 119, Mohali, Punjab 160055
@@ -71,10 +73,10 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2025 SastiTripsWale.com 
+          <p>© 2025 SastiTripsWale.com
             {/* · Made with <i className="fa-solid fa-heart" style={{ color: '#ff5a7a' }} /> by Arya Sahil Keorak */}
           </p>
-          <p>Travel Together · Split Expenses · Make New Travel Friends</p>
+          <p>{t('footer.footerTagline2')}</p>
         </div>
       </div>
     </footer>

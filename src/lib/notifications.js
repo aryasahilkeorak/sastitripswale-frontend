@@ -10,6 +10,7 @@ export const NOTIF_ICON = {
   group: 'fa-solid fa-users-rectangle',
   club: 'fa-solid fa-people-group',
   message: 'fa-solid fa-comment-dots',
+  profile_reminder: 'fa-solid fa-user-gear',
   join_request: 'fa-solid fa-inbox',
   join_accepted: 'fa-solid fa-champagne-glasses',
   join_rejected: 'fa-solid fa-hand',
@@ -30,8 +31,9 @@ export function notificationHref(n) {
     case 'connection':
     case 'follow':
       return meta.senderId ? `/members/${meta.senderId}` : meta.userId ? `/members/${meta.userId}` : null;
-    case 'group':
     case 'club':
+      return meta.groupId ? `/clubs/${meta.groupId}` : '/clubs';
+    case 'group':
     case 'message':
     case 'message_request':
       return meta.groupId ? `/chat/${meta.groupId}` : '/chat';
@@ -48,6 +50,8 @@ export function notificationHref(n) {
       return '/dashboard?tab=settings';
     case 'welcome':
       return '/dashboard';
+    case 'profile_reminder':
+      return '/complete-profile';
     case 'admin_document':
       return '/admin/users';
     case 'admin_query':

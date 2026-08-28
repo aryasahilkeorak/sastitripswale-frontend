@@ -7,34 +7,36 @@ import { api } from '../lib/api.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import { enablePushNotifications, pushPermissionState } from '../lib/push.js';
+import { useT } from '../i18n/index.js';
 import BrandLogo from './BrandLogo.jsx';
 
 const LINKS = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/trips', label: 'Trips' },
-  { to: '/clubs', label: 'Clubs', matchExtra: ['/plan-club'] },
-  { to: '/members', label: 'Members' },
-  { to: '/gallery', label: 'Gallery' },
-  { to: '/how-it-works', label: 'How It Works' },
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/', key: 'nav.home', end: true },
+  { to: '/trips', key: 'nav.trips' },
+  { to: '/clubs', key: 'nav.clubs', matchExtra: ['/plan-club'] },
+  { to: '/members', key: 'nav.members' },
+  { to: '/gallery', key: 'nav.gallery' },
+  { to: '/how-it-works', key: 'nav.howItWorks' },
+  { to: '/about', key: 'nav.about' },
+  { to: '/contact', key: 'nav.contact' },
 ];
 
 const MOBILE_LINKS = [
-  { to: '/', label: 'Home', icon: 'fa-solid fa-house' },
-  { to: '/trips', label: 'Trips', icon: 'fa-solid fa-compass' },
-  { to: '/clubs', label: 'Clubs', icon: 'fa-solid fa-people-group', matchExtra: ['/plan-club'] },
-  { to: '/members', label: 'Members', icon: 'fa-solid fa-users' },
-  { to: '/gallery', label: 'Gallery', icon: 'fa-regular fa-image' },
-  { to: '/completed-trips', label: 'Completed', icon: 'fa-solid fa-trophy' },
-  { to: '/how-it-works', label: 'How It Works', icon: 'fa-solid fa-book-open' },
-  { to: '/plan-trip', label: 'Plan Trip', icon: 'fa-solid fa-map-location-dot' },
-  { to: '/testimonials', label: 'Reviews', icon: 'fa-regular fa-star' },
-  { to: '/about', label: 'About', icon: 'fa-solid fa-circle-info' },
-  { to: '/contact', label: 'Contact', icon: 'fa-solid fa-phone' },
+  { to: '/', key: 'nav.home', icon: 'fa-solid fa-house' },
+  { to: '/trips', key: 'nav.trips', icon: 'fa-solid fa-compass' },
+  { to: '/clubs', key: 'nav.clubs', icon: 'fa-solid fa-people-group', matchExtra: ['/plan-club'] },
+  { to: '/members', key: 'nav.members', icon: 'fa-solid fa-users' },
+  { to: '/gallery', key: 'nav.gallery', icon: 'fa-regular fa-image' },
+  { to: '/completed-trips', key: 'nav.completedTrips', icon: 'fa-solid fa-trophy' },
+  { to: '/how-it-works', key: 'nav.howItWorks', icon: 'fa-solid fa-book-open' },
+  { to: '/plan-trip', key: 'nav.planTrip', icon: 'fa-solid fa-map-location-dot' },
+  { to: '/testimonials', key: 'nav.reviews', icon: 'fa-regular fa-star' },
+  { to: '/about', key: 'nav.about', icon: 'fa-solid fa-circle-info' },
+  { to: '/contact', key: 'nav.contact', icon: 'fa-solid fa-phone' },
 ];
 
 export default function Navbar() {
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -166,14 +168,14 @@ export default function Navbar() {
         <div className="nav-links">
           {LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={linkClassName(l)}>
-              {l.label}
+              {t(l.key)}
             </NavLink>
           ))}
 
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? t('menu.switchToLight') : t('menu.switchToDark')}
             aria-label="Toggle theme"
           >
             <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
@@ -181,7 +183,7 @@ export default function Navbar() {
 
           {!accessToken ? (
             <NavLink to="/join" className="nav-cta">
-              Join Now <i className="fa-solid fa-rocket" />
+              {t('nav.joinNow')} <i className="fa-solid fa-rocket" />
             </NavLink>
           ) : (
             <div className="nav-user" ref={menuRef}>
@@ -206,42 +208,42 @@ export default function Navbar() {
                     <div style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}>{user?.email}</div>
                   </div>
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-user" /> My Profile
+                    <i className="fa-solid fa-user" /> {t('menu.myProfile')}
                   </Link>
                   <Link to="/notifications" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-regular fa-bell" /> Notifications
+                    <i className="fa-regular fa-bell" /> {t('menu.notifications')}
                     {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
                   </Link>
                   <Link to="/dashboard?tab=settings" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-gear" /> Settings
+                    <i className="fa-solid fa-gear" /> {t('menu.settings')}
                   </Link>
                   <Link to="/chat" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-comment-dots" /> Messages
+                    <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
                   </Link>
                   <Link to="/referrals" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-gift" /> Referrals
+                    <i className="fa-solid fa-gift" /> {t('menu.referrals')}
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-map-location-dot" /> Plan a Trip
+                    <i className="fa-solid fa-map-location-dot" /> {t('menu.planTrip')}
                   </Link>
                   <Link to="/plan-group-trip" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-people-group" /> Plan a Group Trip
+                    <i className="fa-solid fa-people-group" /> {t('menu.planGroupTrip')}
                   </Link>
                   <Link to="/plan-club" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-people-roof" /> Create a Club
+                    <i className="fa-solid fa-people-roof" /> {t('menu.createClub')}
                   </Link>
                   {showEnablePush && (
                     <button onClick={handleEnablePush}>
-                      <i className="fa-solid fa-bell" /> Enable notifications
+                      <i className="fa-solid fa-bell" /> {t('menu.enableNotifications')}
                     </button>
                   )}
                   {isAdminAccount && (
                     <Link to="/admin" onClick={goToAdmin}>
-                      <i className="fa-solid fa-shield-halved" /> Admin Panel
+                      <i className="fa-solid fa-shield-halved" /> {t('menu.adminPanel')}
                     </Link>
                   )}
                   <button onClick={logout}>
-                    <i className="fa-solid fa-right-from-bracket" /> Logout
+                    <i className="fa-solid fa-right-from-bracket" /> {t('menu.logout')}
                   </button>
                 </div>
               )}
@@ -272,40 +274,40 @@ export default function Navbar() {
       <div className={`mobile-menu${mobileOpen ? ' open' : ''}`}>
         <button className="theme-toggle-row" onClick={toggleTheme}>
           <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
-          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          {theme === 'dark' ? t('menu.lightMode') : t('menu.darkMode')}
         </button>
         {MOBILE_LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)} className={linkClassName(l)}>
-            <i className={l.icon} /> {l.label}
+            <i className={l.icon} /> {t(l.key)}
           </NavLink>
         ))}
         {accessToken ? (
           <>
             <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-user" /> My Profile
+              <i className="fa-solid fa-user" /> {t('menu.myProfile')}
             </NavLink>
             <NavLink to="/notifications" onClick={() => setMobileOpen(false)}>
-              <i className="fa-regular fa-bell" /> Notifications
+              <i className="fa-regular fa-bell" /> {t('menu.notifications')}
               {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
             </NavLink>
             <NavLink to="/dashboard?tab=settings" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-gear" /> Settings
+              <i className="fa-solid fa-gear" /> {t('menu.settings')}
             </NavLink>
             <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-comment-dots" /> Messages
+              <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
               {pendingRequestCount > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{pendingRequestCount}</span>}
             </NavLink>
             <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-gift" /> Referrals
+              <i className="fa-solid fa-gift" /> {t('menu.referrals')}
             </NavLink>
             {showEnablePush && (
               <button onClick={() => { setMobileOpen(false); handleEnablePush(); }}>
-                <i className="fa-solid fa-bell" /> Enable notifications
+                <i className="fa-solid fa-bell" /> {t('menu.enableNotifications')}
               </button>
             )}
             {isAdminAccount && (
               <NavLink to="/admin" onClick={goToAdmin}>
-                <i className="fa-solid fa-shield-halved" /> Admin Panel
+                <i className="fa-solid fa-shield-halved" /> {t('menu.adminPanel')}
               </NavLink>
             )}
             <button
@@ -324,7 +326,7 @@ export default function Navbar() {
                 padding: '13px 16px',
               }}
             >
-              <i className="fa-solid fa-right-from-bracket" /> Logout
+              <i className="fa-solid fa-right-from-bracket" /> {t('menu.logout')}
             </button>
           </>
         ) : (
@@ -343,7 +345,7 @@ export default function Navbar() {
               marginTop: 6,
             }}
           >
-            <i className="fa-solid fa-rocket" /> Join Community
+            <i className="fa-solid fa-rocket" /> {t('nav.joinCommunity')}
           </NavLink>
         )}
       </div>

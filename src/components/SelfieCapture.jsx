@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../i18n/index.js';
 
 // A live, camera-only capture - deliberately offers no "choose from
 // gallery" fallback, since the whole point is that the photo is taken
 // right now, of the person completing verification.
 export default function SelfieCapture({ onChange }) {
+  const t = useT();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [active, setActive] = useState(false);
@@ -32,7 +34,7 @@ export default function SelfieCapture({ onChange }) {
         }
       }, 0);
     } catch {
-      setError('Camera access is required for a live verification photo. Please allow camera permission and try again.');
+      setError(t('selfieCapture.cameraError'));
     }
   };
 
@@ -68,34 +70,34 @@ export default function SelfieCapture({ onChange }) {
 
   return (
     <div className="form-group">
-      <label>Live selfie photo *</label>
+      <label>{t('selfieCapture.label')}</label>
       {previewUrl ? (
         <div className="upload-box" style={{ padding: 0, overflow: 'hidden', position: 'relative', cursor: 'default' }}>
-          <img src={previewUrl} alt="Your captured selfie" style={{ width: '100%', display: 'block', maxHeight: 260, objectFit: 'cover' }} />
+          <img src={previewUrl} alt={t('selfieCapture.capturedAlt')} style={{ width: '100%', display: 'block', maxHeight: 260, objectFit: 'cover' }} />
           <button
             type="button"
             className="btn btn-sm btn-outline"
             style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(10,18,32,0.7)' }}
             onClick={retake}
           >
-            <i className="fa-solid fa-rotate" /> Retake
+            <i className="fa-solid fa-rotate" /> {t('selfieCapture.retake')}
           </button>
         </div>
       ) : active ? (
         <div>
           <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', borderRadius: 12, background: '#000', transform: 'scaleX(-1)' }} />
           <button type="button" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={capture}>
-            <i className="fa-solid fa-camera" /> Capture photo
+            <i className="fa-solid fa-camera" /> {t('selfieCapture.capturePhoto')}
           </button>
         </div>
       ) : (
         <div className="upload-box" onClick={startCamera}>
-          <div className="upload-label"><i className="fa-solid fa-camera" /> Turn on camera &amp; take a live photo</div>
+          <div className="upload-label"><i className="fa-solid fa-camera" /> {t('selfieCapture.turnOnCamera')}</div>
         </div>
       )}
       {error && <p style={{ color: '#fca5a5', fontSize: '0.75rem', marginTop: 6 }}>{error}</p>}
       <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
-        <i className="fa-solid fa-shield-halved" /> Used only for identity verification - gallery uploads aren't accepted, this must be a live photo of your face.
+        <i className="fa-solid fa-shield-halved" /> {t('selfieCapture.usageNote')}
       </p>
     </div>
   );

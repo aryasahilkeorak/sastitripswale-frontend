@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '../i18n/index.js';
 
 // Controlled lightbox: `images` = [url...], `index` = active index or null.
 export default function Lightbox({ images, index, onClose, onIndex }) {
+  const t = useT();
   const show = index !== null && index !== undefined;
   const hasMultiple = images.length > 1;
 
@@ -64,15 +66,15 @@ export default function Lightbox({ images, index, onClose, onIndex }) {
           boxShadow: '0 0 80px rgba(255,107,0,0.2), 0 32px 80px rgba(0,0,0,0.7)',
         }}
       />
-      <button className="lb-btn" style={lbBtn('top')} onClick={onClose} aria-label="Close">
+      <button className="lb-btn" style={lbBtn('top')} onClick={onClose} aria-label={t('lightbox.close')}>
         <i className="fa-solid fa-xmark" />
       </button>
       {hasMultiple && (
         <>
-          <button className="lb-btn" style={lbBtn('left')} onClick={() => go(-1)} aria-label="Previous">
+          <button className="lb-btn" style={lbBtn('left')} onClick={() => go(-1)} aria-label={t('lightbox.previous')}>
             <i className="fa-solid fa-angle-left" />
           </button>
-          <button className="lb-btn" style={lbBtn('right')} onClick={() => go(1)} aria-label="Next">
+          <button className="lb-btn" style={lbBtn('right')} onClick={() => go(1)} aria-label={t('lightbox.next')}>
             <i className="fa-solid fa-angle-right" />
           </button>
         </>

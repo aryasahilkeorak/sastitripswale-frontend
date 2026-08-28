@@ -6,6 +6,7 @@ import { rupee, dateRange, tripDays, routeLabel, BUDGET_INCLUDES_LABEL } from '.
 import { toast } from '../lib/toast.js';
 import { useCanTrip, handleGateError } from './useCanTrip.js';
 import DestinationImage from './DestinationImage.jsx';
+import { useT } from '../i18n/index.js';
 
 const VEHICLE_BADGE = {
   Bike: { cls: 'badge-magenta', icon: 'fa-solid fa-motorcycle' },
@@ -16,8 +17,9 @@ const VEHICLE_BADGE = {
 };
 
 export default function TripCard({ trip, onChange }) {
+  const t = useT();
   const navigate = useNavigate();
-  const canTrip = useCanTrip();
+  const canTrip = useCanTrip('join');
   const user = useAuth((s) => s.user);
 
   const [status, setStatus] = useState(trip.requestStatus || null);
@@ -61,10 +63,10 @@ export default function TripCard({ trip, onChange }) {
       setFilled(data.filledSeats);
       if (wasAccepted && !data.requestStatus) setCount((c) => Math.max(0, c - 1));
       const messages = {
-        pending: 'Request sent! The host will review it.',
-        null: 'Request withdrawn',
+        pending: t('tripCard.toastRequestSent'),
+        null: t('tripCard.toastRequestWithdrawn'),
       };
-      toast(data.requestStatus === 'pending' ? 'fa-solid fa-paper-plane' : 'fa-solid fa-hand', messages[data.requestStatus] || 'Updated');
+      toast(data.requestStatus === 'pending' ? 'fa-solid fa-paper-plane' : 'fa-solid fa-hand', messages[data.requestStatus] || t('tripCard.toastUpdated'));
       onChange?.();
     } catch (err) {
       if (!handleGateError(err, navigate)) toast('fa-solid fa-circle-xmark', apiError(err));
@@ -74,9 +76,9 @@ export default function TripCard({ trip, onChange }) {
   };
 
   const BUTTON_LABEL = {
-    pending: 'Requested',
-    accepted: 'Joined',
-    rejected: 'Request again',
+    pending: t('tripCard.statusRequested'),
+    accepted: t('tripCard.statusJoined'),
+    rejected: t('tripCard.statusRequestAgain'),
   };
 
   return (
@@ -91,15 +93,15 @@ export default function TripCard({ trip, onChange }) {
           )}
           {trip.isCouplesMode && (
             <span className="badge badge-magenta">
-              <i className="fa-solid fa-heart" /> Couples
+              <i className="fa-solid fa-heart" /> {t('tripCard.couples')}
             </span>
           )}
           {trip.genderPreference && trip.genderPreference !== 'Any' && (
             <span className="badge badge-magenta">
-              <i className={trip.genderPreference === 'Male' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'} /> {trip.genderPreference} only
+              <i className={trip.genderPreference === 'Male' ? 'fa-solid fa-mars' : 'fa-solid fa-venus'} /> {t('tripCard.genderOnly').replace('{gender}', trip.genderPreference)}
             </span>
           )}
-          {days && <span className="badge badge-gold">{days} Days</span>}
+          {days && <span className="badge badge-gold">{t('tripCard.daysBadge').replace('{days}', days)}</span>}
         </div>
         <div
           style={{
@@ -117,16 +119,16 @@ export default function TripCard({ trip, onChange }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-3)' }}>
             {trip.isCouplesMode ? (
               <>
-                <span>{Math.floor(filled / 2)} couple(s) joined</span>
+                <span>{t('tripCard.couplesJoinedCount').replace('{count}', Math.floor(filled / 2))}</span>
                 <span style={{ color: seatsLeft < 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>
-                  {Math.floor(seatsLeft / 2)} couple slot(s) left
+                  {t('tripCard.coupleSlotsLeftCount').replace('{count}', Math.floor(seatsLeft / 2))}
                 </span>
               </>
             ) : (
               <>
-                <span>{filled} joined</span>
+                <span>{t('tripCard.joinedCount').replace('{count}', filled)}</span>
                 <span style={{ color: seatsLeft <= 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>
-                  {seatsLeft} seats left
+                  {t('tripCard.seatsLeftCount').replace('{count}', seatsLeft)}
                 </span>
               </>
             )}
@@ -141,8 +143,9 @@ export default function TripCard({ trip, onChange }) {
         </p>
         {trip.organizer && (
           <p style={{ color: 'var(--text-3)', fontSize: '0.76rem', marginBottom: 12 }}>
-            <i className="fa-solid fa-user" /> Hosted by{' '}
+            <i className="fa-solid fa-user" /> {t('tripCard.hostedBy').split('{name}')[0]}
             <strong style={{ color: 'var(--text)', fontWeight: 700 }}>{trip.organizer.username || trip.organizer.fullName}</strong>
+            {t('tripCard.hostedBy').split('{name}')[1]}
             {trip.organizer.vehicleModel && (
               <>
                 <span style={{ margin: '0 8px' }}>·</span>
@@ -159,7 +162,7 @@ export default function TripCard({ trip, onChange }) {
         </div>
         <div className="trip-card-footer">
           <div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-3)' }}>{trip.isCouplesMode ? 'Per couple' : 'Per head'}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-3)' }}>{trip.isCouplesMode ? t('tripCard.perCouple') : t('tripCard.perHead')}</div>
             <div className="trip-price">{rupee(trip.isCouplesMode ? trip.budgetPerHead * 2 : trip.budgetPerHead)}</div>
             {trip.budgetIncludes && BUDGET_INCLUDES_LABEL[trip.budgetIncludes] && (
               <div style={{ fontSize: '0.68rem', color: 'var(--text-3)', marginTop: 2 }}>
@@ -170,7 +173,7 @@ export default function TripCard({ trip, onChange }) {
           <div className="trip-card-actions">
             {isOwner ? (
               <button className="btn btn-sm btn-outline" onClick={goToEdit}>
-                <i className="fa-solid fa-pen" /> Edit Trip
+                <i className="fa-solid fa-pen" /> {t('tripCard.editTrip')}
               </button>
             ) : (
               <button
@@ -178,10 +181,10 @@ export default function TripCard({ trip, onChange }) {
                 onClick={requestJoin}
                 disabled={busy || status === 'pending'}
               >
-                <i className={status === 'accepted' ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} /> {status ? BUTTON_LABEL[status] : `Request (${count})`}
+                <i className={status === 'accepted' ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} /> {status ? BUTTON_LABEL[status] : t('tripCard.requestWithCount').replace('{count}', count)}
               </button>
             )}
-            <span className="btn btn-sm btn-primary">View</span>
+            <span className="btn btn-sm btn-primary">{t('tripCard.view')}</span>
           </div>
         </div>
       </div>

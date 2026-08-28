@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Modal from './Modal.jsx';
+import RangeSlider from './RangeSlider.jsx';
+import { useT } from '../i18n/index.js';
 
 const MAX_ZOOM = 3;
 
@@ -141,7 +143,7 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
 
       <div className="form-group mt-3">
         <label><i className="fa-solid fa-magnifying-glass-plus" /> Zoom</label>
-        <input type="range" min="1" max={MAX_ZOOM} step="0.01" value={scale} onChange={changeZoom} className="crop-zoom-slider" />
+        <RangeSlider min={1} max={MAX_ZOOM} step={0.01} value={scale} onChange={changeZoom} />
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>

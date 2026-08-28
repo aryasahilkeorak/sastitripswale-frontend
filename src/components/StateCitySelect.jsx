@@ -3,7 +3,9 @@ import { INDIAN_STATES, DISTRICTS_BY_STATE } from '../lib/indiaStatesDistricts.j
 
 // Paired State + City(district) dropdowns - City's options are the selected
 // state's districts, so picking a new state clears any city that no longer
-// applies.
+// applies. Renders just the two bare .form-group fields (no wrapping grid
+// of its own) so callers can lay them out however fits - side by side in a
+// standalone .form-row, or as two cells of a larger field-grid-3.
 export default function StateCitySelect({
   state, city, onStateChange, onCityChange, required = false,
   stateLabel = 'State', cityLabel = 'City', disabled = false,
@@ -11,7 +13,7 @@ export default function StateCitySelect({
   const districts = DISTRICTS_BY_STATE[state] || [];
 
   return (
-    <div className="form-row">
+    <>
       <div className="form-group">
         <label>{stateLabel}{required && ' *'}</label>
         <CustomSelect
@@ -33,6 +35,6 @@ export default function StateCitySelect({
           disabled={disabled || !state}
         />
       </div>
-    </div>
+    </>
   );
 }

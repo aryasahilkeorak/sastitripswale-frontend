@@ -1,4 +1,14 @@
 import { Component } from 'react';
+import { useLanguage } from '../store/language.js';
+import { translations } from '../i18n/translations/index.js';
+import { DEFAULT_LANGUAGE } from '../i18n/languages.js';
+
+// This is a class component, so it can't call the useT() hook - read the
+// language store directly instead (getState() works outside of React).
+function t(key) {
+  const dict = translations[useLanguage.getState().language] || translations[DEFAULT_LANGUAGE];
+  return dict[key] ?? translations[DEFAULT_LANGUAGE][key] ?? key;
+}
 
 // Catches render/lifecycle errors in the child tree and shows a friendly
 // card instead of a blank screen. Reset it by changing `resetKey`
@@ -26,8 +36,8 @@ export default class ErrorBoundary extends Component {
       <div className="container" style={{ paddingTop: 130, minHeight: '60vh' }}>
         <div className="card" style={{ padding: 22, maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '2.6rem', color: 'var(--fire)' }}><i className="fa-solid fa-face-dizzy" /></div>
-          <h2 className="section-title" style={{ fontSize: '1.6rem' }}>Something went wrong</h2>
-          <p className="text-muted">This page hit an unexpected error. You can retry or head home.</p>
+          <h2 className="section-title" style={{ fontSize: '1.6rem' }}>{t('errorBoundary.title')}</h2>
+          <p className="text-muted">{t('errorBoundary.message')}</p>
           {import.meta.env.DEV && (
             <pre
               style={{
@@ -48,10 +58,10 @@ export default class ErrorBoundary extends Component {
           )}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18 }}>
             <button className="btn btn-outline" onClick={() => this.setState({ error: null })}>
-              <i className="fa-solid fa-arrows-rotate" /> Try again
+              <i className="fa-solid fa-arrows-rotate" /> {t('errorBoundary.tryAgain')}
             </button>
             <a className="btn btn-primary" href="/">
-              <i className="fa-solid fa-house" /> Go home
+              <i className="fa-solid fa-house" /> {t('errorBoundary.goHome')}
             </a>
           </div>
         </div>

@@ -3,8 +3,11 @@ import { api, apiError } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import { isVehicleModelYearMistake, VEHICLE_MODEL_YEAR_MISTAKE_MSG } from '../lib/helpers.js';
 import CustomSelect from './CustomSelect.jsx';
+import CustomDatePicker from './CustomDatePicker.jsx';
 import StateCitySelect from './StateCitySelect.jsx';
 import ProfileHeaderPhotos from './ProfileHeaderPhotos.jsx';
+import UsernameInput from './UsernameInput.jsx';
+import { useT } from '../i18n/index.js';
 
 // Shared "edit profile" form - used both in the Dashboard Settings tab and
 // in the Instagram-style edit-profile modal opened from a member's own
@@ -16,9 +19,11 @@ const initialForm = (user) => ({
   vehicleModel: user?.vehicleModel || '', bio: user?.bio || '',
   relationshipStatus: user?.relationshipStatus || '', username: user?.username || '',
   email: user?.email || '', mobile: user?.mobile || '',
+  dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
 });
 
 export default function ProfileEditForm({ user, onSaved, onCancel }) {
+  const t = useT();
   const partnerDocRef = useRef(null);
   const [form, setForm] = useState(() => initialForm(user));
   const [avatar, setAvatar] = useState(null);
@@ -49,6 +54,11 @@ export default function ProfileEditForm({ user, onSaved, onCancel }) {
     }
     if (!form.email.trim()) return toast('fa-solid fa-triangle-exclamation', 'Email cannot be empty');
     if (!/^[0-9]{10,15}$/.test(form.mobile.trim())) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid mobile number');
+    if (!form.dateOfBirth) return toast('fa-solid fa-triangle-exclamation', 'Date of birth is required');
+    {
+      const ageYears = (Date.now() - new Date(form.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (ageYears < 18 || ageYears > 100) return toast('fa-solid fa-triangle-exclamation', 'Enter a valid date of birth (must be 18+)');
+    }
     if (isVehicleModelYearMistake(form.vehicleModel)) return toast('fa-solid fa-triangle-exclamation', VEHICLE_MODEL_YEAR_MISTAKE_MSG);
     setBusy(true);
     try {
@@ -69,10 +79,8 @@ export default function ProfileEditForm({ user, onSaved, onCancel }) {
   };
 
   return (
-    <form className="card" style={{ padding: 16 }} onSubmit={save}>
-      <div className="row-between mb-3">
-        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Your details</span>
-      </div>
+    <form className="card" style={{ padding: 32 }} onSubmit={save}>
+      <h3 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Your details</h3>
       <ProfileHeaderPhotos
         avatarFile={avatar}
         coverFile={cover}
@@ -81,25 +89,42 @@ export default function ProfileEditForm({ user, onSaved, onCancel }) {
         onAvatarChange={setAvatar}
         onCoverChange={setCover}
       />
-      <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
-      <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
-      <StateCitySelect
-        state={form.state}
-        city={form.city}
-        onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
-        onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
-      />
-      <div className="form-row">
+      <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', margin: '20px 0 8px' }}>Personal details</label>
+      <div className="field-grid-3 mb-3">
+        <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} /></div>
+        <div className="form-group"><label>Profession</label><input className="form-input" value={form.profession} onChange={set('profession')} /></div>
         <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
         <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} /></div>
-      </div>
-      <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
-      <div className="form-group">
-        <label>Username</label>
-        <input className="form-input" value={form.username} onChange={set('username')} placeholder="e.g. sahil.k" />
-        <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
-          Lets other members add you to chat groups by username instead of your User ID.
-        </p>
+        <div className="form-group"><label>WhatsApp</label><input className="form-input" value={form.whatsapp} onChange={set('whatsapp')} /></div>
+        <div className="form-group">
+          <label>Username</label>
+          <UsernameInput
+            value={form.username}
+            onChange={set('username')}
+            currentUsername={user?.username}
+            placeholder="e.g. sahil.k"
+          />
+          <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+            Lets other members add you to chat groups by username instead of your User ID.
+          </p>
+        </div>
+        <div className="form-group">
+          <label>Date of birth *</label>
+          <CustomDatePicker
+            value={form.dateOfBirth}
+            onChange={set('dateOfBirth')}
+            max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+          />
+          <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+            Used to verify your identity if you ever need to reset your password without email access.
+          </p>
+        </div>
+        <StateCitySelect
+          state={form.state}
+          city={form.city}
+          onStateChange={(v) => setForm((f) => ({ ...f, state: v, city: '' }))}
+          onCityChange={(v) => setForm((f) => ({ ...f, city: v }))}
+        />
       </div>
       <div className="form-group"><label>Bio</label><textarea className="form-input" value={form.bio} onChange={set('bio')} /></div>
 
@@ -107,30 +132,33 @@ export default function ProfileEditForm({ user, onSaved, onCancel }) {
       <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: -4, marginBottom: 10 }}>
         Just your username on each platform - we add the link automatically.
       </p>
-      <div className="form-row">
+      <div className="field-grid-3">
         <div className="form-group"><label><i className="fa-brands fa-instagram" /> Instagram</label><input className="form-input" value={form.instagram} onChange={set('instagram')} placeholder="username" /></div>
         <div className="form-group"><label><i className="fa-brands fa-facebook" /> Facebook</label><input className="form-input" value={form.facebook} onChange={set('facebook')} placeholder="username" /></div>
-      </div>
-      <div className="form-row">
         <div className="form-group"><label><i className="fa-brands fa-x-twitter" /> X (Twitter)</label><input className="form-input" value={form.twitter} onChange={set('twitter')} placeholder="username" /></div>
         <div className="form-group"><label><i className="fa-brands fa-youtube" /> YouTube</label><input className="form-input" value={form.youtube} onChange={set('youtube')} placeholder="channel handle" /></div>
+        <div className="form-group"><label><i className="fa-brands fa-linkedin" /> LinkedIn</label><input className="form-input" value={form.linkedin} onChange={set('linkedin')} placeholder="username" /></div>
+        <div className="form-group">
+          <label>Relationship status</label>
+          <CustomSelect
+            value={form.relationshipStatus}
+            onChange={set('relationshipStatus')}
+            options={[
+              { value: '', label: 'Select' },
+              { value: 'single', label: 'Single' },
+              { value: 'in_a_relationship', label: 'In a relationship' },
+              { value: 'married', label: 'Married' },
+              { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+            ]}
+          />
+          {!showCouplesBox && (
+            <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>
+              <i className="fa-solid fa-heart" /> Set to "In a relationship" or "Married" to unlock Couples Mode.
+            </p>
+          )}
+        </div>
       </div>
-      <div className="form-group"><label><i className="fa-brands fa-linkedin" /> LinkedIn</label><input className="form-input" value={form.linkedin} onChange={set('linkedin')} placeholder="username" /></div>
-      <div className="form-group">
-        <label>Relationship status</label>
-        <CustomSelect
-          value={form.relationshipStatus}
-          onChange={set('relationshipStatus')}
-          options={[
-            { value: '', label: 'Select' },
-            { value: 'single', label: 'Single' },
-            { value: 'in_a_relationship', label: 'In a relationship' },
-            { value: 'married', label: 'Married' },
-            { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-          ]}
-        />
-      </div>
-      {showCouplesBox ? (
+      {showCouplesBox && (
         <div className="couples-safety-box">
           <div className="couples-safety-header">
             <span className="couples-safety-icon"><i className="fa-solid fa-heart" /></span>
@@ -159,10 +187,6 @@ export default function ProfileEditForm({ user, onSaved, onCancel }) {
             )}
           </div>
         </div>
-      ) : (
-        <p className="text-muted" style={{ fontSize: '0.78rem', margin: '-4px 0 12px' }}>
-          <i className="fa-solid fa-heart" /> Set your status to "In a relationship" or "Married" to unlock Couples Mode.
-        </p>
       )}
       <div style={{ display: 'flex', gap: 10 }}>
         <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save Changes</button>

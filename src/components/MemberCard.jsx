@@ -5,8 +5,10 @@ import { useAuth } from '../store/auth.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
 import VerificationBadge from './VerificationBadge.jsx';
+import { useT } from '../i18n/index.js';
 
 export default function MemberCard({ member }) {
+  const t = useT();
   const navigate = useNavigate();
   const accessToken = useAuth((s) => s.accessToken);
   const [conn, setConn] = useState(member.connection);
@@ -15,7 +17,7 @@ export default function MemberCard({ member }) {
   const connect = async (e) => {
     e.preventDefault();
     if (!accessToken) {
-      toast('fa-solid fa-lock', 'Log in to connect with members');
+      toast('fa-solid fa-lock', t('memberCard.loginToConnect'));
       navigate('/login');
       return;
     }
@@ -23,7 +25,7 @@ export default function MemberCard({ member }) {
     try {
       const { data } = await api.post('/members/connect', { receiverId: member.id });
       setConn({ status: data.status, direction: 'sent' });
-      toast('fa-solid fa-handshake', `Connection request sent to ${member.fullName}!`);
+      toast('fa-solid fa-handshake', t('memberCard.connectionRequestSent').replace('{name}', member.fullName));
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
@@ -35,25 +37,25 @@ export default function MemberCard({ member }) {
   if (member.isSelf) {
     btn = (
       <Link to="/dashboard" className="btn btn-sm btn-outline" style={{ width: '100%', justifyContent: 'center' }}>
-        This is you
+        {t('memberCard.thisIsYou')}
       </Link>
     );
   } else if (conn?.status === 'accepted') {
     btn = (
       <span className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(16,185,129,0.15)', color: '#6ee7b7' }}>
-        <i className="fa-solid fa-check-double" /> Connected
+        <i className="fa-solid fa-check-double" /> {t('memberCard.connected')}
       </span>
     );
   } else if (conn?.status === 'pending') {
     btn = (
       <span className="btn btn-sm btn-outline" style={{ width: '100%', justifyContent: 'center', opacity: 0.7 }}>
-        <i className="fa-regular fa-clock" /> {conn.direction === 'received' ? 'Respond in dashboard' : 'Requested'}
+        <i className="fa-regular fa-clock" /> {conn.direction === 'received' ? t('memberCard.respondInDashboard') : t('memberCard.requested')}
       </span>
     );
   } else {
     btn = (
       <button className="btn btn-sm btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={connect} disabled={busy}>
-        <i className="fa-solid fa-user-plus" /> Connect
+        <i className="fa-solid fa-user-plus" /> {t('memberCard.connect')}
       </button>
     );
   }
@@ -75,7 +77,7 @@ export default function MemberCard({ member }) {
         {member.username && <p className="member-meta">@{member.username}</p>}
       </Link>
       <p className="member-meta">
-        {member.city || 'India'}
+        {member.city || t('memberCard.defaultCountry')}
         {member.age ? ` • ${member.age}` : ''}
       </p>
       {member.profession && <p className="member-meta">{member.profession}</p>}

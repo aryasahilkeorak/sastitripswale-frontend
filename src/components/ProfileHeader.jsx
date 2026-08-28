@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { imageUrl, rupee, paiseToRupee, formatDate, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, SOCIAL_PLATFORMS, socialUrl, CLUB_CATEGORY_ICON } from '../lib/helpers.js';
+import { imageUrl, rupee, paiseToRupee, formatDate, AVATAR_FALLBACK, DESTINATION_PLACEHOLDER, SOCIAL_PLATFORMS, socialUrl, CLUB_CATEGORY_ICON, SMOKES_ICON, DRINKS_ICON } from '../lib/helpers.js';
 import { VerifiedIcon, FounderPill } from './VerificationBadge.jsx';
 import { toast } from '../lib/toast.js';
 import Lightbox from './Lightbox.jsx';
@@ -65,6 +65,15 @@ export default function ProfileHeader({ member, id, actions }) {
             <span className="ig-chip ig-chip-accent">
               <i className="fa-solid fa-car" /> {member.vehicleType}{member.vehicleModel ? ` · ${member.vehicleModel}` : ''}
             </span>
+          )}
+          {/* Only present in the API response when the viewer shares the habit
+              (or is viewing their own profile) - see getMember's smokesVisible/
+              drinksVisible gating in memberController.js. No other viewer sees this. */}
+          {member.smokes && member.smokes !== 'No' && (
+            <span className="ig-chip" title={`Smokes - ${member.smokes}`}><i className={SMOKES_ICON} /> Smokes</span>
+          )}
+          {member.drinks && member.drinks !== 'No' && (
+            <span className="ig-chip" title={`Drinks - ${member.drinks}`}><i className={DRINKS_ICON} /> Drinks</span>
           )}
         </div>
 

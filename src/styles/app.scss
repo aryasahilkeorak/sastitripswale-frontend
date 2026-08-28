@@ -1158,7 +1158,6 @@
 /* ── CTA banner ── */
 .cta-section {
   background: var(--bg-2);
-  padding-top: 0;
 }
 
 .cta-card {
@@ -1379,6 +1378,52 @@
   padding: 32px;
 }
 
+// Wide "form" pages (Join, Edit Profile, Complete Profile) - full-bleed
+// like every other page on mobile/tablet, but 90% of the viewport on
+// desktop ($bp-lg+) so the card gets real breathing room instead of
+// stretching all the way to the edges on a large screen.
+.form-page-container {
+  @include above($bp-lg) {
+    width: 90%;
+  }
+}
+
+// Reusable form-field grid - stacked (1 col) by default; 3-per-row on
+// desktop ($bp-lg+), used wherever a form has enough same-shape short
+// fields to benefit (Join step 1, Edit Profile). Needs a wide-enough
+// container to give 3 columns room to breathe. .field-grid-span-all opts
+// a field (e.g. a textarea, or a checkbox) out of the 3-up split since it
+// reads better spanning the full width.
+.field-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.field-grid-3 .form-group {
+  margin-bottom: 0;
+}
+
+// Grid tracks default to a min-width of "auto", which lets a wide child
+// (e.g. a long hint paragraph that doesn't wrap, a date input) force its
+// own column wider than its equal 1fr share - throwing off the gap between
+// it and its neighbour even though the columns are nominally equal. This
+// lets every column shrink to its track's fair share instead.
+.field-grid-3 > * {
+  min-width: 0;
+}
+
+.field-grid-3 .field-grid-span-all {
+  grid-column: 1 / -1;
+}
+
+@include above($bp-lg) {
+  .field-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 24px;
+  }
+}
+
 .plan-duration-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1386,11 +1431,29 @@
   margin-bottom: 18px;
 }
 
+// All 5 plan options (2 Membership + 3 Trip Pass) in one uniform row,
+// filling the full container width - auto-fit + minmax wraps naturally
+// instead of forcing a fixed column count into a space too narrow for it
+// (that's what clipped the price text last time), and 1fr stretches
+// whatever fits on a row to use up all the available width.
+.plan-duration-grid.uniform {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
 .plan-duration-card {
   padding: 18px;
   text-align: center;
   cursor: pointer;
   color: inherit;
+  position: relative;
+}
+
+.plan-card-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: var(--fire);
+  font-size: 0.9rem;
 }
 
 .plan-duration-tag {
@@ -1566,12 +1629,6 @@
   pointer-events: none;
 }
 
-.crop-zoom-slider {
-  width: 100%;
-  accent-color: var(--fire);
-  cursor: pointer;
-}
-
 /* ── Interest chips (toggle) ── */
 .interest-grid {
   display: flex;
@@ -1595,6 +1652,77 @@
   background: rgba($orange-500, 0.12);
   border-color: rgba($orange-500, 0.4);
   color: var(--fire-2);
+}
+
+/* "People like you" - live match preview on Complete Profile */
+.match-suggest-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.match-suggest-card {
+  flex: 0 0 auto;
+  width: 100px;
+  padding: 10px 8px;
+  border-radius: var(--r);
+  background: var(--surface);
+  border: 1px solid var(--glass-bdr);
+  text-align: center;
+  color: inherit;
+  transition: transform var(--t) var(--ease-spring), border-color var(--t);
+}
+
+.match-suggest-card {
+  @include hover-only {
+    transform: translateY(-2px);
+    border-color: rgba($orange-500, 0.4);
+  }
+}
+
+.match-suggest-card img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 6px;
+  display: block;
+}
+
+.match-suggest-name {
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-suggest-city {
+  font-size: 0.66rem;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-suggest-badges {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.match-suggest-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($orange-500, 0.12);
+  color: var(--fire-2);
+  font-size: 0.62rem;
 }
 
 /* ── Star rating input ── */
@@ -1866,11 +1994,14 @@
 }
 
 /* ── India map (About page - cities covered) ── */
+.india-map-outer {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
 .india-map-wrap {
   position: relative;
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
   aspect-ratio: 2500 / 2843;
   overflow: hidden;
   touch-action: none;
@@ -1968,18 +2099,11 @@
 }
 
 .india-map-legend {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 6;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--glass-bdr-2);
-  font-size: 0.72rem;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 14px;
+  font-size: 0.78rem;
   color: var(--text-2);
 }
 
@@ -3538,11 +3662,18 @@ table.data-table {
   min-width: 0;
 }
 
+// 2-up instead of the default .grid-2's 24px gap - four tiles read tighter
+// at this width, and it keeps a long value (e.g. the support email) from
+// getting truncated inside a narrow 3-up column.
+.contact-info-grid {
+  gap: 10px;
+}
+
 .contact-info-tile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 14px 12px;
 }
 
 .contact-faq-card {
@@ -4625,9 +4756,24 @@ table.data-table {
   top: 90px;
 }
 
-/* Complete-profile page */
+/* Complete-profile page - single centered column (Dashboard, ActivateProfile,
+   EditProfile, Notifications, CompleteProfile all share this shell). Belt
+   and suspenders on top of .container's margin:auto so the column stays
+   centered even if something upstream nudges its available width. */
 .cp-section {
   padding-top: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// ActivateProfile only - short, single-glance content, so it's centered in
+// the viewport like a gate/splash page instead of pinned to the top the way
+// the long forms on the other .cp-section pages are.
+.activate-profile-section {
+  justify-content: center;
+  min-height: calc(100vh - 110px);
+  padding-bottom: 60px;
 }
 
 .edit-profile-head {
@@ -5821,5 +5967,73 @@ table.data-table {
 
   .mini-stat-grid .mini-stat .lbl {
     font-size: 0.68rem;
+  }
+}
+
+/* ============================================================
+   Legal/policy pages (Terms, Privacy, Refund, Shipping) - long-
+   form prose inside a single .card, sharing the site's tokens
+   instead of one-off inline styles per paragraph.
+   ============================================================ */
+
+.legal-content {
+  color: var(--text-2);
+  line-height: 1.85;
+  font-size: 0.95rem;
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--text);
+    margin: 36px 0 14px;
+  }
+
+  h2:first-child {
+    margin-top: 0;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    color: var(--text);
+    margin: 22px 0 10px;
+  }
+
+  p {
+    margin: 0 0 14px;
+  }
+
+  // The global `ul { list-style: none; }` reset (style.scss) is meant for
+  // nav/chip-style lists elsewhere - re-enable real markers here so a
+  // policy page's points read as a list, not a stack of bare paragraphs.
+  ul,
+  ol {
+    margin: 0 0 14px;
+    padding-left: 24px;
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li {
+    margin-bottom: 8px;
+    padding-left: 4px;
+
+    &::marker {
+      color: var(--fire);
+    }
+  }
+
+  a {
+    color: var(--fire);
+  }
+
+  strong {
+    color: var(--text);
   }
 }
