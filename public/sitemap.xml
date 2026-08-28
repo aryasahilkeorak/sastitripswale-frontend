@@ -46,6 +46,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://sastitripswale.com/pricing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sastitripswale.com/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://sastitripswale.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
@@ -56,10 +66,24 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sastitripswale.com/trips/6a794fcbf9da3a07fdb77065</loc>
-    <lastmod>2026-08-17T05:25:56.757Z</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
+    <loc>https://sastitripswale.com/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://sastitripswale.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://sastitripswale.com/refund-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://sastitripswale.com/shipping-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
   <url>
     <loc>https://sastitripswale.com/trips/6a828e44904d7c64a3f079d0</loc>
