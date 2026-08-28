@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, rupee, dateRange, tripDays, routeLabel, timeAgo, AVATAR_FALLBACK, DOC_FALLBACK, BUDGET_INCLUDES_LABEL } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
@@ -109,7 +110,7 @@ export default function TripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const user = useAuth((s) => s.user);
-  const canTrip = useCanTrip();
+  const canTrip = useCanTrip('join');
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -175,7 +176,7 @@ export default function TripDetail() {
   };
 
   const removeTrip = async () => {
-    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Delete this trip? This cannot be undone.', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/trips/${id}`);
       toast('fa-solid fa-trash', 'Trip deleted');
@@ -545,7 +546,7 @@ export default function TripDetail() {
                 </Link>
               )}
 
-              {trip.status === 'upcoming' && !isOrganizer && <ProfileGateCard action="join a trip" />}
+              {trip.status === 'upcoming' && !isOrganizer && <ProfileGateCard action="join a trip" kind="join" />}
 
               {trip.status === 'upcoming' && needsCoupleInfo && !hasPartnerInfo && (
                 <div className="couples-safety-alert">

@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import { NOTIF_ICON, notificationHref } from '../lib/notifications.js';
 import { useNotifStore } from '../store/notifications.js';
 import Loader from '../components/Loader.jsx';
@@ -71,7 +72,7 @@ export default function Notifications() {
   };
 
   const clearAllNotifications = async () => {
-    if (!window.confirm('Clear all notifications? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Clear all notifications? This cannot be undone.', danger: true, confirmLabel: 'Clear' }))) return;
     try {
       await api.delete('/members/notifications');
       setNotifs([]);

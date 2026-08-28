@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, timeAgo, AVATAR_FALLBACK, COVER_ASPECT_RATIO } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Modal from '../components/Modal.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import MemberSearchInput from '../components/MemberSearchInput.jsx';
@@ -260,7 +261,7 @@ export default function Chat() {
 
   const clearChatById = async (id) => {
     setRowMenuFor(null);
-    if (!window.confirm('Clear all messages in this chat? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Clear all messages in this chat? This cannot be undone.', danger: true, confirmLabel: 'Clear' }))) return;
     try {
       await api.delete(`/chat/groups/${id}/messages`);
       toast('fa-solid fa-broom', 'Chat cleared');
@@ -274,7 +275,7 @@ export default function Chat() {
   const blockMember = async (partner) => {
     setRowMenuFor(null);
     if (!partner) return;
-    if (!window.confirm(`Block ${partner.fullName}? They won't be able to connect or message you.`)) return;
+    if (!(await confirm({ message: `Block ${partner.fullName}? They won't be able to connect or message you.`, danger: true, confirmLabel: 'Block' }))) return;
     try {
       await api.post(`/members/${partner._id}/block`);
       toast('fa-solid fa-ban', 'Member blocked');
@@ -291,11 +292,11 @@ export default function Chat() {
     setMenuOpen(false);
     setRowMenuFor(null);
     if (g.type === 'dm') {
-      if (!window.confirm('Delete this chat? This removes it for both of you and cannot be undone.')) return;
+      if (!(await confirm({ message: 'Delete this chat? This removes it for both of you and cannot be undone.', danger: true, confirmLabel: 'Delete' }))) return;
       await declineRequest(g._id);
     } else {
       const label = g.type === 'club' ? 'club' : g.type === 'trip' ? 'trip group' : 'group';
-      if (!window.confirm(`Leave this ${label}?`)) return;
+      if (!(await confirm(`Leave this ${label}?`))) return;
       try {
         await api.delete(`/chat/groups/${g._id}/members/${user.id}`);
         toast('fa-solid fa-hand', `Left the ${label}`);
@@ -323,7 +324,7 @@ export default function Chat() {
 
   const bulkDelete = async () => {
     if (!selectedIds.size) return;
-    if (!window.confirm(`Delete ${selectedIds.size} chat${selectedIds.size > 1 ? 's' : ''}? This cannot be undone.`)) return;
+    if (!(await confirm({ message: `Delete ${selectedIds.size} chat${selectedIds.size > 1 ? 's' : ''}? This cannot be undone.`, danger: true, confirmLabel: 'Delete' }))) return;
     setBulkBusy(true);
     try {
       const targets = groups.filter((g) => selectedIds.has(g._id));

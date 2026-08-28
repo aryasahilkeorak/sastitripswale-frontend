@@ -52,6 +52,19 @@ export default function AdminProfile() {
     finally { setBusy(false); }
   };
 
+  // Discards any unsaved edits (typed fields, staged avatar/cover) rather
+  // than just re-locking the form with changes still sitting in state.
+  const cancelEdit = () => {
+    setForm({
+      fullName: user?.fullName || '',
+      email: user?.email || '',
+      mobile: user?.mobile || '',
+    });
+    setAvatar(null);
+    setCover(null);
+    setEditing(false);
+  };
+
   const changePassword = async (e) => {
     e.preventDefault();
     if (pwForm.newPassword.length < 6) return toast('fa-solid fa-triangle-exclamation', 'New password must be at least 6 characters');
@@ -99,9 +112,17 @@ export default function AdminProfile() {
 
   return (
     <>
-      {/* Special admin identity hero */}
+      {/* Special admin identity hero - this photo (adminAvatarUrl) is
+          separate from the member-facing avatar edited below; it's what
+          shows in the admin header and, for the founder, on the public
+          About page. */}
       <div className="admin-profile-hero mb-4">
-        <img className="profile-avatar" src={avatar ? URL.createObjectURL(avatar) : imageUrl(user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+        <img
+          className="profile-avatar"
+          src={imageUrl(user?.adminAvatarUrl || user?.avatarUrl, AVATAR_FALLBACK)}
+          alt={user?.fullName}
+          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+        />
         <div style={{ flex: 1, minWidth: 220 }}>
           <span className={`role-badge ${isSuper ? 'super' : 'admin'}`} style={{ marginBottom: 8 }}>
             <i className={isSuper ? 'fa-solid fa-crown' : 'fa-solid fa-shield-halved'} /> {isSuper ? 'Super Admin' : 'Admin'}
@@ -111,18 +132,21 @@ export default function AdminProfile() {
           <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
             <i className="fa-solid fa-shield-halved" style={{ color: 'var(--fire)' }} /> Platform administrator since {formatDate(user?.createdAt)}
           </p>
+          <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 8 }}>
+            This photo is separate from your member profile photo below - it's what shows here and (as
+            founder) on the public About page, never in the member directory or chat.
+          </p>
         </div>
       </div>
 
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <form className="card" style={{ padding: 24 }} onSubmit={save}>
-          <div className="row-between mb-3">
-            <h4 style={{ fontFamily: 'var(--font-display)' }}>Edit admin profile</h4>
-            <button type="button" className="btn btn-sm btn-outline" onClick={() => setEditing((v) => !v)}>
-              <i className={`fa-solid ${editing ? 'fa-lock' : 'fa-pen'}`} /> {editing ? 'Lock' : 'Edit'}
-            </button>
-          </div>
+          <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Edit admin profile</h4>
+          <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: -8, marginBottom: 12 }}>
+            Your member profile photo &amp; cover, shown wherever you appear as a regular member (directory,
+            chat, trips) - separate from the admin/founder photo shown above.
+          </p>
           <ProfileHeaderPhotos
             avatarFile={avatar}
             coverFile={cover}
@@ -130,6 +154,7 @@ export default function AdminProfile() {
             currentCoverUrl={user?.coverUrl}
             onAvatarChange={setAvatar}
             onCoverChange={setCover}
+            editable={editing}
           />
           <div className="form-group"><label>Full name</label><input className="form-input" value={form.fullName} onChange={set('fullName')} disabled={!editing} /></div>
           <div className="form-row">
@@ -137,8 +162,17 @@ export default function AdminProfile() {
             <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} disabled={!editing} /></div>
           </div>
 
-          {editing && (
-            <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save changes</button>
+          {editing ? (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-primary" disabled={busy}>{busy ? <span className="spinner" /> : <i className="fa-solid fa-floppy-disk" />} Save changes</button>
+              <button type="button" className="btn btn-outline" onClick={cancelEdit} disabled={busy}>
+                <i className="fa-solid fa-xmark" /> Cancel
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-outline" onClick={() => setEditing(true)}>
+              <i className="fa-solid fa-pen" /> Edit
+            </button>
           )}
         </form>
 

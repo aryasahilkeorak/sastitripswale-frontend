@@ -4,11 +4,13 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import PageHero from '../components/PageHero.jsx';
 import FollowButton from '../components/FollowButton.jsx';
 import VerificationBadge from '../components/VerificationBadge.jsx';
 import Loader from '../components/Loader.jsx';
 import Seo from '../components/Seo.jsx';
+import Checkbox from '../components/Checkbox.jsx';
 
 // Shared by both /members/:id/followers and /members/:id/following -
 // `mode` picks which endpoint/copy to use. Styled as an Instagram-style
@@ -62,7 +64,7 @@ export default function MemberFollowList({ mode }) {
 
   const removeSelected = async () => {
     if (selected.size === 0) return;
-    if (!window.confirm(`Remove ${selected.size} follower${selected.size > 1 ? 's' : ''}? They can follow you again later.`)) return;
+    if (!(await confirm({ message: `Remove ${selected.size} follower${selected.size > 1 ? 's' : ''}? They can follow you again later.`, danger: true, confirmLabel: 'Remove' }))) return;
     setRemoving(true);
     try {
       await Promise.all([...selected].map((followerId) => api.delete(`/members/followers/${followerId}`)));
@@ -119,14 +121,9 @@ export default function MemberFollowList({ mode }) {
                 {filtered.map((m) => (
                   <div key={m.id} className="ig-follow-row">
                     {selecting ? (
-                      <label className="ig-follow-avatar" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(m.id)}
-                          onChange={() => toggleSelect(m.id)}
-                          style={{ width: 20, height: 20 }}
-                        />
-                      </label>
+                      <span className="ig-follow-avatar" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Checkbox checked={selected.has(m.id)} onChange={() => toggleSelect(m.id)} />
+                      </span>
                     ) : (
                       <Link to={`/members/${m.username || m.id}`} className="ig-follow-avatar">
                         <img

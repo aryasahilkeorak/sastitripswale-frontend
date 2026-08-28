@@ -1,0 +1,119 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import PageHero from '../components/PageHero.jsx';
+import Seo from '../components/Seo.jsx';
+import { buildFaqLd } from '../lib/seo.js';
+
+const FAQS = [
+  {
+    q: 'What is SastiTripsWale?',
+    a: 'SastiTripsWale is a travel-focused community platform. Members can discover trips, host their own trips, join trips other members have created, form travel clubs, and connect with fellow travelers who share similar travel interests.',
+  },
+  {
+    q: 'What can I do on SastiTripsWale?',
+    a: 'Browse and join trips, host your own trip, create or join a travel club, browse the member directory, send connection requests, chat with other members, and build a travel-focused profile with verification badges.',
+  },
+  {
+    q: 'Can I host a trip?',
+    a: 'Yes - once you have an active membership and a complete verified profile, you can host a trip by setting the route, dates, a per-head budget estimate, vehicle type and available seats. You review and accept or decline join requests.',
+  },
+  {
+    q: 'Can I join a trip?',
+    a: "Yes - browse open trips by destination, dates, vehicle type or budget, and send a join request. The trip's host reviews and accepts or declines it. Membership and a complete profile are required to join.",
+  },
+  {
+    q: 'How do I connect with fellow travelers?',
+    a: 'Use the member directory to search by name, city, or interests, then send a connection request from a member\'s profile. Once connected, you can message each other directly, in addition to any shared trip or club group chat.',
+  },
+  {
+    q: 'What does the membership fee pay for?',
+    a: "Your membership fee is a platform/membership fee - it pays for access to SastiTripsWale's premium features (hosting trips, joining trips, creating clubs, connecting with members) for a fixed 6-month or 1-year period. It is not a payment for any specific trip, booking, or third-party travel service.",
+  },
+  {
+    q: 'What is the Trip Pass?',
+    a: "The Trip Pass is a lighter, pay-per-trip alternative to membership, for members who just want to try SastiTripsWale on a few trips - ₹29 for 1 host + 1 join credit, ₹49 for 2 + 2, or ₹59 for 3 + 3. Hosting a trip spends a host credit; a join request that's accepted spends a join credit (declined or withdrawn requests are refunded automatically). It only covers hosting/joining a regular trip - clubs, connections, and messaging still need a membership. No coupon codes apply to it, and buying another pass tops up whatever credits you already have.",
+  },
+  {
+    q: 'Why does the membership price differ by preference?',
+    a: 'At signup you choose which travel-group composition you\'d like to see and be part of - single-gender (Only Male / Only Female) or mixed (Male + Female). This is a safety and comfort preference, similar to women-only travel groups, and it sets which of two membership price tiers applies. It is not a dating, matchmaking, or relationship-matching feature.',
+  },
+  {
+    q: 'What is Couples Mode?',
+    a: "Couples Mode is an optional trip setting that reserves paired seats for travelling couples on car trips, so a couple can join and travel together instead of being split up. It requires each partner's mobile number and an uploaded ID for verification, and is unrelated to membership pricing.",
+  },
+  {
+    q: 'Is SastiTripsWale a travel agency?',
+    a: 'No. We are not a travel agency, tour operator, or travel-booking platform. Trips on SastiTripsWale are created and organized by members themselves - we provide the platform that connects them.',
+  },
+  {
+    q: 'Does SastiTripsWale book hotels or flights?',
+    a: 'No. We do not book, sell, or arrange flights, hotels, buses, or holiday packages. Any travel arrangements for a trip are made independently by the members participating in it.',
+  },
+  {
+    q: 'Does SastiTripsWale collect travel expenses from users?',
+    a: "No. When a trip is created, the host enters an estimated per-head budget purely for other members' planning purposes - it's a display calculation (total ÷ people), not a payment collected through the Platform. Any actual cost-sharing between travelers happens directly between them, outside SastiTripsWale.",
+  },
+  {
+    q: 'Is my identity verification information shared with other members?',
+    a: 'No. Your uploaded ID documents and live selfie are visible only to you and to our admin verification team. Other members only see that you carry a "Verified" badge, never the documents themselves.',
+  },
+  {
+    q: 'Can I cancel my membership?',
+    a: "Membership is a one-time payment for a fixed period, not a recurring subscription - so there's no future charge to cancel. If you stop using the Platform, your membership simply runs until its expiry date and does not renew automatically.",
+  },
+  {
+    q: 'What is the refund policy?',
+    a: 'Once activated, membership is non-refundable except for duplicate charges or a payment that was deducted but never activated your membership. See our full Cancellation & Refund Policy for details.',
+  },
+  {
+    q: 'How can I contact support?',
+    a: "Email support@sastitripswale.com or use the Contact page's message form or in-app support chat - we aim to respond within 24 hours.",
+  },
+];
+
+export default function Faq() {
+  const [open, setOpen] = useState(0);
+
+  return (
+    <>
+      <Seo
+        title="Frequently Asked Questions"
+        description="Answers about how SastiTripsWale works, membership pricing, hosting and joining trips, safety verification, cancellation and refunds."
+        path="/faq"
+        jsonLd={[buildFaqLd(FAQS)]}
+      />
+      <PageHero
+        tag="Help Center"
+        tagIcon="fa-solid fa-circle-question"
+        title="Frequently Asked"
+        highlight="Questions"
+        sub="Everything about membership, trips, safety, and refunds. Can't find your answer? Reach out on the Contact page."
+      />
+
+      <section>
+        <div className="container" style={{ maxWidth: 780 }}>
+          <div>
+            {FAQS.map((f, i) => (
+              <div className={`faq-item${open === i ? ' open' : ''}`} key={f.q}>
+                <div className="faq-q" onClick={() => setOpen(open === i ? -1 : i)}>
+                  {f.q}
+                  <span className="faq-icon">+</span>
+                </div>
+                <div className="faq-a" style={{ maxHeight: open === i ? 400 : 0 }}>
+                  <div className="faq-a-inner">{f.a}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center fade-up" style={{ marginTop: 40 }}>
+            <p className="text-muted mb-3">Still have a question?</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <Link to="/contact" className="btn btn-primary"><i className="fa-solid fa-headset" /> Contact Support</Link>
+              <Link to="/pricing" className="btn btn-outline"><i className="fa-solid fa-tag" /> View Pricing</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

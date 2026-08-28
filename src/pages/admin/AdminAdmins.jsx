@@ -3,6 +3,7 @@ import { api, apiError } from '../../lib/api.js';
 import { useAuth } from '../../store/auth.js';
 import { formatDate } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import PasswordInput from '../../components/PasswordInput.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -87,8 +88,8 @@ export default function AdminAdmins() {
     finally { setEditBusy(false); }
   };
 
-  const revokeFromEditor = () => {
-    if (!window.confirm('Revoke this admin (demote to a normal member)?')) return;
+  const revokeFromEditor = async () => {
+    if (!(await confirm({ message: 'Revoke this admin (demote to a normal member)?', danger: true, confirmLabel: 'Revoke' }))) return;
     changeRole(editing.id, 'member');
     closeEditor();
   };

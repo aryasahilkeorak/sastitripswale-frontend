@@ -12,7 +12,7 @@ export default function EditProfile() {
 
   return (
     <section className="cp-section">
-      <div className="container" style={{ maxWidth: 640 }}>
+      <div className="container form-page-container">
         <div className="edit-profile-head">
           <button className="ig-id-btn" onClick={() => navigate(-1)} aria-label="Back">
             <i className="fa-solid fa-arrow-left" />

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
+import { imageUrl, paiseToRupee, timeAgo, AVATAR_FALLBACK } from '../../lib/helpers.js';
 import Modal from '../../components/Modal.jsx';
+import Loader from '../../components/Loader.jsx';
+import CustomNumberStepper from '../../components/CustomNumberStepper.jsx';
 
 const EMPTY = { code: '', discountPct: '', discountAmt: '', maxUses: 1000 };
 
@@ -9,6 +13,20 @@ export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null); // coupon being edited
+  const [usageFor, setUsageFor] = useState(null); // coupon whose usage list is open
+  const [usage, setUsage] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(false);
+
+  const viewUsage = (coupon) => {
+    setUsageFor(coupon);
+    setUsage(null);
+    setUsageLoading(true);
+    api
+      .get(`/admin/coupons/${coupon._id}/usage`)
+      .then((r) => setUsage(r.data.usage))
+      .catch((err) => toast('fa-solid fa-circle-xmark', apiError(err)))
+      .finally(() => setUsageLoading(false));
+  };
 
   const load = () => api.get('/admin/coupons').then((r) => setCoupons(r.data.coupons)).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -26,7 +44,7 @@ export default function AdminCoupons() {
     } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const remove = async (id) => {
-    if (!window.confirm('Delete this coupon permanently?')) return;
+    if (!(await confirm({ message: 'Delete this coupon permanently?', danger: true, confirmLabel: 'Delete' }))) return;
     try { await api.delete(`/admin/coupons/${id}`); setCoupons((cs) => cs.filter((c) => c._id !== id)); toast('fa-solid fa-trash', 'Coupon removed'); }
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
@@ -48,10 +66,10 @@ export default function AdminCoupons() {
         <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>Add coupon</h4>
         <div className="form-group"><label>Code</label><input className="form-input" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} required /></div>
         <div className="form-row">
-          <div className="form-group"><label>% off</label><input className="form-input" type="number" value={form.discountPct} onChange={(e) => setForm({ ...form, discountPct: e.target.value })} /></div>
-          <div className="form-group"><label>₹ off</label><input className="form-input" type="number" value={form.discountAmt} onChange={(e) => setForm({ ...form, discountAmt: e.target.value })} /></div>
+          <div className="form-group"><label>% off</label><CustomNumberStepper max={100} value={form.discountPct} onChange={(e) => setForm({ ...form, discountPct: e.target.value })} /></div>
+          <div className="form-group"><label>₹ off</label><CustomNumberStepper prefix="₹" value={form.discountAmt} onChange={(e) => setForm({ ...form, discountAmt: e.target.value })} /></div>
         </div>
-        <div className="form-group"><label>Max uses</label><input className="form-input" type="number" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} /></div>
+        <div className="form-group"><label>Max uses</label><CustomNumberStepper value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} /></div>
         <button className="btn btn-primary"><i className="fa-solid fa-plus" /> Create</button>
       </form>
 
@@ -65,7 +83,15 @@ export default function AdminCoupons() {
                 <tr key={c._id}>
                   <td data-label="Code" style={{ fontFamily: 'var(--font-mono)' }}>{c.code}{!c.isActive && <span className="text-muted" style={{ fontSize: '0.68rem' }}> (off)</span>}</td>
                   <td data-label="Discount">{c.discountPct ? `${c.discountPct}%` : `₹${c.discountAmt}`}</td>
-                  <td data-label="Used">{c.usedCount}/{c.maxUses}</td>
+                  <td data-label="Used">
+                    {c.usedCount > 0 ? (
+                      <button className="btn btn-sm btn-outline" onClick={() => viewUsage(c)}>
+                        {c.usedCount}/{c.maxUses} <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '0.7em' }} />
+                      </button>
+                    ) : (
+                      <span>{c.usedCount}/{c.maxUses}</span>
+                    )}
+                  </td>
                   <td data-label="Actions">
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button className="btn btn-sm btn-outline" onClick={() => setEditing({ ...c })}><i className="fa-solid fa-pen-to-square" /></button>
@@ -85,12 +111,58 @@ export default function AdminCoupons() {
           <form onSubmit={saveEdit}>
             <div className="form-group"><label>Code</label><input className="form-input" value={editing.code} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} /></div>
             <div className="form-row">
-              <div className="form-group"><label>% off</label><input className="form-input" type="number" value={editing.discountPct} onChange={(e) => setEditing({ ...editing, discountPct: e.target.value })} /></div>
-              <div className="form-group"><label>₹ off</label><input className="form-input" type="number" value={editing.discountAmt} onChange={(e) => setEditing({ ...editing, discountAmt: e.target.value })} /></div>
+              <div className="form-group"><label>% off</label><CustomNumberStepper max={100} value={editing.discountPct} onChange={(e) => setEditing({ ...editing, discountPct: e.target.value })} /></div>
+              <div className="form-group"><label>₹ off</label><CustomNumberStepper prefix="₹" value={editing.discountAmt} onChange={(e) => setEditing({ ...editing, discountAmt: e.target.value })} /></div>
             </div>
-            <div className="form-group"><label>Max uses</label><input className="form-input" type="number" value={editing.maxUses} onChange={(e) => setEditing({ ...editing, maxUses: e.target.value })} /></div>
+            <div className="form-group"><label>Max uses</label><CustomNumberStepper value={editing.maxUses} onChange={(e) => setEditing({ ...editing, maxUses: e.target.value })} /></div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}><i className="fa-solid fa-floppy-disk" /> Save changes</button>
           </form>
+        )}
+      </Modal>
+
+      <Modal open={Boolean(usageFor)} onClose={() => setUsageFor(null)} title={usageFor ? `Used by - ${usageFor.code}` : ''}>
+        {usageLoading ? (
+          <Loader label="Loading…" />
+        ) : (
+          <>
+            {usageFor && usage && usageFor.usedCount > usage.length && (
+              <div className="card mb-3" style={{ padding: 12, borderColor: 'rgba(239,68,68,0.3)', fontSize: '0.8rem' }}>
+                <i className="fa-solid fa-triangle-exclamation" style={{ color: '#fca5a5' }} /> This coupon's usage counter says{' '}
+                <strong>{usageFor.usedCount}</strong>, but only <strong>{usage.length}</strong> {usage.length === 1 ? 'redemption is' : 'redemptions are'} traceable
+                to a real payment below. The other {usageFor.usedCount - usage.length} likely belonged to account(s) since deleted -
+                deleting a user removes their payment record but doesn't decrement the coupon's counter.
+              </div>
+            )}
+            {!usage?.length ? (
+              <p className="text-muted">No successful redemptions traceable to a current payment record.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {usage.map((u) => (
+                  <div key={u.paymentId} className="row-between" style={{ alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                      <img
+                        src={imageUrl(u.user.avatarUrl, AVATAR_FALLBACK)}
+                        alt=""
+                        style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <strong style={{ fontSize: '0.85rem' }}>
+                          {u.user.fullName}
+                          {!u.user.isActive && <span className="badge badge-red" style={{ marginLeft: 6, fontSize: '0.6rem' }}>banned</span>}
+                        </strong>
+                        <div className="text-muted" style={{ fontSize: '0.72rem' }}>{u.user.email || u.user.mobile}</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{paiseToRupee(u.amount)}</div>
+                      <div className="text-muted" style={{ fontSize: '0.68rem' }}>{timeAgo(u.usedAt)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </Modal>
     </div>

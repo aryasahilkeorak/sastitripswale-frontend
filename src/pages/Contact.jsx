@@ -8,18 +8,18 @@ import CustomSelect from '../components/CustomSelect.jsx';
 import Seo from '../components/Seo.jsx';
 
 const INFO = [
-  // Mobile/WhatsApp/email temporarily hidden across the app - see Footer.jsx and Layout.jsx.
+  // WhatsApp/phone temporarily hidden across the app - see Footer.jsx and Layout.jsx.
   // { icon: 'fa-brands fa-whatsapp', label: 'WhatsApp', value: '+91 98765 43210', href: 'https://wa.me/919876543210' },
-  // { icon: 'fa-solid fa-envelope', label: 'Email', value: 'hello@SastiTripsWale.com', href: 'mailto:hello@SastiTripsWale.com' },
   // { icon: 'fa-solid fa-phone', label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
+  { icon: 'fa-solid fa-envelope', label: 'Email', value: 'support@sastitripswale.com', href: 'mailto:support@sastitripswale.com' },
   { icon: 'fa-solid fa-location-dot', label: 'Location', value: 'Sector 119, Mohali, Punjab 160055' },
   { icon: 'fa-solid fa-clock', label: 'Response time', value: 'Within 24 hours' },
 ];
 
 const QA = [
-  { q: 'How to join for free?', a: 'Use coupon FREEJOIN at checkout for 100% off the ₹99 fee.', icon: 'fa-solid fa-ticket' },
+  { q: 'How to join for free?', a: 'Ask an influencer you follow or someone you know for their referral/coupon code - some can save you up to 100% off the membership fee (plans start at ₹199).', icon: 'fa-solid fa-ticket' },
   { q: 'Is it safe?', a: 'Every member is ID-verified, with women-safe verified groups available.', icon: 'fa-solid fa-shield-halved' },
-  { q: 'How are costs split?', a: 'Total trip budget is divided equally among all confirmed members.', icon: 'fa-solid fa-wallet' },
+  { q: 'How are costs split?', a: 'Total trip budget is divided equally among all confirmed members - it’s a display estimate, not a payment collected through the platform.', icon: 'fa-solid fa-wallet' },
 ];
 
 export default function Contact() {
@@ -88,7 +88,7 @@ export default function Contact() {
           <div className="contact-grid">
             {/* Left: info */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className="grid-3 mb-3">
+              <div className="grid-2 contact-info-grid mb-3">
                 {INFO.map((i) => (
                   <div key={i.label} className="card contact-info-tile">
                     <div className="notif-icon"><i className={i.icon} /></div>
@@ -138,13 +138,14 @@ export default function Contact() {
               <h3 className="mb-1" style={{ fontFamily: 'var(--font-display)' }}>Send a message</h3>
               <p className="text-muted mb-3" style={{ fontSize: '0.82rem' }}>Fill this out and we'll get back to you within 24 hours.</p>
               <div className="form-row">
-                <div className="form-group"><label>Name *</label><input className="form-input" required value={form.name} onChange={set('name')} /></div>
-                <div className="form-group"><label>Mobile</label><input className="form-input" value={form.mobile} onChange={set('mobile')} /></div>
+                <div className="form-group"><label htmlFor="contact-name">Name *</label><input id="contact-name" className="form-input" required value={form.name} onChange={set('name')} /></div>
+                <div className="form-group"><label htmlFor="contact-mobile">Mobile</label><input id="contact-mobile" className="form-input" value={form.mobile} onChange={set('mobile')} /></div>
               </div>
               <div className="form-row">
-                <div className="form-group"><label>Email</label><input className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
-                <div className="form-group"><label>Subject</label>
+                <div className="form-group"><label htmlFor="contact-email">Email</label><input id="contact-email" className="form-input" type="email" value={form.email} onChange={set('email')} /></div>
+                <div className="form-group"><label htmlFor="contact-subject">Subject</label>
                   <CustomSelect
+                    id="contact-subject"
                     value={form.subject}
                     onChange={set('subject')}
                     options={[
@@ -159,7 +160,7 @@ export default function Contact() {
                   />
                 </div>
               </div>
-              <div className="form-group"><label>Message *</label><textarea className="form-input" required rows={6} value={form.message} onChange={set('message')} /></div>
+              <div className="form-group"><label htmlFor="contact-message">Message *</label><textarea id="contact-message" className="form-input" required rows={6} value={form.message} onChange={set('message')} /></div>
               <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
                 {busy ? <span className="spinner" /> : <i className="fa-solid fa-paper-plane" />} Send Message
               </button>

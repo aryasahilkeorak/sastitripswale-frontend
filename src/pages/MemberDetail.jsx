@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
-import { imageUrl, rupee, formatDate, timeAgo, AVATAR_FALLBACK, TRAVEL_INTEREST_ICONS } from '../lib/helpers.js';
+import { imageUrl, authedFileUrl, rupee, formatDate, timeAgo, AVATAR_FALLBACK, TRAVEL_INTEREST_ICONS } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import Modal from '../components/Modal.jsx';
@@ -12,6 +13,8 @@ import DestinationImage from '../components/DestinationImage.jsx';
 import Stars from '../components/Stars.jsx';
 import Seo from '../components/Seo.jsx';
 import FollowButton from '../components/FollowButton.jsx';
+import ActivationAlerts from '../components/ActivationAlerts.jsx';
+import SelfieCapture from '../components/SelfieCapture.jsx';
 
 const TABS = [
   { key: 'trips', label: 'Trips', icon: 'fa-solid fa-table-cells' },
@@ -33,7 +36,10 @@ export default function MemberDetail() {
   const [tab, setTab] = useState('trips');
   const [lb, setLb] = useState(null);
   const [selfieUrl, setSelfieUrl] = useState(null);
+  const [selfieId, setSelfieId] = useState(null);
+  const [selfieStatus, setSelfieStatus] = useState(null);
   const [showSelfie, setShowSelfie] = useState(false);
+  const [retakeSelfieOpen, setRetakeSelfieOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -115,7 +121,7 @@ export default function MemberDetail() {
 
   const disconnect = async () => {
     const isPending = member.connection?.status === 'pending';
-    if (!window.confirm(isPending ? 'Withdraw your connection request?' : `Remove ${member.fullName} from your connections?`)) return;
+    if (!(await confirm(isPending ? 'Withdraw your connection request?' : `Remove ${member.fullName} from your connections?`))) return;
     setBusy(true);
     try {
       await api.delete(`/members/connect/${member.connection.connectionId}`);
@@ -132,14 +138,43 @@ export default function MemberDetail() {
     try {
       const { data } = await api.get(`/members/${id}/selfie`);
       setSelfieUrl(data.url);
+      setSelfieId(data.id || null);
+      setSelfieStatus(data.status || null);
       setShowSelfie(true);
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err, 'No verification photo on file'));
     }
   };
 
+  const pickRetakeSelfie = async () => {
+    // Retaking an already-verified selfie sends it back for admin review -
+    // worth a heads-up before they lose that status.
+    if (selfieStatus === 'verified') {
+      const ok = await confirm({
+        message: "Your selfie is already verified. Retaking it will send it back for admin review.",
+        confirmLabel: 'Retake anyway',
+      });
+      if (!ok) return;
+    }
+    setShowSelfie(false);
+    setRetakeSelfieOpen(true);
+  };
+
+  const submitSelfieRetake = async (file) => {
+    if (!file || !selfieId) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api.put(`/members/documents/${selfieId}`, fd);
+      toast('fa-solid fa-circle-check', 'Selfie updated - pending review');
+      setRetakeSelfieOpen(false);
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
   const removeTrip = async (tripId) => {
-    if (!window.confirm('Delete this trip? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Delete this trip? This cannot be undone.', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/trips/${tripId}`);
       setMember((m) => ({ ...m, recentTrips: (m.recentTrips || []).filter((t) => t._id !== tripId) }));
@@ -191,7 +226,7 @@ export default function MemberDetail() {
 
   const toggleBlockUser = async () => {
     setMenuOpen(false);
-    if (!member.isBlockedByMe && !window.confirm(`Block ${member.fullName}? They won't be able to connect or message you.`)) return;
+    if (!member.isBlockedByMe && !(await confirm({ message: `Block ${member.fullName}? They won't be able to connect or message you.`, danger: true, confirmLabel: 'Block' }))) return;
     try {
       const { data } = await api.post(`/members/${id}/block`);
       toast(data.blocked ? 'fa-solid fa-ban' : 'fa-solid fa-circle-check', data.blocked ? 'Member blocked' : 'Member unblocked');
@@ -331,6 +366,12 @@ export default function MemberDetail() {
             </div>
           }
         />
+
+        {member.isSelf && (
+          <div className="mt-3">
+            <ActivationAlerts />
+          </div>
+        )}
 
         {member.travelInterests?.length > 0 && (
           <div className="card ig-secondary-card mt-3">
@@ -483,12 +524,32 @@ export default function MemberDetail() {
 
       <Lightbox images={photoImgs} index={lb} onClose={() => setLb(null)} onIndex={setLb} />
 
-      <Lightbox
-        images={selfieUrl ? [imageUrl(selfieUrl)] : []}
-        index={showSelfie ? 0 : null}
-        onClose={() => setShowSelfie(false)}
-        onIndex={() => {}}
-      />
+      <Modal open={showSelfie} onClose={() => setShowSelfie(false)} title="Verification Selfie">
+        {selfieUrl && (
+          <>
+            <img
+              src={authedFileUrl(selfieUrl, accessToken)}
+              alt="Verification selfie"
+              style={{ width: '100%', borderRadius: 12, display: 'block' }}
+            />
+            {selfieStatus && (
+              <div className="mt-3" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span className={`badge ${selfieStatus === 'verified' ? 'badge-green' : selfieStatus === 'rejected' ? 'badge-red' : 'badge-gold'}`}>
+                  {selfieStatus}
+                </span>
+                {member.isSelf && (
+                  <button className="btn btn-sm btn-outline" onClick={pickRetakeSelfie}>
+                    <i className="fa-solid fa-rotate" /> Reupload
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
+      <Modal open={retakeSelfieOpen} onClose={() => setRetakeSelfieOpen(false)} title="Retake your live selfie">
+        <SelfieCapture onChange={submitSelfieRetake} />
+      </Modal>
 
       {!member.isSelf && (
         <Modal open={showReport} onClose={() => setShowReport(false)} title={`Report ${member.fullName}`}>

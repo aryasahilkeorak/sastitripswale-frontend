@@ -4,6 +4,7 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, rupee, dateRange, tripDays, routeLabel, AVATAR_FALLBACK } from '../lib/helpers.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import DestinationImage from '../components/DestinationImage.jsx';
@@ -70,7 +71,7 @@ export default function GroupTripDetail() {
   };
 
   const removeTrip = async () => {
-    if (!window.confirm('Delete this group trip? This cannot be undone.')) return;
+    if (!(await confirm({ message: 'Delete this group trip? This cannot be undone.', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/group-trips/${id}`);
       toast('fa-solid fa-trash', 'Group trip deleted');

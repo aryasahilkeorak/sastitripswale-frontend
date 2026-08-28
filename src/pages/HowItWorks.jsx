@@ -14,7 +14,7 @@ const GETTING_STARTED = [
     n: '02',
     icon: 'fa-solid fa-credit-card',
     h: 'Choose a Plan & Pay',
-    p: 'Pick 6 months or 1 year. Have a coupon? Apply it at checkout to bring the price down - then pay through Razorpay, or instantly in test mode while the platform is in beta.',
+    p: 'Pick 6 months or 1 year. Have a coupon? Apply it at checkout to bring the price down, then pay securely through Razorpay.',
   },
   {
     n: '03',
@@ -184,6 +184,10 @@ export default function HowItWorks() {
               </div>
             ))}
           </div>
+          <p className="text-center text-muted" style={{ marginTop: 28, fontSize: '0.88rem' }}>
+            Just want to try a few trips instead? The <Link to="/pricing">Trip Pass</Link> starts at ₹29 for a
+            single host + join credit - no coupon needed, no commitment.
+          </p>
         </div>
       </section>
 
@@ -192,13 +196,13 @@ export default function HowItWorks() {
         <section key={s.title} style={{ background: i % 2 === 1 ? 'var(--bg-2)' : undefined }}>
           <div className="container">
             <div className="grid-2" style={{ alignItems: 'start', gap: 48 }}>
-              <div className="fade-left">
+              <div>
                 <div className="section-tag"><i className={s.icon} /> {s.tag}</div>
                 <h2 className="section-title" style={{ fontSize: '1.8rem' }}>
                   {s.title} <span className="highlight">{s.highlight}</span>
                 </h2>
               </div>
-              <div className="fade-right">
+              <div>
                 {s.body.map((para, j) => (
                   <p key={j} style={{ color: 'var(--text-2)', lineHeight: 1.9, marginBottom: j === s.body.length - 1 && !s.bullets.length ? 0 : 16 }}>
                     {para}

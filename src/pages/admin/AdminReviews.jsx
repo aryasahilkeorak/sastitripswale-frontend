@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { timeAgo } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import Stars from '../../components/Stars.jsx';
 
 export default function AdminReviews() {
@@ -14,7 +15,7 @@ export default function AdminReviews() {
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const remove = async (id) => {
-    if (!window.confirm('Delete this review?')) return;
+    if (!(await confirm({ message: 'Delete this review?', danger: true, confirmLabel: 'Delete' }))) return;
     try { await api.delete(`/admin/reviews/${id}`); setReviews((rs) => rs.filter((r) => r._id !== id)); toast('fa-solid fa-trash', 'Review deleted'); }
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };

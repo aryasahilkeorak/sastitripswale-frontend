@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 import Modal from '../../components/Modal.jsx';
+import CustomNumberStepper from '../../components/CustomNumberStepper.jsx';
 import { imageUrl, AVATAR_FALLBACK } from '../../lib/helpers.js';
 
 const STATUS_BADGE = { pending: 'badge-gold', approved: 'badge-green', rejected: 'badge-fire' };
@@ -76,7 +78,7 @@ export default function AdminInfluencers() {
   };
 
   const reject = async (inf) => {
-    if (!window.confirm(`Reject ${inf.user?.fullName}'s application?`)) return;
+    if (!(await confirm({ message: `Reject ${inf.user?.fullName}'s application?`, danger: true, confirmLabel: 'Reject' }))) return;
     try {
       await api.patch(`/admin/influencers/${inf._id}`, { action: 'reject' });
       load();
@@ -97,7 +99,7 @@ export default function AdminInfluencers() {
   };
 
   const revoke = async (inf) => {
-    if (!window.confirm(`Revoke ${inf.user?.fullName}'s influencer status? Their coupon will be disabled.`)) return;
+    if (!(await confirm({ message: `Revoke ${inf.user?.fullName}'s influencer status? Their coupon will be disabled.`, danger: true, confirmLabel: 'Revoke' }))) return;
     try {
       await api.delete(`/admin/influencers/${inf._id}`);
       setInfluencers((list) => list.filter((i) => i._id !== inf._id));
@@ -215,11 +217,11 @@ export default function AdminInfluencers() {
             <div className="form-row">
               <div className="form-group">
                 <label>Customer discount %</label>
-                <input className="form-input" type="number" min="0" max="100" value={approveForm.discountPct} onChange={(e) => setApproveForm({ ...approveForm, discountPct: e.target.value })} />
+                <CustomNumberStepper min={0} max={100} value={approveForm.discountPct} onChange={(e) => setApproveForm({ ...approveForm, discountPct: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Influencer commission % (10-30)</label>
-                <input className="form-input" type="number" min="10" max="30" value={approveForm.commissionPct} onChange={(e) => setApproveForm({ ...approveForm, commissionPct: e.target.value })} />
+                <CustomNumberStepper min={10} max={30} value={approveForm.commissionPct} onChange={(e) => setApproveForm({ ...approveForm, commissionPct: e.target.value })} />
               </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}><i className="fa-solid fa-star" /> Approve &amp; issue coupon</button>
@@ -253,11 +255,11 @@ export default function AdminInfluencers() {
             <div className="form-row">
               <div className="form-group">
                 <label>Customer discount %</label>
-                <input className="form-input" type="number" min="0" max="100" value={editing.coupon?.discountPct ?? ''} onChange={(e) => setEditing({ ...editing, coupon: { ...editing.coupon, discountPct: e.target.value } })} />
+                <CustomNumberStepper min={0} max={100} value={editing.coupon?.discountPct ?? ''} onChange={(e) => setEditing({ ...editing, coupon: { ...editing.coupon, discountPct: e.target.value } })} />
               </div>
               <div className="form-group">
                 <label>Influencer commission % (10-30)</label>
-                <input className="form-input" type="number" min="10" max="30" value={editing.commissionPct ?? ''} onChange={(e) => setEditing({ ...editing, commissionPct: e.target.value })} />
+                <CustomNumberStepper min={10} max={30} value={editing.commissionPct ?? ''} onChange={(e) => setEditing({ ...editing, commissionPct: e.target.value })} />
               </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}><i className="fa-solid fa-floppy-disk" /> Save changes</button>

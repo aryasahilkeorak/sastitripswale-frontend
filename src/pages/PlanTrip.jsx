@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth.js';
 import { rupee, dateRange, routeLabel, BUDGET_INCLUDES, GENDER_PREFERENCE, todayISO } from '../lib/helpers.js';
 import { suggestMileageForUser } from '../lib/vehicleMileage.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import PageHero from '../components/PageHero.jsx';
 import ProfileGateCard from '../components/ProfileGateCard.jsx';
 import { useCanTrip, handleGateError } from '../components/useCanTrip.js';
@@ -40,7 +41,7 @@ const EMPTY = {
 export default function PlanTrip() {
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
-  const canTrip = useCanTrip();
+  const canTrip = useCanTrip('host');
   const isMember = user?.membershipActive || user?.role === 'admin';
   const profileDone = user?.profileComplete || user?.role === 'admin';
   const canPlan = isMember && profileDone;
@@ -163,7 +164,7 @@ export default function PlanTrip() {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Delete this trip?')) return;
+    if (!(await confirm({ message: 'Delete this trip?', danger: true, confirmLabel: 'Delete' }))) return;
     try {
       await api.delete(`/trips/${id}`);
       toast('fa-solid fa-trash', 'Trip deleted');
@@ -179,7 +180,7 @@ export default function PlanTrip() {
 
       <section className="plan-page" style={{ paddingTop: 40 }}>
         <div className="container">
-          <ProfileGateCard action="post trips" />
+          <ProfileGateCard action="post trips" kind="host" />
 
           <Link to="/plan-group-trip" className="btn btn-outline mb-4" style={{ width: '100%', justifyContent: 'center' }}>
             <i className="fa-solid fa-people-group" /> Plan a Group Trip instead

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../../lib/api.js';
 import { timeAgo } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
+import { confirm } from '../../lib/confirm.js';
 
 export default function AdminMessages() {
   const [section, setSection] = useState('queries'); // queries | reports
@@ -54,7 +55,7 @@ function ContactQueries() {
     } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const remove = async (id) => {
-    if (!window.confirm('Delete this message?')) return;
+    if (!(await confirm({ message: 'Delete this message?', danger: true, confirmLabel: 'Delete' }))) return;
     try { await api.delete(`/admin/contact-messages/${id}`); setMessages((ms) => ms.filter((m) => m._id !== id)); toast('fa-solid fa-trash', 'Deleted'); }
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
@@ -124,7 +125,7 @@ function UserReports() {
     } catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };
   const remove = async (id) => {
-    if (!window.confirm('Delete this report?')) return;
+    if (!(await confirm({ message: 'Delete this report?', danger: true, confirmLabel: 'Delete' }))) return;
     try { await api.delete(`/admin/reports/${id}`); setReports((rs) => rs.filter((r) => r._id !== id)); toast('fa-solid fa-trash', 'Deleted'); }
     catch (e) { toast('fa-solid fa-circle-xmark', apiError(e)); }
   };

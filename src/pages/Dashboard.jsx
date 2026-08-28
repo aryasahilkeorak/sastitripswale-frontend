@@ -15,10 +15,14 @@ import {
 import { getBrandsForType, getModelsForBrand, getVehicleYearOptions, OTHER_OPTION } from '../lib/vehicleCatalog.js';
 import { toEmbedUrl, getThumbnail } from '../lib/videoEmbed.js';
 import { toast } from '../lib/toast.js';
+import { confirm } from '../lib/confirm.js';
 import Modal from '../components/Modal.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
+import CustomNumberStepper from '../components/CustomNumberStepper.jsx';
 import SelfieCapture from '../components/SelfieCapture.jsx';
 import Loader from '../components/Loader.jsx';
+import { useT, LANGUAGES } from '../i18n/index.js';
+import { useLanguage } from '../store/language.js';
 
 // "My Profile" IS the public profile page (MemberDetail, at /members/:id) -
 // same page everyone else's profile uses, Instagram-style, just with
@@ -28,10 +32,11 @@ import Loader from '../components/Loader.jsx';
 export default function Dashboard() {
   const user = useAuth((s) => s.user);
   const viewMode = useAuth((s) => s.viewMode);
+  const t = useT();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab') === 'settings' ? 'settings' : 'profile';
-  const settingsView = ['payments', 'influencer', 'wallet'].includes(searchParams.get('view'))
+  const settingsView = ['payments', 'influencer', 'wallet', 'documents', 'language'].includes(searchParams.get('view'))
     ? searchParams.get('view')
     : null;
   const [payments, setPayments] = useState([]);
@@ -63,7 +68,12 @@ export default function Dashboard() {
   }
 
   const settingsTitle =
-    settingsView === 'payments' ? 'Payments' : settingsView === 'influencer' ? 'Influencer / Promoter' : settingsView === 'wallet' ? 'Wallet' : 'Settings';
+    settingsView === 'payments' ? 'Payments' :
+    settingsView === 'influencer' ? 'Influencer / Promoter' :
+    settingsView === 'wallet' ? 'Wallet' :
+    settingsView === 'documents' ? 'My Documents' :
+    settingsView === 'language' ? t('settings.language') :
+    t('settings.title');
 
   return (
     <section className="cp-section">
@@ -115,6 +125,9 @@ function SettingsRow({ icon, title, sub, onClick, to }) {
 // their settings screen instead of scattering these across top-level tabs.
 function SettingsForm({ user, payments, view, setView }) {
   const clear = useAuth((s) => s.clear);
+  const t = useT();
+  const currentLanguage = useLanguage((s) => s.language);
+  const currentLanguageLabel = LANGUAGES.find((l) => l.code === currentLanguage)?.nativeName || 'English';
 
   const logout = async () => {
     await api.post('/auth/logout').catch(() => {});
@@ -132,7 +145,9 @@ function SettingsForm({ user, payments, view, setView }) {
             <div key={p._id} className="notif-item">
               <div className="notif-icon"><i className="fa-solid fa-credit-card" /></div>
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: '0.88rem', textTransform: 'capitalize' }}>{p.purpose}</strong>
+                <strong style={{ fontSize: '0.88rem' }}>
+                  {p.purpose === 'trip_pack' ? `Trip Pass - ${p.packTier} trip${p.packTier > 1 ? 's' : ''}` : 'Membership'}
+                </strong>
                 <p className="text-muted" style={{ fontSize: '0.78rem' }}>
                   {p.razorpayPaymentId || p._id}{p.couponUsed ? ` · ${p.couponUsed}` : ''} · {timeAgo(p.createdAt)}
                 </p>
@@ -156,6 +171,14 @@ function SettingsForm({ user, payments, view, setView }) {
     return <WalletTab user={user} />;
   }
 
+  if (view === 'documents') {
+    return <DocumentsCard user={user} bare />;
+  }
+
+  if (view === 'language') {
+    return <LanguageTab />;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 640 }}>
       <Link to="/edit-profile" className="card row-between" style={{ padding: 16, alignItems: 'center' }}>
@@ -167,27 +190,64 @@ function SettingsForm({ user, payments, view, setView }) {
             onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
           />
           <div>
-            <strong style={{ fontSize: '0.92rem' }}>Edit profile</strong>
-            <div className="text-muted" style={{ fontSize: '0.78rem' }}>Name, bio, socials, contact info</div>
+            <strong style={{ fontSize: '0.92rem' }}>{t('settings.editProfile')}</strong>
+            <div className="text-muted" style={{ fontSize: '0.78rem' }}>{t('settings.editProfileSub')}</div>
           </div>
         </div>
         <i className="fa-solid fa-chevron-right text-muted" />
       </Link>
 
-      <SettingsRow icon="fa-solid fa-credit-card" title="Payments" sub="Membership payment history" onClick={() => setView('payments')} />
-      <SettingsRow icon="fa-solid fa-wallet" title="Wallet" sub="Referral & influencer earnings, withdrawals" onClick={() => setView('wallet')} />
-      <SettingsRow icon="fa-solid fa-star" title="Influencer / Promoter" sub="Your coupon, earnings & referrals" onClick={() => setView('influencer')} />
+      <SettingsRow icon="fa-solid fa-credit-card" title={t('settings.payments')} sub={t('settings.paymentsSub')} onClick={() => setView('payments')} />
+      <SettingsRow icon="fa-solid fa-wallet" title={t('settings.wallet')} sub={t('settings.walletSub')} onClick={() => setView('wallet')} />
+      <SettingsRow icon="fa-solid fa-star" title={t('settings.influencer')} sub={t('settings.influencerSub')} onClick={() => setView('influencer')} />
+      <SettingsRow icon="fa-solid fa-language" title={t('settings.language')} sub={currentLanguageLabel} onClick={() => setView('language')} />
 
-      <DocumentsCard />
+      <SettingsRow icon="fa-solid fa-id-card" title={t('settings.documents')} sub={t('settings.documentsSub')} onClick={() => setView('documents')} />
       <VehiclesCard user={user} />
 
-      <SettingsRow icon="fa-solid fa-circle-question" title="Help & Support" sub="Contact us or report an issue" to="/contact" />
+      <SettingsRow icon="fa-solid fa-circle-question" title={t('settings.helpSupport')} sub={t('settings.helpSupportSub')} to="/contact" />
 
       <div className="card" style={{ padding: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
-        <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>Account</h4>
-        <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>Sign out of your account on this device.</p>
-        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> Logout</button>
+        <h4 className="mb-2" style={{ fontFamily: 'var(--font-display)' }}>{t('settings.accountHeading')}</h4>
+        <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>{t('settings.accountSub')}</p>
+        <button className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={logout}><i className="fa-solid fa-right-from-bracket" /> {t('settings.logoutBtn')}</button>
       </div>
+    </div>
+  );
+}
+
+// Applies immediately on tap - no separate "Save" step, matching how the
+// theme toggle works. Native names are shown as the primary label since
+// that's what a reader actually looking for their language will recognize.
+function LanguageTab() {
+  const t = useT();
+  const language = useLanguage((s) => s.language);
+  const setLanguage = useLanguage((s) => s.setLanguage);
+
+  const pick = (lang) => {
+    setLanguage(lang.code);
+    toast('fa-solid fa-language', `${t('settings.languageChanged')} - ${lang.nativeName}`);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 480 }}>
+      {LANGUAGES.map((lang) => (
+        <button
+          key={lang.code}
+          type="button"
+          className="card row-between"
+          style={{ padding: 16, alignItems: 'center', width: '100%', textAlign: 'left' }}
+          onClick={() => pick(lang)}
+        >
+          <div>
+            <strong style={{ fontSize: '0.92rem' }}>{lang.nativeName}</strong>
+            {lang.nativeName !== lang.englishName && (
+              <div className="text-muted" style={{ fontSize: '0.78rem' }}>{lang.englishName}</div>
+            )}
+          </div>
+          {language === lang.code && <i className="fa-solid fa-circle-check" style={{ color: 'var(--fire)' }} />}
+        </button>
+      ))}
     </div>
   );
 }
@@ -202,12 +262,35 @@ const DOC_TYPE_LABEL = {
 };
 const DOC_STATUS_BADGE = { pending: 'badge-gold', verified: 'badge-green', rejected: 'badge-red' };
 
-export function DocumentsCard() {
+// Every doc slot a complete profile needs (see completeProfile's
+// REQUIRED_DOC_FIELDS/VEHICLE_DOC_FIELDS on the backend) - used to work out
+// what's missing entirely, as opposed to uploaded-but-rejected.
+function requiredDocSlots(user) {
+  const slots = [
+    { docType: 'selfie', side: '', label: 'Live Selfie' },
+    { docType: 'aadhaar', side: 'front', label: 'Aadhaar (front)' },
+    { docType: 'aadhaar', side: 'back', label: 'Aadhaar (back)' },
+  ];
+  if (user?.hasVehicle) {
+    slots.push(
+      { docType: 'driving_license', side: 'front', label: 'Driving Licence (front)' },
+      { docType: 'driving_license', side: 'back', label: 'Driving Licence (back)' },
+      { docType: 'rc', side: 'front', label: 'Vehicle RC (front)' },
+      { docType: 'rc', side: 'back', label: 'Vehicle RC (back)' }
+    );
+  }
+  return slots;
+}
+
+export function DocumentsCard({ user, bare = false }) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reuploadingId, setReuploadingId] = useState(null);
   const [selfieReuploadId, setSelfieReuploadId] = useState(null);
+  const [addSelfieOpen, setAddSelfieOpen] = useState(false);
+  const [addingSlot, setAddingSlot] = useState(null); // the missing slot a plain file input is currently targeting
   const fileRef = useRef(null);
+  const addFileRef = useRef(null);
 
   const load = () => {
     setLoading(true);
@@ -215,7 +298,21 @@ export function DocumentsCard() {
   };
   useEffect(load, []);
 
-  const pickReupload = (doc) => {
+  const missingSlots = requiredDocSlots(user).filter(
+    (slot) => !docs.some((d) => d.docType === slot.docType && (d.side || '') === slot.side)
+  );
+
+  const pickReupload = async (doc) => {
+    // Retaking an already-verified selfie sends it back for admin review -
+    // worth a heads-up before they lose that status. ID documents can't be
+    // reuploaded once verified at all, so this branch is selfie-only.
+    if (doc.docType === 'selfie' && doc.status === 'verified') {
+      const ok = await confirm({
+        message: "Your selfie is already verified. Retaking it will send it back for admin review.",
+        confirmLabel: 'Retake anyway',
+      });
+      if (!ok) return;
+    }
     if (doc.docType === 'selfie') {
       setSelfieReuploadId(doc._id);
       return;
@@ -256,34 +353,104 @@ export function DocumentsCard() {
     }
   };
 
+  const submitNewSelfie = async (file) => {
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('document', file);
+      fd.append('docType', 'selfie');
+      await api.post('/members/document', fd);
+      toast('fa-solid fa-circle-check', 'Selfie uploaded - pending review');
+      setAddSelfieOpen(false);
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
+  const pickAddSlot = (slot) => {
+    setAddingSlot(slot);
+    setTimeout(() => addFileRef.current?.click(), 0);
+  };
+
+  const onAddFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !addingSlot) return;
+    try {
+      const fd = new FormData();
+      fd.append('document', file);
+      fd.append('docType', addingSlot.docType);
+      if (addingSlot.side) fd.append('side', addingSlot.side);
+      await api.post('/members/document', fd);
+      toast('fa-solid fa-circle-check', `${addingSlot.label} uploaded - pending review`);
+      load();
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setAddingSlot(null);
+    }
+  };
+
   if (loading) return null;
-  if (docs.length === 0) return null;
+  if (docs.length === 0 && missingSlots.length === 0) return null;
 
   return (
-    <div className="card" style={{ padding: 16 }}>
-      <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My Documents</h4>
+    <div className={bare ? '' : 'card'} style={bare ? undefined : { padding: 16 }}>
+      {!bare && <h4 className="mb-3" style={{ fontFamily: 'var(--font-display)' }}>My Documents</h4>}
       <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={onFile} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {docs.map((d) => (
-          <div key={d._id} className="row-between" style={{ alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span className="notif-icon"><i className="fa-solid fa-id-card" /></span>
-              <div>
-                <strong style={{ fontSize: '0.88rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</strong>
-                <div><span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span></div>
+      <input ref={addFileRef} type="file" accept="image/*,application/pdf" hidden onChange={onAddFile} />
+
+      {docs.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: missingSlots.length ? 16 : 0 }}>
+          {docs.map((d) => (
+            <div key={d._id} className="row-between" style={{ alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="notif-icon"><i className="fa-solid fa-id-card" /></span>
+                <div>
+                  <strong style={{ fontSize: '0.88rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</strong>
+                  <div><span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span></div>
+                </div>
               </div>
+              {(d.status !== 'verified' || d.docType === 'selfie') && (
+                <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
+                  <i className="fa-solid fa-rotate" /> Reupload
+                </button>
+              )}
             </div>
-            {d.status === 'rejected' && (
-              <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
-                <i className="fa-solid fa-rotate" /> Reupload
-              </button>
-            )}
+          ))}
+        </div>
+      )}
+
+      {missingSlots.length > 0 && (
+        <div>
+          <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 10px' }}>
+            <i className="fa-solid fa-triangle-exclamation" style={{ color: 'var(--fire)' }} /> Still missing - required to plan or join trips:
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {missingSlots.map((slot) => (
+              <div key={`${slot.docType}-${slot.side}`} className="row-between" style={{ alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span className="notif-icon"><i className={slot.docType === 'selfie' ? 'fa-solid fa-camera-retro' : 'fa-solid fa-id-card'} /></span>
+                  <strong style={{ fontSize: '0.88rem' }}>{slot.label}</strong>
+                </div>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => (slot.docType === 'selfie' ? setAddSelfieOpen(true) : pickAddSlot(slot))}
+                >
+                  <i className="fa-solid fa-upload" /> Upload
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       <Modal open={Boolean(selfieReuploadId)} onClose={() => setSelfieReuploadId(null)} title="Retake your live selfie">
         <SelfieCapture onChange={submitSelfieReupload} />
+      </Modal>
+      <Modal open={addSelfieOpen} onClose={() => setAddSelfieOpen(false)} title="Upload your live selfie">
+        <SelfieCapture onChange={submitNewSelfie} />
       </Modal>
     </div>
   );
@@ -484,7 +651,7 @@ function EditPrimaryVehicleForm({ user, onDone }) {
         </div>
         <div className="form-group">
           <label>Mileage (km/l)</label>
-          <input className="form-input" type="number" min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" />
+          <CustomNumberStepper min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" />
         </div>
       </div>
       <div className="form-group">
@@ -605,7 +772,7 @@ function AddVehicleForm({ onDone }) {
           <label>Model year</label>
           <CustomSelect value={year} onChange={(e) => setYear(e.target.value)} options={yearOptions} />
         </div>
-        <div className="form-group"><label>Mileage (km/l)</label><input className="form-input" type="number" min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" /></div>
+        <div className="form-group"><label>Mileage (km/l)</label><CustomNumberStepper min={1} max={200} value={mileageKmpl} onChange={(e) => setMileageKmpl(e.target.value)} placeholder="e.g. 16" /></div>
       </div>
       <div className="form-group">
         <label>Fuel type</label>
@@ -789,7 +956,7 @@ function WithdrawForm({ user, maxPaise, onDone }) {
       </div>
       <div className="form-group">
         <label>Amount to withdraw (₹)</label>
-        <input className="form-input" type="number" min={100} max={maxPaise / 100} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" />
+        <CustomNumberStepper prefix="₹" min={100} max={maxPaise / 100} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" />
         <p className="text-muted" style={{ fontSize: '0.72rem', marginTop: 6 }}>Available: {paiseToRupee(maxPaise)} · Minimum ₹100</p>
       </div>
       <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={busy}>
@@ -936,11 +1103,11 @@ function InfluencerTab() {
           <div className="form-row">
             <div className="form-group">
               <label>Total followers *</label>
-              <input className="form-input" type="number" min="1" value={form.totalFollowers} onChange={setField('totalFollowers')} placeholder="e.g. 12000" />
+              <CustomNumberStepper min={1} value={form.totalFollowers} onChange={setField('totalFollowers')} placeholder="e.g. 12000" />
             </div>
             <div className="form-group">
               <label>Average views per reel/video *</label>
-              <input className="form-input" type="number" min="1" value={form.avgReelViews} onChange={setField('avgReelViews')} placeholder="e.g. 5000" />
+              <CustomNumberStepper min={1} value={form.avgReelViews} onChange={setField('avgReelViews')} placeholder="e.g. 5000" />
             </div>
           </div>
 
