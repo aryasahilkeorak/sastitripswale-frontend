@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'ക്രമീകരണങ്ങൾ',
   'menu.messages': 'സന്ദേശങ്ങൾ',
   'menu.referrals': 'റഫറലുകൾ',
+  'menu.myPlan': 'എന്റെ പ്ലാൻ',
   'menu.planTrip': 'ഒരു ട്രിപ്പ് പ്ലാൻ ചെയ്യുക',
   'menu.planGroupTrip': 'ഗ്രൂപ്പ് ട്രിപ്പ് പ്ലാൻ ചെയ്യുക',
   'menu.createClub': 'ക്ലബ്ബ് സൃഷ്ടിക്കുക',

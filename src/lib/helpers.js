@@ -157,6 +157,39 @@ export function planPrice(preference, duration) {
 }
 export const PREF_LABEL = { male: 'Only Male', female: 'Only Female', both: 'Male + Female' };
 
+export function planDurationLabel(duration) {
+  return duration === '1y' ? '1 Year' : duration === 'lifetime' ? 'Lifetime' : '6 Months';
+}
+
+// Days remaining until `expiresAt` (negative once past), or null for a
+// membership that never expires (e.g. staff `lifetime` accounts).
+export function daysUntil(expiresAt) {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  return Math.ceil(ms / (24 * 60 * 60 * 1000));
+}
+
+// A small { label, badgeClass } summary of a user's membership state, for
+// the "My Plan" page and anywhere else that needs a status pill.
+export function membershipStatusInfo(user) {
+  if (!user?.membershipPaid) return { label: 'No active plan', badgeClass: 'badge-gold' };
+  if (user.membershipDuration === 'lifetime') return { label: 'Lifetime', badgeClass: 'badge-green' };
+  const days = daysUntil(user.membershipExpiresAt);
+  if (days === null || days > 7) return { label: 'Active', badgeClass: 'badge-green' };
+  if (days > 0) return { label: `Expiring in ${days} day${days === 1 ? '' : 's'}`, badgeClass: 'badge-gold' };
+  return { label: 'Expired', badgeClass: 'badge-red' };
+}
+
+// The 4 duration-plan combinations (kept in sync with backend
+// utils/plans.js PLAN_KEYS), for admin UIs that configure something
+// per-plan (referral discounts, influencer discounts/commissions).
+export const PLAN_LIST = [
+  { key: 'single_6m', price: PLAN_PRICES.single['6m'], label: 'Single, 6 months' },
+  { key: 'single_1y', price: PLAN_PRICES.single['1y'], label: 'Single, 1 year' },
+  { key: 'both_6m', price: PLAN_PRICES.both['6m'], label: 'Both, 6 months' },
+  { key: 'both_1y', price: PLAN_PRICES.both['1y'], label: 'Both, 1 year' },
+];
+
 // Trip Pass (pay-per-trip) pricing - kept in sync with backend
 // utils/plans.js. Flat price regardless of co-traveler preference. Each
 // tier grants that many HOST credits AND that many JOIN credits (two

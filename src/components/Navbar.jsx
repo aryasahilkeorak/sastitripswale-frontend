@@ -13,24 +13,28 @@ import BrandLogo from './BrandLogo.jsx';
 const LINKS = [
   { to: '/', key: 'nav.home', end: true },
   { to: '/trips', key: 'nav.trips' },
-  { to: '/clubs', key: 'nav.clubs', matchExtra: ['/plan-club'] },
   { to: '/members', key: 'nav.members' },
+  { to: '/clubs', key: 'nav.clubs', matchExtra: ['/plan-club'] },
   { to: '/gallery', key: 'nav.gallery' },
   { to: '/how-it-works', key: 'nav.howItWorks' },
   { to: '/about', key: 'nav.about' },
   { to: '/contact', key: 'nav.contact' },
 ];
 
+// Ordered by priority for the mobile drawer: things a returning member
+// checks first (home), then core discovery/action pages, then informational/
+// marketing pages last - account-specific items (profile/messages/etc.) are
+// interleaved separately below since they only apply when logged in.
 const MOBILE_LINKS = [
   { to: '/', key: 'nav.home', icon: 'fa-solid fa-house' },
   { to: '/trips', key: 'nav.trips', icon: 'fa-solid fa-compass' },
-  { to: '/clubs', key: 'nav.clubs', icon: 'fa-solid fa-people-group', matchExtra: ['/plan-club'] },
+  { to: '/plan-trip', key: 'nav.planTrip', icon: 'fa-solid fa-map-location-dot' },
   { to: '/members', key: 'nav.members', icon: 'fa-solid fa-users' },
+  { to: '/clubs', key: 'nav.clubs', icon: 'fa-solid fa-people-group', matchExtra: ['/plan-club'] },
   { to: '/gallery', key: 'nav.gallery', icon: 'fa-regular fa-image' },
   { to: '/completed-trips', key: 'nav.completedTrips', icon: 'fa-solid fa-trophy' },
-  { to: '/how-it-works', key: 'nav.howItWorks', icon: 'fa-solid fa-book-open' },
-  { to: '/plan-trip', key: 'nav.planTrip', icon: 'fa-solid fa-map-location-dot' },
   { to: '/testimonials', key: 'nav.reviews', icon: 'fa-regular fa-star' },
+  { to: '/how-it-works', key: 'nav.howItWorks', icon: 'fa-solid fa-book-open' },
   { to: '/about', key: 'nav.about', icon: 'fa-solid fa-circle-info' },
   { to: '/contact', key: 'nav.contact', icon: 'fa-solid fa-phone' },
 ];
@@ -160,7 +164,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
+      <nav className={`navbar${scrolled || mobileOpen ? ' scrolled' : ''}`}>
         <Link to="/" className="nav-brand">
           <BrandLogo variant="horizontal" />
         </Link>
@@ -210,18 +214,21 @@ export default function Navbar() {
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-user" /> {t('menu.myProfile')}
                   </Link>
+                  <Link to="/chat" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
+                  </Link>
                   <Link to="/notifications" onClick={() => setMenuOpen(false)}>
                     <i className="fa-regular fa-bell" /> {t('menu.notifications')}
                     {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
                   </Link>
-                  <Link to="/dashboard?tab=settings" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-gear" /> {t('menu.settings')}
-                  </Link>
-                  <Link to="/chat" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
-                  </Link>
                   <Link to="/referrals" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-gift" /> {t('menu.referrals')}
+                  </Link>
+                  <Link to="/my-plan" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-id-badge" /> {t('menu.myPlan')}
+                  </Link>
+                  <Link to="/dashboard?tab=settings" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-gear" /> {t('menu.settings')}
                   </Link>
                   <Link to="/plan-trip" onClick={() => setMenuOpen(false)}>
                     <i className="fa-solid fa-map-location-dot" /> {t('menu.planTrip')}
@@ -276,6 +283,21 @@ export default function Navbar() {
           <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
           {theme === 'dark' ? t('menu.lightMode') : t('menu.darkMode')}
         </button>
+        {accessToken && (
+          <>
+            <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-user" /> {t('menu.myProfile')}
+            </NavLink>
+            <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
+              {pendingRequestCount > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{pendingRequestCount}</span>}
+            </NavLink>
+            <NavLink to="/notifications" onClick={() => setMobileOpen(false)}>
+              <i className="fa-regular fa-bell" /> {t('menu.notifications')}
+              {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+            </NavLink>
+          </>
+        )}
         {MOBILE_LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.to === '/'} onClick={() => setMobileOpen(false)} className={linkClassName(l)}>
             <i className={l.icon} /> {t(l.key)}
@@ -283,22 +305,14 @@ export default function Navbar() {
         ))}
         {accessToken ? (
           <>
-            <NavLink to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-user" /> {t('menu.myProfile')}
+            <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-gift" /> {t('menu.referrals')}
             </NavLink>
-            <NavLink to="/notifications" onClick={() => setMobileOpen(false)}>
-              <i className="fa-regular fa-bell" /> {t('menu.notifications')}
-              {unread > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{unread}</span>}
+            <NavLink to="/my-plan" onClick={() => setMobileOpen(false)}>
+              <i className="fa-solid fa-id-badge" /> {t('menu.myPlan')}
             </NavLink>
             <NavLink to="/dashboard?tab=settings" onClick={() => setMobileOpen(false)}>
               <i className="fa-solid fa-gear" /> {t('menu.settings')}
-            </NavLink>
-            <NavLink to="/chat" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-comment-dots" /> {t('menu.messages')}
-              {pendingRequestCount > 0 && <span className="badge badge-magenta" style={{ marginLeft: 'auto' }}>{pendingRequestCount}</span>}
-            </NavLink>
-            <NavLink to="/referrals" onClick={() => setMobileOpen(false)}>
-              <i className="fa-solid fa-gift" /> {t('menu.referrals')}
             </NavLink>
             {showEnablePush && (
               <button onClick={() => { setMobileOpen(false); handleEnablePush(); }}>

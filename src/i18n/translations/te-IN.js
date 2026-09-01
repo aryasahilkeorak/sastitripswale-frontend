@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'సెట్టింగ్‌లు',
   'menu.messages': 'సందేశాలు',
   'menu.referrals': 'రెఫరల్స్',
+  'menu.myPlan': 'నా ప్లాన్',
   'menu.planTrip': 'ట్రిప్ ప్లాన్ చేయండి',
   'menu.planGroupTrip': 'గ్రూప్ ట్రిప్ ప్లాన్ చేయండి',
   'menu.createClub': 'క్లబ్ సృష్టించండి',

@@ -3,14 +3,38 @@ import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { confirm } from '../../lib/confirm.js';
 import Modal from '../../components/Modal.jsx';
+import CustomSelect from '../../components/CustomSelect.jsx';
 import CustomNumberStepper from '../../components/CustomNumberStepper.jsx';
-import { imageUrl, AVATAR_FALLBACK } from '../../lib/helpers.js';
+import { imageUrl, AVATAR_FALLBACK, rupee, PLAN_LIST } from '../../lib/helpers.js';
 
 const STATUS_BADGE = { pending: 'badge-gold', approved: 'badge-green', rejected: 'badge-fire' };
+
+const PLAN_OPTIONS = PLAN_LIST.map((p) => ({ value: p.key, label: `${rupee(p.price)} - ${p.label}` }));
 
 function suggestCode(user, discountPct) {
   const handle = (user?.username || user?.fullName || 'promo').replace(/[^a-zA-Z0-9]/g, '');
   return `${handle}${discountPct}`.toUpperCase();
+}
+
+// Same value for every plan, to start a fresh approve form from.
+function flatPlanPcts(value) {
+  return Object.fromEntries(PLAN_LIST.map((p) => [p.key, value]));
+}
+
+// Per-plan map for an already-approved influencer - falls back to their
+// flat headline value for any plan not yet set individually (e.g. an
+// influencer approved before per-plan rates existed).
+function planPctsFrom(perPlan, legacyFlat, fallback) {
+  return Object.fromEntries(PLAN_LIST.map((p) => [p.key, perPlan?.[p.key] ?? legacyFlat ?? fallback]));
+}
+
+// Compact display for a table cell - "20%" if every plan matches, else the
+// spread, e.g. "10-30%".
+function pctRangeLabel(perPlan, legacyFlat) {
+  const vals = PLAN_LIST.map((p) => perPlan?.[p.key] ?? legacyFlat ?? 0);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  return min === max ? `${min}%` : `${min}-${max}%`;
 }
 
 const SOCIAL_ICON = { instagram: 'fa-brands fa-instagram', facebook: 'fa-brands fa-facebook', twitter: 'fa-brands fa-x-twitter', youtube: 'fa-brands fa-youtube', linkedin: 'fa-brands fa-linkedin' };
@@ -55,15 +79,18 @@ export default function AdminInfluencers() {
   const [commissions, setCommissions] = useState([]);
   const [viewing, setViewing] = useState(null); // application being viewed read-only
   const [approving, setApproving] = useState(null); // influencer being approved/reconsidered
-  const [approveForm, setApproveForm] = useState({ couponCode: '', discountPct: 10, commissionPct: 10 });
+  const [approveForm, setApproveForm] = useState({ couponCode: '', discountPcts: flatPlanPcts(10), commissionPcts: flatPlanPcts(10) });
+  const [approvePlan, setApprovePlan] = useState(PLAN_LIST[3].key);
   const [editing, setEditing] = useState(null); // approved influencer being edited
+  const [editPlan, setEditPlan] = useState(PLAN_LIST[3].key);
 
   const load = () => api.get('/admin/influencers').then((r) => setInfluencers(r.data.influencers)).catch(() => {});
   const loadCommissions = () => api.get('/admin/commissions').then((r) => setCommissions(r.data.commissions)).catch(() => {});
   useEffect(() => { load(); loadCommissions(); }, []);
 
   const openApprove = (inf) => {
-    setApproveForm({ couponCode: suggestCode(inf.user, 10), discountPct: 10, commissionPct: 10 });
+    setApproveForm({ couponCode: suggestCode(inf.user, 10), discountPcts: flatPlanPcts(10), commissionPcts: flatPlanPcts(10) });
+    setApprovePlan(PLAN_LIST[3].key);
     setApproving(inf);
   };
 
@@ -86,11 +113,20 @@ export default function AdminInfluencers() {
     } catch (err) { toast('fa-solid fa-circle-xmark', apiError(err)); }
   };
 
+  const openEdit = (inf) => {
+    setEditing({
+      ...inf,
+      discountPcts: planPctsFrom(inf.coupon?.discountPcts, inf.coupon?.discountPct, 0),
+      commissionPcts: planPctsFrom(inf.commissionPcts, inf.commissionPct, 10),
+    });
+    setEditPlan(PLAN_LIST[3].key);
+  };
+
   const saveEdit = async (e) => {
     e.preventDefault();
     try {
       await api.put(`/admin/influencers/${editing._id}`, {
-        discountPct: editing.coupon?.discountPct, commissionPct: editing.commissionPct,
+        discountPcts: editing.discountPcts, commissionPcts: editing.commissionPcts,
       });
       setEditing(null);
       load();
@@ -142,9 +178,9 @@ export default function AdminInfluencers() {
                   </td>
                   <td data-label="Status"><span className={`badge ${STATUS_BADGE[inf.status] || ''}`}>{inf.status}</span></td>
                   <td data-label="Coupon" style={{ fontFamily: 'var(--font-mono)' }}>
-                    {inf.coupon ? `${inf.coupon.code} (${inf.coupon.discountPct}%)` : '—'}
+                    {inf.coupon ? `${inf.coupon.code} (${pctRangeLabel(inf.coupon.discountPcts, inf.coupon.discountPct)})` : '—'}
                   </td>
-                  <td data-label="Commission">{inf.status === 'approved' ? `${inf.commissionPct}%` : '—'}</td>
+                  <td data-label="Commission">{inf.status === 'approved' ? pctRangeLabel(inf.commissionPcts, inf.commissionPct) : '—'}</td>
                   <td data-label="Earned">{inf.status === 'approved' ? `₹${((inf.totalEarnedPaise || 0) / 100).toFixed(2)}` : '—'}</td>
                   <td data-label="Actions">
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -157,7 +193,7 @@ export default function AdminInfluencers() {
                       )}
                       {inf.status === 'approved' && (
                         <>
-                          <button className="btn btn-sm btn-outline" onClick={() => setEditing({ ...inf })}><i className="fa-solid fa-pen-to-square" /></button>
+                          <button className="btn btn-sm btn-outline" onClick={() => openEdit(inf)}><i className="fa-solid fa-pen-to-square" /></button>
                           <button className="btn btn-sm" style={{ background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={() => revoke(inf)}><i className="fa-solid fa-trash" /></button>
                         </>
                       )}
@@ -214,14 +250,31 @@ export default function AdminInfluencers() {
               <label>Coupon code</label>
               <input className="form-input" value={approveForm.couponCode} onChange={(e) => setApproveForm({ ...approveForm, couponCode: e.target.value.toUpperCase() })} required />
             </div>
+            <div className="form-group">
+              <label>Membership plan</label>
+              <CustomSelect value={approvePlan} onChange={(e) => setApprovePlan(e.target.value)} options={PLAN_OPTIONS} />
+            </div>
+            <p className="text-muted" style={{ fontSize: '0.76rem', marginTop: -6, marginBottom: 10 }}>
+              Set separately for each plan - pick another plan above to set its rates too.
+            </p>
             <div className="form-row">
               <div className="form-group">
                 <label>Customer discount %</label>
-                <CustomNumberStepper min={0} max={100} value={approveForm.discountPct} onChange={(e) => setApproveForm({ ...approveForm, discountPct: e.target.value })} />
+                <CustomNumberStepper
+                  min={0}
+                  max={100}
+                  value={approveForm.discountPcts[approvePlan]}
+                  onChange={(e) => setApproveForm({ ...approveForm, discountPcts: { ...approveForm.discountPcts, [approvePlan]: e.target.value } })}
+                />
               </div>
               <div className="form-group">
                 <label>Influencer commission % (10-30)</label>
-                <CustomNumberStepper min={10} max={30} value={approveForm.commissionPct} onChange={(e) => setApproveForm({ ...approveForm, commissionPct: e.target.value })} />
+                <CustomNumberStepper
+                  min={10}
+                  max={30}
+                  value={approveForm.commissionPcts[approvePlan]}
+                  onChange={(e) => setApproveForm({ ...approveForm, commissionPcts: { ...approveForm.commissionPcts, [approvePlan]: e.target.value } })}
+                />
               </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}><i className="fa-solid fa-star" /> Approve &amp; issue coupon</button>
@@ -252,14 +305,28 @@ export default function AdminInfluencers() {
             <p className="text-muted" style={{ marginBottom: 12 }}>
               <strong>{editing.user?.fullName}</strong> - coupon <span style={{ fontFamily: 'var(--font-mono)' }}>{editing.coupon?.code}</span>
             </p>
+            <div className="form-group">
+              <label>Membership plan</label>
+              <CustomSelect value={editPlan} onChange={(e) => setEditPlan(e.target.value)} options={PLAN_OPTIONS} />
+            </div>
             <div className="form-row">
               <div className="form-group">
                 <label>Customer discount %</label>
-                <CustomNumberStepper min={0} max={100} value={editing.coupon?.discountPct ?? ''} onChange={(e) => setEditing({ ...editing, coupon: { ...editing.coupon, discountPct: e.target.value } })} />
+                <CustomNumberStepper
+                  min={0}
+                  max={100}
+                  value={editing.discountPcts[editPlan]}
+                  onChange={(e) => setEditing({ ...editing, discountPcts: { ...editing.discountPcts, [editPlan]: e.target.value } })}
+                />
               </div>
               <div className="form-group">
                 <label>Influencer commission % (10-30)</label>
-                <CustomNumberStepper min={10} max={30} value={editing.commissionPct ?? ''} onChange={(e) => setEditing({ ...editing, commissionPct: e.target.value })} />
+                <CustomNumberStepper
+                  min={10}
+                  max={30}
+                  value={editing.commissionPcts[editPlan]}
+                  onChange={(e) => setEditing({ ...editing, commissionPcts: { ...editing.commissionPcts, [editPlan]: e.target.value } })}
+                />
               </div>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}><i className="fa-solid fa-floppy-disk" /> Save changes</button>

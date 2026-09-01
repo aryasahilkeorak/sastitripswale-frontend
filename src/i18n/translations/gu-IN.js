@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'સેટિંગ્સ',
   'menu.messages': 'સંદેશા',
   'menu.referrals': 'રેફરલ્સ',
+  'menu.myPlan': 'મારો પ્લાન',
   'menu.planTrip': 'ટ્રિપ પ્લાન કરો',
   'menu.planGroupTrip': 'ગ્રુપ ટ્રિપ પ્લાન કરો',
   'menu.createClub': 'ક્લબ બનાવો',
