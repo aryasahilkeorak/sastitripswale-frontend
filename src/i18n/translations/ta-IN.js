@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'அமைப்புகள்',
   'menu.messages': 'செய்திகள்',
   'menu.referrals': 'பரிந்துரைகள்',
+  'menu.myPlan': 'எனது பிளான்',
   'menu.planTrip': 'ஒரு பயணத்தைத் திட்டமிடுங்கள்',
   'menu.planGroupTrip': 'குழு பயணத்தைத் திட்டமிடுங்கள்',
   'menu.createClub': 'கிளப் உருவாக்குங்கள்',

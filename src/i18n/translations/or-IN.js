@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'ସେଟିଂସ୍',
   'menu.messages': 'ବାର୍ତ୍ତା',
   'menu.referrals': 'ରେଫେରାଲ',
+  'menu.myPlan': 'ମୋ ପ୍ଲାନ୍',
   'menu.planTrip': 'ଏକ ଟ୍ରିପ୍ ଯୋଜନା କରନ୍ତୁ',
   'menu.planGroupTrip': 'ଗ୍ରୁପ୍ ଟ୍ରିପ୍ ଯୋଜନା କରନ୍ତୁ',
   'menu.createClub': 'କ୍ଲବ୍ ତିଆରି କରନ୍ତୁ',

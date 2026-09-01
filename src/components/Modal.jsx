@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-export default function Modal({ open, onClose, title, children, maxWidth }) {
+export default function Modal({ open, onClose, title, children, maxWidth, centered, zIndex }) {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => e.key === 'Escape' && onClose?.();
@@ -13,9 +14,15 @@ export default function Modal({ open, onClose, title, children, maxWidth }) {
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  // Portalled to document.body: a `position: fixed` overlay only covers the
+  // viewport if none of its ancestors set transform/filter/backdrop-filter
+  // (each creates a containing block that traps fixed descendants inside
+  // it). Cards on this page use backdrop-filter, so without the portal the
+  // overlay collapses to the card's own box instead of covering the screen.
+  return createPortal(
     <div
-      className="modal-overlay open"
+      className={`modal-overlay open${centered ? ' modal-overlay-center' : ''}`}
+      style={zIndex ? { zIndex } : undefined}
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div className="modal" style={maxWidth ? { maxWidth } : undefined}>
@@ -29,6 +36,7 @@ export default function Modal({ open, onClose, title, children, maxWidth }) {
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

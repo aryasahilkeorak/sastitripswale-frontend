@@ -23,6 +23,7 @@ export default {
   'menu.settings': 'Settings',
   'menu.messages': 'Messages',
   'menu.referrals': 'Referrals',
+  'menu.myPlan': 'My Plan',
   'menu.planTrip': 'Plan a Trip',
   'menu.planGroupTrip': 'Plan a Group Trip',
   'menu.createClub': 'Create a Club',

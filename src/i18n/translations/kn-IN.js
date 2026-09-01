@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
   'menu.messages': 'ಸಂದೇಶಗಳು',
   'menu.referrals': 'ರೆಫರಲ್‌ಗಳು',
+  'menu.myPlan': 'ನನ್ನ ಪ್ಲಾನ್',
   'menu.planTrip': 'ಒಂದು ಟ್ರಿಪ್ ಯೋಜಿಸಿ',
   'menu.planGroupTrip': 'ಗುಂಪು ಟ್ರಿಪ್ ಯೋಜಿಸಿ',
   'menu.createClub': 'ಕ್ಲಬ್ ರಚಿಸಿ',

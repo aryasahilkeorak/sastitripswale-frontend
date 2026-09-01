@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'सेटिंग्स',
   'menu.messages': 'संदेश',
   'menu.referrals': 'रेफरल',
+  'menu.myPlan': 'मेरा प्लान',
   'menu.planTrip': 'ट्रिप प्लान करें',
   'menu.planGroupTrip': 'ग्रुप ट्रिप प्लान करें',
   'menu.createClub': 'क्लब बनाएं',

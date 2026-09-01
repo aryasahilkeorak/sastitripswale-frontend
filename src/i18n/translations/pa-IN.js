@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'ਸੈਟਿੰਗਾਂ',
   'menu.messages': 'ਸੁਨੇਹੇ',
   'menu.referrals': 'ਰੈਫਰਲ',
+  'menu.myPlan': 'ਮੇਰਾ ਪਲਾਨ',
   'menu.planTrip': 'ਇੱਕ ਟ੍ਰਿਪ ਪਲਾਨ ਕਰੋ',
   'menu.planGroupTrip': 'ਗਰੁੱਪ ਟ੍ਰਿਪ ਪਲਾਨ ਕਰੋ',
   'menu.createClub': 'ਕਲੱਬ ਬਣਾਓ',

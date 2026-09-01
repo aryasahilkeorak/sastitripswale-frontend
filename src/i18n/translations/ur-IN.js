@@ -18,6 +18,7 @@ export default {
   'menu.settings': 'ترتیبات',
   'menu.messages': 'پیغامات',
   'menu.referrals': 'ریفرلز',
+  'menu.myPlan': 'میرا پلان',
   'menu.planTrip': 'ایک ٹرپ کی منصوبہ بندی کریں',
   'menu.planGroupTrip': 'گروپ ٹرپ کی منصوبہ بندی کریں',
   'menu.createClub': 'کلب بنائیں',
