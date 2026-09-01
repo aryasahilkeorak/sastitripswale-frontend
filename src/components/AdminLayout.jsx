@@ -156,7 +156,10 @@ export default function AdminLayout() {
                 <i className={isSuper ? 'fa-solid fa-crown' : 'fa-solid fa-shield-halved'} /> {isSuper ? 'Super Admin' : 'Admin'}
               </span>
             </div>
-            <img src={imageUrl(user?.adminAvatarUrl || user?.avatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
+            {/* adminAvatarUrl only, deliberately no `|| user?.avatarUrl` fallback -
+                that used to make this look like it was mirroring the member
+                photo below whenever a dedicated admin photo hadn't been set. */}
+            <img src={imageUrl(user?.adminAvatarUrl, AVATAR_FALLBACK)} alt={user?.fullName} onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)} />
           </Link>
         </div>
 
