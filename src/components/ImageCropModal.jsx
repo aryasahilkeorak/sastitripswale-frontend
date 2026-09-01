@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Modal from './Modal.jsx';
-import RangeSlider from './RangeSlider.jsx';
-import { useT } from '../i18n/index.js';
 
 const MAX_ZOOM = 3;
 
-// Crop modal for uploaded photos. Drag to pan, slider (or wheel) to zoom.
+// Crop modal for uploaded photos. Drag/touch to pan, scroll or pinch to zoom.
 // `aspect` (width/height) controls the crop shape: 1 (default) gives the
 // square/circular-guide crop used for avatars everywhere in the app; any
 // other ratio (e.g. 3 for a wide banner) gives a rectangular crop with no
@@ -19,6 +17,13 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
   const imgRef = useRef(null);
   const viewportRef = useRef(null);
   const dragRef = useRef(null);
+  // Active touch/mouse/pen pointers, keyed by pointerId - lets us tell a
+  // single-finger pan from a two-finger pinch instead of letting a second
+  // finger's pointerdown silently clobber the first's drag origin (which is
+  // what made pinch-zoom feel like the image was jumping/tilting instead of
+  // scaling).
+  const pointersRef = useRef(new Map());
+  const pinchRef = useRef(null);
 
   const isSquare = aspect === 1;
   const viewW = isSquare ? 300 : 480;
@@ -37,6 +42,9 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
     setSrc(url);
     setScale(1);
     setPos({ x: 0, y: 0 });
+    pointersRef.current.clear();
+    pinchRef.current = null;
+    dragRef.current = null;
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
@@ -46,12 +54,18 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
   const renderW = natural.w * baseScale * scale;
   const renderH = natural.h * baseScale * scale;
 
+  // `left`/`top` below re-center the image around pos - i.e. left = (viewW -
+  // w)/2 + x - so pos itself must be clamped to a *symmetric* range around 0
+  // (half the overflow each way), not to [viewW-w, 0]. That range is only
+  // correct for un-centered (raw top-left) positioning; used here, it let
+  // one drag direction run too far (a gap past the image's edge) while
+  // blocking the opposite direction entirely at pos=0.
   const clamp = (x, y, w = renderW, h = renderH) => {
-    const minX = Math.min(0, viewW - w);
-    const minY = Math.min(0, viewH - h);
+    const maxX = Math.max(0, (w - viewW) / 2);
+    const maxY = Math.max(0, (h - viewH) / 2);
     return {
-      x: Math.max(minX, Math.min(0, x)),
-      y: Math.max(minY, Math.min(0, y)),
+      x: Math.max(-maxX, Math.min(maxX, x)),
+      y: Math.max(-maxY, Math.min(maxY, y)),
     };
   };
 
@@ -60,15 +74,57 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
 
   const onLoad = () => {
     const el = imgRef.current;
-    setNatural({ w: el.naturalWidth, h: el.naturalHeight });
+    const w = el.naturalWidth;
+    const h = el.naturalHeight;
+    setNatural({ w, h });
+    // A dead-center default crop chops the top of the subject's head off for
+    // a typical portrait photo (cover-fit only leaves room to pan vertically
+    // when the source is taller than the square frame, and centering it
+    // crops evenly top/bottom - but a person's face usually sits nearer the
+    // top of the frame, not the middle). Bias the initial framing so most of
+    // that crop comes off the bottom instead, so avatars look right without
+    // the user having to drag first.
+    if (isSquare) {
+      const base = Math.max(viewW / w, viewH / h);
+      const overflow = h * base - viewH;
+      setPos(overflow > 0 ? { x: 0, y: overflow * 0.35 } : { x: 0, y: 0 });
+    } else {
+      setPos({ x: 0, y: 0 });
+    }
   };
+
+  const pinchDistance = (pts) => Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
 
   const onPointerDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = Array.from(pointersRef.current.values());
+    if (pts.length >= 2) {
+      // A second finger just landed - stop panning and start a pinch instead
+      // of letting this pointerdown overwrite dragRef with a new origin.
+      dragRef.current = null;
+      pinchRef.current = { startDist: pinchDistance(pts), startScale: scale, startPos: pos };
+    } else {
+      pinchRef.current = null;
+      dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
+    }
   };
 
   const onPointerMove = (e) => {
+    if (!pointersRef.current.has(e.pointerId)) return;
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = Array.from(pointersRef.current.values());
+
+    if (pts.length >= 2 && pinchRef.current) {
+      const factor = pinchDistance(pts) / pinchRef.current.startDist;
+      const next = Math.max(1, Math.min(MAX_ZOOM, pinchRef.current.startScale * factor));
+      setScale(next);
+      const w = natural.w * baseScale * next;
+      const h = natural.h * baseScale * next;
+      setPos(clamp(pinchRef.current.startPos.x, pinchRef.current.startPos.y, w, h));
+      return;
+    }
+
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
@@ -77,23 +133,19 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
     setPos(clamp(rawX, rawY));
   };
 
-  const onPointerUp = () => {
-    dragRef.current = null;
+  const onPointerUp = (e) => {
+    pointersRef.current.delete(e.pointerId);
+    pinchRef.current = null;
+    const remaining = Array.from(pointersRef.current.values());
+    // One finger lifted but one is still down (pinch -> pan) - resume
+    // panning from here instead of leaving the gesture dead until both lift.
+    dragRef.current = remaining.length === 1 ? { startX: remaining[0].x, startY: remaining[0].y, origX: pos.x, origY: pos.y } : null;
   };
 
   const onWheel = (e) => {
     e.preventDefault();
     const next = Math.max(1, Math.min(MAX_ZOOM, scale - e.deltaY * 0.0015));
     setScale(next);
-  };
-
-  const changeZoom = (e) => {
-    const next = Number(e.target.value);
-    setScale(next);
-    // Re-clamp against the new render size so the image never leaves a gap.
-    const w = natural.w * baseScale * next;
-    const h = natural.h * baseScale * next;
-    setPos((p) => clamp(p.x, p.y, w, h));
   };
 
   const applyCrop = () => {
@@ -119,7 +171,11 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
   };
 
   return (
-    <Modal open={Boolean(file)} onClose={onCancel} title={title} maxWidth={viewW + 40}>
+    // +80 (not the visually-tighter +40) so the viewport actually fits inside
+    // the modal's own 36px padding on each side (72px total) - it used to
+    // fall short, which forced the modal into a horizontal scroll/overflow
+    // around the crop area and threw off exactly where a drag landed on it.
+    <Modal open={Boolean(file)} onClose={onCancel} title={title} maxWidth={viewW + 80}>
       <div
         ref={viewportRef}
         className="crop-viewport"
@@ -141,10 +197,9 @@ export default function ImageCropModal({ file, onCancel, onCropped, aspect = 1, 
         {guide === 'circle' && <div className="crop-circle-guide" />}
       </div>
 
-      <div className="form-group mt-3">
-        <label><i className="fa-solid fa-magnifying-glass-plus" /> Zoom</label>
-        <RangeSlider min={1} max={MAX_ZOOM} step={0.01} value={scale} onChange={changeZoom} />
-      </div>
+      <p className="text-muted" style={{ fontSize: '0.78rem', textAlign: 'center', margin: '10px 0 4px' }}>
+        <i className="fa-solid fa-arrows-up-down-left-right" /> Drag to reposition · scroll or pinch to zoom
+      </p>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
         <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }} onClick={onCancel}>
