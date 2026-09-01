@@ -683,7 +683,16 @@ export default function Chat() {
                             )}
                             <div>
                               {!isDm && <div className="chat-sender">{mine ? 'You' : (displayName(m.sender) || 'Member')}</div>}
-                              <div className="chat-bubble">{m.text}</div>
+                              {m.sharedPhoto && (
+                                <div className="chat-shared-photo" onClick={() => setZoomImg(imageUrl(m.sharedPhoto.photoUrl))}>
+                                  <img src={imageUrl(m.sharedPhoto.photoUrl)} alt="" />
+                                </div>
+                              )}
+                              {m.text ? (
+                                <div className="chat-bubble">{m.text}</div>
+                              ) : m.sharedPhoto ? (
+                                <div className="chat-bubble chat-bubble-meta">Shared a photo</div>
+                              ) : null}
                               <div className="chat-time">
                                 {timeAgo(m.createdAt)}
                                 {m.isAuto && <span className="text-muted" style={{ marginLeft: 6 }}><i className="fa-solid fa-robot" /> Automated reply</span>}

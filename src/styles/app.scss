@@ -3061,12 +3061,27 @@
 
 .ig-tile {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   border-radius: var(--r-sm);
   background: var(--surface);
   cursor: pointer;
   color: inherit;
+}
+
+// A status badge (e.g. "Completed") laid over a trip tile's photo - same
+// problem as .trip-card-img-wrap .badge: the badge's normal translucent
+// tint has too little contrast against a bright photo without a solid dark
+// backing, so it reads as an illegible smear instead of legible text.
+.ig-tile .badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  background: rgba(6, 7, 13, 0.72);
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .ig-tile img {
@@ -3923,6 +3938,24 @@ table.data-table {
   border-bottom-left-radius: 4px;
 }
 
+.chat-bubble-meta {
+  font-style: italic;
+  color: var(--text-3);
+}
+
+.chat-shared-photo {
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.chat-shared-photo img {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: var(--r);
+  object-fit: cover;
+  display: block;
+}
+
 /* Support chat's "typing…" indicator - three bouncing dots in place of a
    real bubble while the auto-reply is deliberately delayed a couple of
    seconds so it doesn't feel instant/robotic. */
@@ -4418,6 +4451,87 @@ table.data-table {
   object-fit: cover;
   border-radius: var(--r);
   border: 1px solid var(--glass-bdr);
+}
+
+// Full-width responsive grid of document tiles for the member-facing "My
+// Documents" list (Dashboard) - replaces a plain vertical list so a wide
+// settings page (see Dashboard's documents-view maxWidth override) doesn't
+// leave most of it empty.
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r);
+  background: var(--glass-2);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-bdr);
+  overflow: hidden;
+}
+
+.doc-card-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 140px;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  @include hover-only {
+    .doc-card-thumb-zoom {
+      opacity: 1;
+    }
+  }
+}
+
+.doc-card-thumb-zoom {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.1rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+// Dashed placeholder tile shown for a required document slot that hasn't
+// been uploaded yet - same footprint as .doc-card-thumb's image, no photo.
+.doc-card-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px dashed var(--glass-bdr);
+  color: var(--fire);
+  font-size: 1.6rem;
+}
+
+.doc-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  padding: 14px;
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .admin-profile-hero {

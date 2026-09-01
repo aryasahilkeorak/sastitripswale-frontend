@@ -4,10 +4,12 @@ import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import {
   imageUrl,
+  authedFileUrl,
   rupee,
   paiseToRupee,
   timeAgo,
   AVATAR_FALLBACK,
+  DOC_FALLBACK,
   isVehicleModelYearMistake,
   VEHICLE_MODEL_YEAR_MISTAKE_MSG,
   SOCIAL_PLATFORMS,
@@ -77,7 +79,7 @@ export default function Dashboard() {
 
   return (
     <section className="cp-section">
-      <div className="container" style={{ maxWidth: 680 }}>
+      <div className="container" style={{ maxWidth: settingsView === 'documents' ? 1100 : 680 }}>
         <div className="edit-profile-head">
           {settingsView ? (
             <button type="button" className="ig-id-btn" onClick={() => navigate(-1)} aria-label="Back">
@@ -283,6 +285,7 @@ function requiredDocSlots(user) {
 }
 
 export function DocumentsCard({ user, bare = false }) {
+  const accessToken = useAuth((s) => s.accessToken);
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reuploadingId, setReuploadingId] = useState(null);
@@ -402,21 +405,36 @@ export function DocumentsCard({ user, bare = false }) {
       <input ref={addFileRef} type="file" accept="image/*,application/pdf" hidden onChange={onAddFile} />
 
       {docs.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: missingSlots.length ? 16 : 0 }}>
+        <div className="doc-grid" style={{ marginBottom: missingSlots.length ? 28 : 0 }}>
           {docs.map((d) => (
-            <div key={d._id} className="row-between" style={{ alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span className="notif-icon"><i className="fa-solid fa-id-card" /></span>
+            <div key={d._id} className="doc-card">
+              <a
+                href={authedFileUrl(d.fileUrl, accessToken)}
+                target="_blank"
+                rel="noreferrer"
+                className="doc-card-thumb"
+                title={`View ${DOC_TYPE_LABEL[d.docType] || d.docType}${d.side ? ` (${d.side})` : ''}`}
+              >
+                <img
+                  src={authedFileUrl(d.fileUrl, accessToken)}
+                  alt={DOC_TYPE_LABEL[d.docType] || d.docType}
+                  onError={(e) => (e.currentTarget.src = DOC_FALLBACK)}
+                />
+                <span className="doc-card-thumb-zoom"><i className="fa-solid fa-magnifying-glass" /></span>
+              </a>
+              <div className="doc-card-body">
                 <div>
-                  <strong style={{ fontSize: '0.88rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</strong>
-                  <div><span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem', marginTop: 4 }}>{d.status}</span></div>
+                  <strong style={{ fontSize: '0.9rem' }}>{DOC_TYPE_LABEL[d.docType] || d.docType}{d.side ? ` (${d.side})` : ''}</strong>
+                  <div style={{ marginTop: 6 }}>
+                    <span className={`badge ${DOC_STATUS_BADGE[d.status] || 'badge-gold'}`} style={{ fontSize: '0.62rem' }}>{d.status}</span>
+                  </div>
                 </div>
+                {(d.status !== 'verified' || d.docType === 'selfie') && (
+                  <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
+                    <i className="fa-solid fa-rotate" /> Reupload
+                  </button>
+                )}
               </div>
-              {(d.status !== 'verified' || d.docType === 'selfie') && (
-                <button className="btn btn-sm btn-outline" onClick={() => pickReupload(d)}>
-                  <i className="fa-solid fa-rotate" /> Reupload
-                </button>
-              )}
             </div>
           ))}
         </div>
@@ -424,22 +442,24 @@ export function DocumentsCard({ user, bare = false }) {
 
       {missingSlots.length > 0 && (
         <div>
-          <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 10px' }}>
+          <p className="text-muted" style={{ fontSize: '0.78rem', margin: '0 0 12px' }}>
             <i className="fa-solid fa-triangle-exclamation" style={{ color: 'var(--fire)' }} /> Still missing - required to plan or join trips:
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="doc-grid">
             {missingSlots.map((slot) => (
-              <div key={`${slot.docType}-${slot.side}`} className="row-between" style={{ alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className="notif-icon"><i className={slot.docType === 'selfie' ? 'fa-solid fa-camera-retro' : 'fa-solid fa-id-card'} /></span>
-                  <strong style={{ fontSize: '0.88rem' }}>{slot.label}</strong>
+              <div key={`${slot.docType}-${slot.side}`} className="doc-card doc-card-missing">
+                <div className="doc-card-thumb doc-card-thumb-placeholder">
+                  <i className={slot.docType === 'selfie' ? 'fa-solid fa-camera-retro' : 'fa-solid fa-id-card'} />
                 </div>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => (slot.docType === 'selfie' ? setAddSelfieOpen(true) : pickAddSlot(slot))}
-                >
-                  <i className="fa-solid fa-upload" /> Upload
-                </button>
+                <div className="doc-card-body">
+                  <strong style={{ fontSize: '0.9rem' }}>{slot.label}</strong>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => (slot.docType === 'selfie' ? setAddSelfieOpen(true) : pickAddSlot(slot))}
+                  >
+                    <i className="fa-solid fa-upload" /> Upload
+                  </button>
+                </div>
               </div>
             ))}
           </div>
