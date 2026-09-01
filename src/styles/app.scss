@@ -1616,6 +1616,13 @@
 }
 
 .crop-viewport img {
+  // Overrides the global `img { max-width: 100% }` reset (style.scss), which
+  // otherwise clamps this image's width to the viewport's own 300px no
+  // matter what width the crop math sets inline - so zooming in grew the
+  // (unclamped) inline height while the width stayed capped, distorting the
+  // aspect ratio and throwing off the centering math that assumes the real
+  // rendered width. Zoom needs to be able to render past the viewport.
+  max-width: none;
   user-select: none;
   -webkit-user-drag: none;
 }
