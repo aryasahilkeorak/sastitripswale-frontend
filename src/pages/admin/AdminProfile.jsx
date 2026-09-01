@@ -1,15 +1,40 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { useAuth } from '../../store/auth.js';
 import { imageUrl, formatDate, AVATAR_FALLBACK } from '../../lib/helpers.js';
 import { toast } from '../../lib/toast.js';
 import PasswordInput from '../../components/PasswordInput.jsx';
 import ProfileHeaderPhotos from '../../components/ProfileHeaderPhotos.jsx';
+import ImageCropModal from '../../components/ImageCropModal.jsx';
 
 export default function AdminProfile() {
   const user = useAuth((s) => s.user);
   const setUser = useAuth((s) => s.setUser);
   const isSuper = user?.role === 'superadmin';
+
+  const adminAvatarRef = useRef(null);
+  const [pendingAdminAvatar, setPendingAdminAvatar] = useState(null);
+  const [adminAvatarBusy, setAdminAvatarBusy] = useState(false);
+
+  // Uploads straight away instead of going through the "Edit admin profile"
+  // form's Save button below - this hero photo (adminAvatarUrl) is a
+  // separate field from that form's member-facing avatar, so there's no
+  // reason to make changing it wait on unrelated fields being saved too.
+  const uploadAdminAvatar = async (cropped) => {
+    setPendingAdminAvatar(null);
+    setAdminAvatarBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('adminAvatar', cropped);
+      const { data } = await api.put('/members/profile', fd);
+      setUser(data.user);
+      toast('fa-solid fa-circle-check', 'Admin photo updated');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    } finally {
+      setAdminAvatarBusy(false);
+    }
+  };
 
   const [form, setForm] = useState({
     fullName: user?.fullName || '',
@@ -117,12 +142,41 @@ export default function AdminProfile() {
           shows in the admin header and, for the founder, on the public
           About page. */}
       <div className="admin-profile-hero mb-4">
-        <img
-          className="profile-avatar"
-          src={imageUrl(user?.adminAvatarUrl || user?.avatarUrl, AVATAR_FALLBACK)}
-          alt={user?.fullName}
-          onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
-        />
+        <div style={{ position: 'relative', width: 96, height: 96, flexShrink: 0 }}>
+          {/* adminAvatarUrl only - no `|| user?.avatarUrl` fallback. That
+              fallback was what made this look linked to the member avatar
+              below: with no dedicated admin photo set, it silently mirrored
+              whatever avatarUrl was, so editing the member photo appeared to
+              also change this one. Shows the generic placeholder instead
+              until a dedicated photo is uploaded via the camera button. */}
+          <img
+            className="profile-avatar"
+            src={imageUrl(user?.adminAvatarUrl, AVATAR_FALLBACK)}
+            alt={user?.fullName}
+            onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
+          />
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ position: 'absolute', right: 0, bottom: 0, borderRadius: '50%', width: 30, height: 30, padding: 0, justifyContent: 'center', background: 'var(--fire)', color: '#fff' }}
+            onClick={() => adminAvatarRef.current?.click()}
+            disabled={adminAvatarBusy}
+            title="Change admin photo"
+          >
+            {adminAvatarBusy ? <span className="spinner" /> : <i className="fa-solid fa-camera" />}
+          </button>
+          <input
+            ref={adminAvatarRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (f) setPendingAdminAvatar(f);
+            }}
+          />
+        </div>
         <div style={{ flex: 1, minWidth: 220 }}>
           <span className={`role-badge ${isSuper ? 'super' : 'admin'}`} style={{ marginBottom: 8 }}>
             <i className={isSuper ? 'fa-solid fa-crown' : 'fa-solid fa-shield-halved'} /> {isSuper ? 'Super Admin' : 'Admin'}
@@ -138,6 +192,13 @@ export default function AdminProfile() {
           </p>
         </div>
       </div>
+
+      <ImageCropModal
+        file={pendingAdminAvatar}
+        title="Crop admin photo"
+        onCancel={() => setPendingAdminAvatar(null)}
+        onCropped={uploadAdminAvatar}
+      />
 
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
