@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api, apiError } from '../lib/api.js';
 import { useAuth } from '../store/auth.js';
 import { imageUrl, authedFileUrl, rupee, formatDate, timeAgo, AVATAR_FALLBACK, TRAVEL_INTEREST_ICONS } from '../lib/helpers.js';
+import { toPostShape } from '../lib/galleryPost.js';
 import { toast } from '../lib/toast.js';
 import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
@@ -267,6 +268,32 @@ export default function MemberDetail() {
     );
 
   const photoImgs = (member.recentPhotos || []).map((p) => imageUrl(p.photoUrl));
+  const photoPosts = (member.recentPhotos || []).map((p) => toPostShape(p, member));
+
+  const likePhoto = async (photoId) => {
+    try {
+      const { data } = await api.post(`/gallery/${photoId}/like`);
+      setMember((m) => ({
+        ...m,
+        recentPhotos: m.recentPhotos.map((p) => (p._id === photoId ? { ...p, likedByMe: data.liked, likesCount: data.likesCount } : p)),
+      }));
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
+  // A repost always lands on the current user's OWN profile, never this
+  // one - reposting is disabled here whenever the viewed photo is already
+  // the viewer's own (see PostActions), so this only ever fires for someone
+  // else's photo. No local state to update - just confirm it worked.
+  const repostPhoto = async (photoId) => {
+    try {
+      await api.post(`/gallery/${photoId}/repost`);
+      toast('fa-solid fa-retweet', 'Reposted to your profile!');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
 
   return (
     <section className="detail-section">
@@ -427,7 +454,7 @@ export default function MemberDetail() {
                   <Link to={`/trips/${t._id}`} key={t._id} className="ig-tile">
                     <DestinationImage trip={t} loading="lazy" />
                     {t.status === 'completed' && (
-                      <span className="badge badge-green" style={{ position: 'absolute', top: 8, left: 8 }}>
+                      <span className="badge badge-green">
                         <i className="fa-solid fa-trophy" /> Completed
                       </span>
                     )}
@@ -522,9 +549,9 @@ export default function MemberDetail() {
         </div>
       </div>
 
-      <Lightbox images={photoImgs} index={lb} onClose={() => setLb(null)} onIndex={setLb} />
+      <Lightbox posts={photoPosts} index={lb} onClose={() => setLb(null)} onIndex={setLb} onLike={likePhoto} onRepost={repostPhoto} />
 
-      <Modal open={showSelfie} onClose={() => setShowSelfie(false)} title="Verification Selfie">
+      <Modal open={showSelfie} onClose={() => setShowSelfie(false)} title="Verification Selfie" centered>
         {selfieUrl && (
           <>
             <img

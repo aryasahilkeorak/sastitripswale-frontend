@@ -182,6 +182,14 @@ export default function EditTrip() {
         <Link to={`/trips/${id}`} className="btn btn-primary mt-3">Back to trip</Link>
       </div>
     );
+  if (trip.status === 'completed')
+    return (
+      <div className="empty-state" style={{ paddingTop: 160 }}>
+        <i className="fa-solid fa-trophy" />
+        <p>This trip is already completed and its details can't be edited.</p>
+        <Link to={`/trips/${id}`} className="btn btn-primary mt-3">Back to trip</Link>
+      </div>
+    );
 
   return (
     <>

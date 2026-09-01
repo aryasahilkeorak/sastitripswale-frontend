@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
-import { rupee, PLAN_PRICES } from '../../lib/helpers.js';
+import { rupee, PLAN_LIST } from '../../lib/helpers.js';
 import CustomSelect from '../../components/CustomSelect.jsx';
 import CustomNumberStepper from '../../components/CustomNumberStepper.jsx';
 
@@ -9,28 +9,23 @@ import CustomNumberStepper from '../../components/CustomNumberStepper.jsx';
 // left blank means "and every referral after this, forever".
 const BLANK_TIER = { from: '', to: '', rewardPct: '' };
 
-// Real membership prices (utils/plans.js) to preview the money flow against,
-// instead of an arbitrary made-up number.
-const EXAMPLE_PRICES = [
-  { value: PLAN_PRICES.single['6m'], label: `${rupee(PLAN_PRICES.single['6m'])} - Single, 6 months` },
-  { value: PLAN_PRICES.single['1y'], label: `${rupee(PLAN_PRICES.single['1y'])} - Single, 1 year` },
-  { value: PLAN_PRICES.both['6m'], label: `${rupee(PLAN_PRICES.both['6m'])} - Both, 6 months` },
-  { value: PLAN_PRICES.both['1y'], label: `${rupee(PLAN_PRICES.both['1y'])} - Both, 1 year` },
-];
+const PLANS = PLAN_LIST;
+const EXAMPLE_PRICES = PLANS.map((p) => ({ value: p.key, label: `${rupee(p.price)} - ${p.label}` }));
 
 export default function AdminReferralSettings() {
   const [enabled, setEnabled] = useState(null);
   const [busy, setBusy] = useState(false);
   const [tiers, setTiers] = useState([]);
   const [tiersBusy, setTiersBusy] = useState(false);
-  const [discountPct, setDiscountPct] = useState('');
+  const [discounts, setDiscounts] = useState({});
   const [discountBusy, setDiscountBusy] = useState(false);
-  const [examplePrice, setExamplePrice] = useState(EXAMPLE_PRICES[3].value);
+  const [selectedPlan, setSelectedPlan] = useState(EXAMPLE_PRICES[3].value);
 
   const load = () =>
     api.get('/admin/settings').then((r) => {
       setEnabled(r.data.settings.referralEnabled);
-      setDiscountPct(String(r.data.settings.referralDiscountPct ?? 0));
+      const d = r.data.settings.referralDiscounts || {};
+      setDiscounts(Object.fromEntries(PLANS.map((p) => [p.key, String(d[p.key] ?? 0)])));
       setTiers(
         (r.data.settings.referralTiers || []).map((t) => ({
           from: String(t.from),
@@ -54,14 +49,15 @@ export default function AdminReferralSettings() {
     }
   };
 
+  const setDiscount = (key, value) => setDiscounts((d) => ({ ...d, [key]: value }));
+
   const saveDiscount = async (e) => {
     e.preventDefault();
     setDiscountBusy(true);
     try {
-      const { data } = await api.patch('/admin/settings/referral-discount', {
-        referralDiscountPct: Number(discountPct || 0),
-      });
-      setDiscountPct(String(data.referralDiscountPct));
+      const payload = Object.fromEntries(PLANS.map((p) => [p.key, Number(discounts[p.key] || 0)]));
+      const { data } = await api.patch('/admin/settings/referral-discount', { referralDiscounts: payload });
+      setDiscounts(Object.fromEntries(PLANS.map((p) => [p.key, String(data.referralDiscounts[p.key] ?? 0)])));
       toast('fa-solid fa-circle-check', 'Referral discount updated');
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
@@ -101,7 +97,9 @@ export default function AdminReferralSettings() {
 
   // Live money-flow preview - updates as the admin types, before anything is
   // even saved, so the effect of a change is obvious immediately.
-  const discountNum = Math.min(100, Math.max(0, Number(discountPct) || 0));
+  const selectedPlanInfo = PLANS.find((p) => p.key === selectedPlan) || PLANS[0];
+  const examplePrice = selectedPlanInfo.price;
+  const discountNum = Math.min(100, Math.max(0, Number(discounts[selectedPlan]) || 0));
   const customerPays = Math.round(examplePrice * (1 - discountNum / 100));
 
   return (
@@ -142,7 +140,17 @@ export default function AdminReferralSettings() {
           <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>
             How much a new member saves on their <strong>first</strong> membership payment when they
             sign up with someone else's referral code - applied automatically, once per member.
+            Pick a plan below and set its discount - each plan keeps its own value.
           </p>
+          <div className="form-group">
+            <label htmlFor="discount-plan" className="text-muted" style={{ fontSize: '0.72rem' }}>Membership plan</label>
+            <CustomSelect
+              id="discount-plan"
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+              options={EXAMPLE_PRICES}
+            />
+          </div>
           <div className="form-group">
             <label htmlFor="referral-discount-pct" className="text-muted" style={{ fontSize: '0.72rem' }}>Discount off membership price</label>
             <CustomNumberStepper
@@ -151,8 +159,8 @@ export default function AdminReferralSettings() {
               min={0}
               max={100}
               step={1}
-              value={discountPct}
-              onChange={(e) => setDiscountPct(e.target.value)}
+              value={discounts[selectedPlan] ?? ''}
+              onChange={(e) => setDiscount(selectedPlan, e.target.value)}
               placeholder="e.g. 10"
             />
           </div>
@@ -166,16 +174,13 @@ export default function AdminReferralSettings() {
             <i className="fa-solid fa-calculator" style={{ color: 'var(--fire)', marginRight: 8 }} />Live example
           </h4>
           <p className="text-muted mb-3" style={{ fontSize: '0.85rem' }}>
-            What this actually looks like on a real membership price - updates as you type above, before you save.
+            What this actually looks like for the plan selected on the left - updates as you type, before you save.
           </p>
           <div className="form-group">
-            <label htmlFor="example-price" className="text-muted" style={{ fontSize: '0.72rem' }}>Example membership plan</label>
-            <CustomSelect
-              id="example-price"
-              value={examplePrice}
-              onChange={(e) => setExamplePrice(Number(e.target.value))}
-              options={EXAMPLE_PRICES}
-            />
+            <label className="text-muted" style={{ fontSize: '0.72rem' }}>Membership plan</label>
+            <div style={{ padding: '10px 14px', borderRadius: 'var(--r)', background: 'var(--bg-2)', fontSize: '0.88rem', fontWeight: 600 }}>
+              {rupee(selectedPlanInfo.price)} - {selectedPlanInfo.label}
+            </div>
           </div>
           <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
             <div className="admin-stat" style={{ padding: 14 }}>

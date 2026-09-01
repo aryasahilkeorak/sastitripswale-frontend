@@ -46,6 +46,7 @@ const EditProfile = lazy(() => import('./pages/EditProfile.jsx'));
 const Notifications = lazy(() => import('./pages/Notifications.jsx'));
 const Chat = lazy(() => import('./pages/Chat.jsx'));
 const Referrals = lazy(() => import('./pages/Referrals.jsx'));
+const MyPlan = lazy(() => import('./pages/MyPlan.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview.jsx'));
@@ -119,6 +120,7 @@ export default function App() {
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
+            <Route path="/my-plan" element={<ProtectedRoute><MyPlan /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/chat/:groupId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

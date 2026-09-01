@@ -7,7 +7,9 @@ import { toast } from '../lib/toast.js';
 import { confirm } from '../lib/confirm.js';
 import Loader from '../components/Loader.jsx';
 import Lightbox from '../components/Lightbox.jsx';
+import Modal from '../components/Modal.jsx';
 import CustomSelect from '../components/CustomSelect.jsx';
+import { toPostShape } from '../lib/galleryPost.js';
 import DestinationImage from '../components/DestinationImage.jsx';
 import Stars from '../components/Stars.jsx';
 import ProfileGateCard from '../components/ProfileGateCard.jsx';
@@ -118,6 +120,8 @@ export default function TripDetail() {
   const [lb, setLb] = useState(null);
   const [heroZoom, setHeroZoom] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState(null);
+  const [photoLocation, setPhotoLocation] = useState('');
   const photoInputRef = useRef(null);
   const hasPartnerInfo = Boolean(user?.partnerMobile && user?.partnerDocUrl);
 
@@ -186,21 +190,54 @@ export default function TripDetail() {
     }
   };
 
-  const uploadPhoto = async (e) => {
+  const pickPhoto = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    setPhotoLocation('');
+    setPendingPhotoFile(file);
+  };
+
+  const submitPhotoUpload = async (e) => {
+    e.preventDefault();
+    if (!pendingPhotoFile) return;
     setUploadingPhoto(true);
     try {
       const fd = new FormData();
-      fd.append('photo', file);
+      fd.append('photo', pendingPhotoFile);
+      if (photoLocation.trim()) fd.append('location', photoLocation.trim());
       await api.post(`/trips/${id}/photos`, fd);
       toast('fa-solid fa-images', 'Photo added to the trip gallery!');
+      setPendingPhotoFile(null);
       load();
     } catch (err) {
       toast('fa-solid fa-circle-xmark', apiError(err));
     } finally {
       setUploadingPhoto(false);
+    }
+  };
+
+  const likePhoto = async (photoId) => {
+    try {
+      const { data } = await api.post(`/gallery/${photoId}/like`);
+      setTrip((t) => ({
+        ...t,
+        photos: t.photos.map((p) => (p._id === photoId ? { ...p, likedByMe: data.liked, likesCount: data.likesCount } : p)),
+      }));
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
+    }
+  };
+
+  // A repost lands on the current user's own profile, not this trip (see
+  // galleryController.repostPhoto - `trip` is deliberately not copied), so
+  // there's no trip.photos state to update here.
+  const repostPhoto = async (photoId) => {
+    try {
+      await api.post(`/gallery/${photoId}/repost`);
+      toast('fa-solid fa-retweet', 'Reposted to your profile!');
+    } catch (err) {
+      toast('fa-solid fa-circle-xmark', apiError(err));
     }
   };
 
@@ -256,6 +293,7 @@ export default function TripDetail() {
   const days = tripDays(trip.startDate, trip.endDate);
   const vb = VEHICLE_BADGE[trip.vehicleType] || { cls: 'badge-fire', icon: 'fa-solid fa-location-dot' };
   const photos = (trip.photos || []).map((p) => imageUrl(p.photoUrl));
+  const photoPosts = (trip.photos || []).map((p) => toPostShape(p));
   const isOrganizer = user && trip.organizer && String(trip.organizer._id) === String(user.id);
   const isAdminViewer = user?.role === 'admin' || user?.role === 'superadmin';
   // Strictly trip members only (not admins) - matches the backend check.
@@ -407,7 +445,7 @@ export default function TripDetail() {
                         <button className="btn btn-sm btn-outline" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}>
                           {uploadingPhoto ? <span className="spinner" /> : <i className="fa-solid fa-camera" />} Add photo
                         </button>
-                        <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={uploadPhoto} />
+                        <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={pickPhoto} />
                       </>
                     )}
                   </div>
@@ -518,22 +556,29 @@ export default function TripDetail() {
                 </p>
               )}
 
-              <div className="seats-bar mt-3"><div className="seats-fill" style={{ width: `${pct}%` }} /></div>
-              {trip.isCouplesMode ? (
-                <div className="row-between" style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>
-                  <span>{Math.floor(filled / 2)} couple(s) joined</span>
-                  <span style={{ color: seatsLeft < 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>{Math.floor(seatsLeft / 2)} couple slot(s) left</span>
-                </div>
-              ) : (
-                <div className="row-between" style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>
-                  <span>{filled} joined</span>
-                  <span style={{ color: seatsLeft <= 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>{seatsLeft} seats left</span>
-                </div>
+              {trip.status !== 'completed' && (
+                <>
+                  <div className="seats-bar mt-3"><div className="seats-fill" style={{ width: `${pct}%` }} /></div>
+                  {trip.isCouplesMode ? (
+                    <div className="row-between" style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>
+                      <span>{Math.floor(filled / 2)} couple(s) joined</span>
+                      <span style={{ color: seatsLeft < 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>{Math.floor(seatsLeft / 2)} couple slot(s) left</span>
+                    </div>
+                  ) : (
+                    <div className="row-between" style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>
+                      <span>{filled} joined</span>
+                      <span style={{ color: seatsLeft <= 2 ? '#fca5a5' : '#6ee7b7', fontWeight: 700 }}>{seatsLeft} seats left</span>
+                    </div>
+                  )}
+                </>
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem', color: 'var(--text-2)', margin: '18px 0' }}>
                 <div><i className="fa-solid fa-calendar" style={{ color: 'var(--fire)' }} /> {dateRange(trip.startDate, trip.endDate)}</div>
-                <div><i className="fa-solid fa-people-group" style={{ color: 'var(--fire)' }} /> {trip.interestCount} interested</div>
+                <div>
+                  <i className="fa-solid fa-people-group" style={{ color: 'var(--fire)' }} />{' '}
+                  {trip.interestCount} {trip.status === 'completed' ? 'co-traveler' + (trip.interestCount === 1 ? '' : 's') : 'interested'}
+                </div>
               </div>
 
               {/* Organizer */}
@@ -598,7 +643,7 @@ export default function TripDetail() {
                 </div>
               )}
 
-              {(isOrganizer || user?.role === 'admin') && (
+              {(isOrganizer || user?.role === 'admin') && trip.status !== 'completed' && (
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--glass-bdr)' }}>
                   <div className="text-muted" style={{ fontSize: '0.72rem', marginBottom: 8 }}>
                     <i className="fa-solid fa-gear" /> Organizer controls
@@ -614,16 +659,12 @@ export default function TripDetail() {
                       { value: 'cancelled', label: 'Cancelled' },
                     ]}
                   />
-                  {trip.status !== 'completed' && (
-                    <>
-                      <Link to={`/trips/${id}/edit`} className="btn btn-sm btn-outline mb-2" style={{ width: '100%', justifyContent: 'center' }}>
-                        <i className="fa-solid fa-pen-to-square" /> Edit Trip
-                      </Link>
-                      <button className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={removeTrip}>
-                        <i className="fa-solid fa-trash" /> Delete Trip
-                      </button>
-                    </>
-                  )}
+                  <Link to={`/trips/${id}/edit`} className="btn btn-sm btn-outline mb-2" style={{ width: '100%', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-pen-to-square" /> Edit Trip
+                  </Link>
+                  <button className="btn btn-sm" style={{ width: '100%', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', color: '#fca5a5' }} onClick={removeTrip}>
+                    <i className="fa-solid fa-trash" /> Delete Trip
+                  </button>
                 </div>
               )}
 
@@ -654,7 +695,25 @@ export default function TripDetail() {
         </div>
       </section>
 
-      <Lightbox images={photos} index={lb} onClose={() => setLb(null)} onIndex={setLb} />
+      <Lightbox posts={photoPosts} index={lb} onClose={() => setLb(null)} onIndex={setLb} onLike={likePhoto} onRepost={repostPhoto} />
+
+      <Modal open={Boolean(pendingPhotoFile)} onClose={() => (uploadingPhoto ? null : setPendingPhotoFile(null))} title="Add photo" centered>
+        <form onSubmit={submitPhotoUpload}>
+          <div className="form-group">
+            <label>Location (optional)</label>
+            <input
+              className="form-input"
+              value={photoLocation}
+              onChange={(e) => setPhotoLocation(e.target.value)}
+              maxLength={120}
+              placeholder="e.g. Rishikesh, Uttarakhand"
+            />
+          </div>
+          <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={uploadingPhoto}>
+            {uploadingPhoto ? <span className="spinner" /> : <i className="fa-solid fa-camera" />} Add to trip gallery
+          </button>
+        </form>
+      </Modal>
       <Lightbox images={heroZoom ? [heroZoom] : []} index={heroZoom ? 0 : null} onClose={() => setHeroZoom(null)} onIndex={() => {}} />
     </>
   );
