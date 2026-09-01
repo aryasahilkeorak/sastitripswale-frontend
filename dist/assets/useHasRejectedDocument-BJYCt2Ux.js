@@ -1,0 +1,1 @@
+import{r as s,d as r}from"./index-Cc46GOZo.js";function m(e){const[c,t]=s.useState(!1);return s.useEffect(()=>{if(!e){t(!1);return}r.get("/members/documents").then(a=>t((a.data.documents||[]).some(o=>o.status==="rejected"))).catch(()=>{})},[e]),c}export{m as u};

@@ -1,0 +1,1 @@
+import{j as s}from"./index-Cc46GOZo.js";function r({label:a="Loading…"}){return s.jsxs("div",{className:"page-loader",children:[s.jsx("span",{className:"spinner"}),s.jsx("p",{children:a})]})}export{r as L};
