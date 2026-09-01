@@ -123,13 +123,13 @@ export default function About() {
               <div className="card" style={{ padding: 24 }}>
                 <i className="fa-solid fa-quote-left" style={{ fontSize: '1.8rem', color: 'var(--fire)' }} />
                 <p style={{ fontSize: '1.05rem', fontStyle: 'italic', color: 'var(--text)', margin: '16px 0 20px', lineHeight: 1.8 }}>
-                  &ldquo;{team[0].quote}&rdquo;
+                  &ldquo;{t(team[0].quoteKey)}&rdquo;
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <img src={team[0].photo} alt={team[0].name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.9rem' }}>{team[0].name}</strong>
-                    <span style={{ color: 'var(--text-3)', fontSize: '0.78rem' }}>{team[0].title}</span>
+                    <span style={{ color: 'var(--text-3)', fontSize: '0.78rem' }}>{t(team[0].titleKey)}</span>
                   </div>
                 </div>
               </div>
